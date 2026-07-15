@@ -13,14 +13,14 @@
     --ground: #FBF4EE; --surface: #FFFBF6; --surface-2: #F5E8DE;
     --ink: #2C1D28; --ink-soft: #6A5460; --line: #E7D7CC;
     --plum: #8A3F5C; --turq: #0a786f; --turq-deep: #085d56; --turq-ink: #04302C; --turq-soft: #A9E3DE;
-    --shadow: rgba(58, 30, 44, 0.13);
+    --shadow: rgba(58, 30, 44, 0.13); --danger: #B23A3A;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --ground: #1F1620; --surface: #2B1F2C; --surface-2: #362538;
       --ink: #F1E5DC; --ink-soft: #BFA9B2; --line: #3D2E3C;
       --plum: #D68CA7; --turq: #0a786f; --turq-deep: #23a99e; --turq-ink: #eafffb; --turq-soft: #2A5C58;
-      --shadow: rgba(0, 0, 0, 0.4);
+      --shadow: rgba(0, 0, 0, 0.4); --danger: #F0918C;
     }
   }
   * { box-sizing: border-box; }
@@ -64,7 +64,23 @@
   .empty h2 { font-family: var(--serif); font-weight: 600; font-size: 1.5rem; margin: 10px 0 8px; }
   .empty p { color: var(--ink-soft); margin: 0 auto 22px; max-width: 26em; }
 
-  .note { margin-top: 26px; font-size: 0.82rem; color: var(--ink-soft); line-height: 1.5; text-align: center; }
+  /* auth card */
+  .auth-card { background: var(--surface-2); border-radius: 16px; padding: 18px; margin-top: 26px; }
+  .auth-card .auth-title { font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+  .auth-card .auth-sub { color: var(--ink-soft); font-size: 0.9rem; margin: 0 0 14px; line-height: 1.45; }
+  .otp-form { display: flex; gap: 8px; flex-wrap: wrap; }
+  .otp-form input { flex: 1; min-width: 200px; font: inherit; font-size: 1rem; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); outline: none; }
+  .otp-form input:focus { border-color: var(--turq); box-shadow: 0 0 0 3px var(--turq-soft); }
+  .otp-btn { flex: none; border: 0; border-radius: 12px; padding: 0 20px; background: var(--turq); color: var(--turq-ink); font: inherit; font-weight: 700; font-size: 0.95rem; cursor: pointer; }
+  .otp-btn:disabled { opacity: 0.5; cursor: default; }
+  .auth-msg { font-size: 0.9rem; color: var(--turq-deep); margin: 12px 0 0; min-height: 1.1em; line-height: 1.4; }
+  .auth-msg.err { color: var(--danger); }
+  .auth-card.signed { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .auth-card.signed .who b { color: var(--ink); }
+  .auth-card.signed .who .auth-sub { margin: 3px 0 0; }
+  .link-btn { border: 0; background: none; color: var(--turq-deep); font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer; text-decoration: underline; flex: none; }
+
+  .note { margin-top: 22px; font-size: 0.82rem; color: var(--ink-soft); line-height: 1.5; text-align: center; }
   .foot { margin-top: 30px; text-align: center; font-size: 12.5px; color: var(--ink-soft); }
   .foot a { color: var(--turq-deep); text-decoration: none; }
 </style>
@@ -76,12 +92,17 @@
     <span class="mark"><b>Nana</b>fy</span>
   </div>
 
-  <div id="app"></div>
+  <div id="list"></div>
+  <div id="authArea"></div>
 
   <p class="foot"><a href="/">← nanafy.ai</a></p>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  var SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
+  var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
+
   var META = {
     memorial:   { emoji: '🕊️', label: 'Memorial' },
     wedding:    { emoji: '💍', label: 'Wedding' },
@@ -93,23 +114,32 @@
   function esc(s){ var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
   function fmtDate(ms){ try { return new Date(ms).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); } catch(e){ return ''; } }
 
-  function load(){
-    var list = [];
-    try { list = JSON.parse(localStorage.getItem('nanafy_keepsakes') || '[]'); } catch(e){}
-    var app = document.getElementById('app');
+  // ---- device list (Layer 1) ----
+  function getDeviceList(){ try { return JSON.parse(localStorage.getItem('nanafy_keepsakes')||'[]'); } catch(e){ return []; } }
+  function saveDeviceList(list){ try { localStorage.setItem('nanafy_keepsakes', JSON.stringify(list)); } catch(e){} }
+  function mergeInto(list, items){
+    items.forEach(function(it){ if(!list.some(function(x){return x.code===it.code;})) list.unshift(it); });
+    return list;
+  }
 
+  var sb = window.supabase.createClient(SUPABASE_URL, ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+
+  function renderList(){
+    var list = getDeviceList().slice().sort(function(a,b){ return (b.created||0)-(a.created||0); });
+    var el = document.getElementById('list');
     if (!list.length) {
-      app.innerHTML =
+      el.innerHTML =
         '<div class="empty"><div class="em">🌱</div>' +
         '<h2>No keepsakes yet</h2>' +
-        '<p>Keepsakes you create will show up here, saved on this device so you can come back to them.</p>' +
+        '<p>Keepsakes you create show up here. Sign in below to keep them safe and reach them from any device.</p>' +
         '<a class="create-btn" href="/create/">＋ Create a keepsake</a></div>';
       return;
     }
-
-    app.innerHTML =
+    el.innerHTML =
       '<h1>My keepsakes</h1>' +
-      '<p class="lede">' + list.length + ' saved on this device.</p>' +
+      '<p class="lede">' + list.length + ' keepsake' + (list.length>1?'s':'') + '.</p>' +
       '<a class="create-btn" href="/create/">＋ Create a keepsake</a>' +
       '<div class="klist">' + list.map(function (k) {
         var m = META[k.type] || META.other;
@@ -118,11 +148,94 @@
           '<span class="info"><span class="name">' + esc(k.name || 'Keepsake') + '</span>' +
           '<span class="meta">' + esc(m.label) + ' · ' + esc(fmtDate(k.created)) + ' · code ' + esc(k.code) + '</span></span>' +
           '<span class="arrow">›</span></a>';
-      }).join('') + '</div>' +
-      '<p class="note">These are remembered on this device only. Soon you’ll be able to add your email to get back to them from anywhere.</p>';
+      }).join('') + '</div>';
   }
 
-  load();
+  function renderAuth(session){
+    var el = document.getElementById('authArea');
+    if (session && session.user) {
+      el.innerHTML =
+        '<div class="auth-card signed"><div class="who">✓ Signed in as <b>' + esc(session.user.email) + '</b>' +
+        '<div class="auth-sub">Your keepsakes are saved to your account and follow you to any device.</div></div>' +
+        '<button class="link-btn" id="signOut">Sign out</button></div>';
+      document.getElementById('signOut').addEventListener('click', function(){
+        sb.auth.signOut().then(function(){ location.reload(); });
+      });
+    } else {
+      el.innerHTML =
+        '<div class="auth-card"><div class="auth-title">📧 Get back from any device</div>' +
+        '<p class="auth-sub">Add your email and we’ll send you a magic link. Tap it to sign in — no password — and your keepsakes will follow you to any phone or computer.</p>' +
+        '<form class="otp-form" id="otpForm">' +
+        '<input type="email" id="otpEmail" placeholder="you@example.com" autocomplete="email" required>' +
+        '<button class="otp-btn" type="submit">Email me a link</button></form>' +
+        '<p class="auth-msg" id="authMsg"></p></div>';
+      document.getElementById('otpForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        var email = document.getElementById('otpEmail').value.trim();
+        var btn = e.target.querySelector('.otp-btn');
+        var msg = document.getElementById('authMsg');
+        msg.className = 'auth-msg'; msg.textContent = '';
+        if (!email || email.indexOf('@') < 1) { msg.className='auth-msg err'; msg.textContent='Please enter a valid email.'; return; }
+        btn.disabled = true; btn.textContent = 'Sending…';
+        sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: location.origin + '/mine/' } })
+          .then(function(res){
+            if (res.error) throw res.error;
+            msg.textContent = '✓ Check your email (' + email + ') — including your spam folder — for a link from Nanafy. Tap it to sign in.';
+            btn.textContent = 'Link sent';
+          })
+          .catch(function(err){
+            msg.className='auth-msg err';
+            msg.textContent = 'Couldn’t send the link: ' + (err.message || 'please try again in a minute.');
+            btn.disabled = false; btn.textContent = 'Email me a link';
+          });
+      });
+    }
+  }
+
+  // ---- sync device keepsakes to the account + pull the account's keepsakes ----
+  async function syncAndLoad(session){
+    var uid = session.user.id;
+    try {
+      var device = getDeviceList();
+      var codes = device.map(function(k){ return (k.code||'').toUpperCase(); }).filter(Boolean);
+
+      // Resolve device codes -> event ids, then record account membership.
+      if (codes.length) {
+        var evByCode = await sb.from('events').select('id,share_code').in('share_code', codes);
+        var rows = evByCode.data || [];
+        if (rows.length) {
+          await sb.from('event_members').upsert(
+            rows.map(function(r){ return { user_id: uid, event_id: r.id }; }),
+            { onConflict: 'user_id,event_id' }
+          );
+        }
+      }
+
+      // Pull every keepsake tied to this account (from any device).
+      var mem = await sb.from('event_members').select('event_id').eq('user_id', uid);
+      var ids = (mem.data || []).map(function(m){ return m.event_id; });
+      if (ids.length) {
+        var evs = await sb.from('events').select('share_code,honoree,title,event_type,created_at').in('id', ids);
+        var accountItems = (evs.data || []).map(function(e){
+          return { code: e.share_code, name: e.honoree || e.title || 'Keepsake', type: e.event_type, created: Date.parse(e.created_at) };
+        });
+        saveDeviceList(mergeInto(getDeviceList(), accountItems));
+        renderList();
+      }
+    } catch (e) { /* keep showing device list on any error */ }
+  }
+
+  // ---- boot ----
+  renderList();
+  sb.auth.getSession().then(function(res){
+    var session = res.data.session;
+    renderAuth(session);
+    if (session) syncAndLoad(session);
+  });
+  sb.auth.onAuthStateChange(function(event, session){
+    renderAuth(session);
+    if (event === 'SIGNED_IN' && session) syncAndLoad(session);
+  });
 </script>
 </body>
 </html>
