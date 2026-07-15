@@ -54,9 +54,9 @@
   }
   .kcard:hover { transform: translateY(-1px); border-color: var(--turq-soft); }
   .kcard .emoji { font-size: 1.7rem; flex: none; }
-  .kcard .info { flex: 1; min-width: 0; }
-  .kcard .name { font-family: var(--serif); font-size: 1.2rem; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .kcard .meta { font-size: 0.82rem; color: var(--ink-soft); margin-top: 2px; }
+  .kcard .info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .kcard .name { display: block; font-family: var(--serif); font-size: 1.2rem; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kcard .meta { display: block; font-size: 0.82rem; color: var(--ink-soft); margin-top: 2px; }
   .kcard .arrow { flex: none; color: var(--turq-deep); font-size: 1.2rem; }
 
   .empty { text-align: center; padding: 20px 10px 10px; }
