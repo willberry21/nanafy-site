@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your keepsake · Nanafy</title>
+<meta name="description" content="The memories everyone has gathered, in one place.">
+<meta name="theme-color" content="#0a786f">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2222%22%20fill%3D%22%230a786f%22%2F%3E%3Cg%20transform%3D%22translate(14%2014)%20scale(.72)%22%3E%3Cg%20fill%3D%22%23fff%22%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(0%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(45%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(90%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(135%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(180%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(225%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(270%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(315%2050%2050)%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2218.5%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%222%22%20fill%3D%22%230a786f%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<style>
+  :root {
+    --ground: #FBF4EE; --surface: #FFFBF6; --surface-2: #F5E8DE;
+    --ink: #2C1D28; --ink-soft: #6A5460; --line: #E7D7CC;
+    --plum: #8A3F5C; --turq: #0a786f; --turq-deep: #085d56; --turq-ink: #04302C; --turq-soft: #A9E3DE;
+    --shadow: rgba(58, 30, 44, 0.13); --danger: #B23A3A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #1F1620; --surface: #2B1F2C; --surface-2: #362538;
+      --ink: #F1E5DC; --ink-soft: #BFA9B2; --line: #3D2E3C;
+      --plum: #D68CA7; --turq: #0a786f; --turq-deep: #23a99e; --turq-ink: #eafffb; --turq-soft: #2A5C58;
+      --shadow: rgba(0, 0, 0, 0.4); --danger: #F0918C;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    --serif: "Hoefler Text", "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, sans-serif;
+    background: var(--ground); color: var(--ink);
+    font-family: var(--sans); font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 620px; margin: 0 auto; padding: 26px 20px 72px; }
+  .brand { display: flex; align-items: center; gap: 9px; margin-bottom: 26px; }
+  .brand .mark { font-family: var(--serif); font-size: 1.35rem; font-weight: 600; color: var(--ink-soft); letter-spacing: -0.02em; }
+  .brand .mark b { color: var(--turq); }
+
+  .spinner { text-align: center; color: var(--ink-soft); padding: 70px 0; }
+  .center { text-align: center; }
+
+  /* header */
+  .khead { text-align: center; padding: 6px 0 8px; }
+  .khead .prep { font-family: var(--sans); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--plum); margin: 0 0 6px; }
+  .khead h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(2rem, 6.4vw, 2.8rem); letter-spacing: -0.01em; line-height: 1.08; margin: 0; text-wrap: balance; }
+  .khead .count { color: var(--ink-soft); font-size: 0.98rem; margin-top: 10px; }
+  .khead .count b { color: var(--turq-deep); font-family: var(--serif); font-size: 1.1rem; }
+
+  /* gather-more bar */
+  .gather { background: var(--surface-2); border-radius: 16px; padding: 14px 16px; margin: 22px 0 30px; }
+  .gather .g-t { font-size: 0.9rem; color: var(--ink-soft); margin: 0 0 10px; }
+  .gather .g-row { display: flex; gap: 8px; }
+  .gather .g-link { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px; font-size: 0.85rem; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; }
+  .gather .g-copy { flex: none; border: 0; border-radius: 11px; padding: 0 16px; background: var(--turq); color: var(--turq-ink); font: inherit; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+  .gather .g-copy.done { background: var(--surface); color: var(--turq-deep); }
+
+  /* memory cards */
+  .mlist { display: grid; gap: 16px; }
+  .mcard { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px 20px 18px; box-shadow: 0 14px 34px -26px var(--shadow); }
+  .mcard .who { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .mcard .who .name { font-weight: 700; color: var(--plum); font-size: 1rem; }
+  .mcard .who .when { font-size: 0.8rem; color: var(--ink-soft); flex: none; }
+  .mcard .q { font-family: var(--serif); font-style: italic; color: var(--ink-soft); font-size: 0.95rem; margin: 10px 0 10px; line-height: 1.4; }
+  .mcard .body { font-family: var(--serif); font-size: 1.12rem; line-height: 1.5; color: var(--ink); white-space: pre-wrap; }
+  .mcard .photo { margin-top: 14px; }
+  .mcard .photo img { width: 100%; border-radius: 12px; display: block; }
+
+  /* empty */
+  .empty { text-align: center; padding: 30px 10px; }
+  .empty .em { font-size: 2.6rem; }
+  .empty h2 { font-family: var(--serif); font-weight: 600; font-size: 1.5rem; margin: 8px 0 6px; }
+  .empty p { color: var(--ink-soft); margin: 0 auto; max-width: 26em; }
+
+  /* code entry */
+  .code-form { max-width: 340px; margin: 0 auto; }
+  .code-form input { width: 100%; text-align: center; letter-spacing: 6px; font-weight: 700; text-transform: uppercase; font-family: var(--serif); font-size: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); padding: 13px 15px; outline: none; }
+  .code-form input:focus { border-color: var(--turq); box-shadow: 0 0 0 3px var(--turq-soft); }
+  .btn { width: 100%; margin-top: 14px; border: 0; border-radius: 999px; background: var(--turq); color: var(--turq-ink); font: inherit; font-size: 1.02rem; font-weight: 700; padding: 15px; cursor: pointer; }
+  .error { color: var(--danger); font-size: 14px; margin-top: 12px; text-align: center; }
+
+  .refresh { display: block; margin: 26px auto 0; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 11px 22px; font: inherit; font-weight: 600; font-size: 0.92rem; cursor: pointer; }
+  .foot { margin-top: 34px; text-align: center; font-size: 12.5px; color: var(--ink-soft); }
+  .foot a { color: var(--turq-deep); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 100 100" width="28" height="28" aria-hidden="true"><g fill="#0a786f"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(45 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(135 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(225 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(315 50 50)"/><circle cx="50" cy="50" r="18.5"/></g><circle cx="50" cy="50" r="2" fill="#FBF4EE"/></svg>
+    <span class="mark"><b>Nana</b>fy</span>
+  </div>
+  <div id="app"><div class="spinner">Loading…</div></div>
+  <p class="foot"><a href="/">nanafy.ai</a></p>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
+const HEADERS = { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY };
+const PREPOSITIONS = { memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating', graduation: 'Congratulating', tribute: 'A tribute to', other: 'For' };
+
+const app = document.getElementById('app');
+let code = '';
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function when(iso) {
+  const d = new Date(iso), now = new Date();
+  const mins = Math.round((now - d) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + ' min ago';
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24 && d.toDateString() === now.toDateString()) return hrs + (hrs === 1 ? ' hour ago' : ' hours ago');
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+async function fetchKeepsake(c) {
+  const q = SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(c.toUpperCase()) +
+    '&select=title,honoree,event_type,memories(contributor_name,prompt_text,body,photo_url,created_at)';
+  const res = await fetch(q, { headers: HEADERS });
+  if (!res.ok) throw new Error('server');
+  return (await res.json())[0] || null;
+}
+
+function renderCodeEntry(message) {
+  app.innerHTML =
+    '<div class="center khead"><h1>Open a keepsake</h1>' +
+    '<p class="count">Enter its 6-character code to see the memories gathered.</p></div>' +
+    '<form class="code-form" id="codeForm">' +
+    '<input type="text" id="codeInput" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="ABC123" aria-label="Keepsake code">' +
+    (message ? '<p class="error">' + esc(message) + '</p>' : '') +
+    '<button class="btn" type="submit">Open</button></form>';
+  document.getElementById('codeForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const c = document.getElementById('codeInput').value.trim();
+    if (c.length === 6) start(c);
+  });
+}
+
+function render(ev) {
+  const prep = PREPOSITIONS[ev.event_type] || 'For';
+  const title = ev.title || ev.honoree;
+  const memories = (ev.memories || []).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const n = memories.length;
+  const addLink = location.origin + '/add/?c=' + encodeURIComponent(code.toUpperCase());
+
+  let html =
+    '<div class="khead">' +
+    '<p class="prep">' + esc(prep) + '</p>' +
+    '<h1>' + esc(title) + '</h1>' +
+    '<p class="count">' + (n === 0 ? 'No memories yet' : '<b>' + n + '</b> ' + (n === 1 ? 'memory' : 'memories') + ' gathered') + '</p>' +
+    '</div>' +
+
+    '<div class="gather"><p class="g-t">Share this link to gather more memories:</p>' +
+    '<div class="g-row"><div class="g-link">' + esc(addLink) + '</div>' +
+    '<button class="g-copy" id="gCopy">Copy</button></div></div>';
+
+  if (n === 0) {
+    html += '<div class="empty"><div class="em">🌱</div><h2>Waiting for the first memory</h2>' +
+      '<p>Share the link above — as people add their memories, they’ll appear right here.</p></div>';
+  } else {
+    html += '<div class="mlist">' + memories.map(function (m) {
+      return '<div class="mcard">' +
+        '<div class="who"><span class="name">' + esc(m.contributor_name || 'Anonymous') + '</span>' +
+        '<span class="when">' + esc(when(m.created_at)) + '</span></div>' +
+        (m.prompt_text ? '<div class="q">' + esc(m.prompt_text) + '</div>' : '') +
+        '<div class="body">' + esc(m.body) + '</div>' +
+        (m.photo_url ? '<div class="photo"><img src="' + esc(m.photo_url) + '" alt="Shared photo" loading="lazy"></div>' : '') +
+        '</div>';
+    }).join('') + '</div>';
+  }
+
+  html += '<button class="refresh" id="refresh">↻ Check for new memories</button>';
+
+  app.innerHTML = html;
+
+  const gCopy = document.getElementById('gCopy');
+  gCopy.addEventListener('click', function () {
+    navigator.clipboard.writeText(addLink).then(function () {
+      gCopy.textContent = 'Copied ✓'; gCopy.classList.add('done');
+      setTimeout(function () { gCopy.textContent = 'Copy'; gCopy.classList.remove('done'); }, 2000);
+    });
+  });
+  document.getElementById('refresh').addEventListener('click', function () { start(code); });
+}
+
+async function start(c) {
+  code = c;
+  app.innerHTML = '<div class="spinner">Gathering the memories…</div>';
+  try {
+    const ev = await fetchKeepsake(c);
+    if (!ev) return renderCodeEntry('No keepsake found with code ' + c.toUpperCase() + '. Double-check it and try again.');
+    const u = new URL(location.href);
+    u.searchParams.set('c', c.toUpperCase());
+    history.replaceState(null, '', u);
+    render(ev);
+    window.scrollTo(0, 0);
+  } catch {
+    renderCodeEntry("Couldn't reach the server. Check your connection and try again.");
+  }
+}
+
+const initial = new URLSearchParams(location.search).get('c');
+if (initial && initial.trim().length === 6) start(initial.trim());
+else renderCodeEntry();
+</script>
+</body>
+</html>

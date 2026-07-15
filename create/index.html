@@ -187,11 +187,12 @@
     </div>
 
     <div class="key-actions">
-      <button class="action primary" id="shareBtn" hidden>Share the link</button>
-      <a class="action" id="openGuest" target="_blank" rel="noopener">Open the guest page ↗</a>
+      <a class="action primary" id="viewKeepsake">🌻 See your keepsake &amp; memories</a>
+      <button class="action" id="shareBtn" hidden>Share the link</button>
+      <a class="action" id="openGuest" target="_blank" rel="noopener">Preview the guest page ↗</a>
     </div>
 
-    <p class="key-hint">Print the QR on a card, set it on a table, or text the link. Anyone who scans or taps it can add a memory — no app, no sign-up.</p>
+    <p class="key-hint">Print the QR on a card, set it on a table, or text the link. Anyone who scans or taps it can add a memory — no app, no sign-up. <b>Bookmark your keepsake link</b> so you can come back and watch the memories gather.</p>
 
     <p class="newlink"><button id="makeAnother">＋ Create another keepsake</button></p>
   </div>
@@ -335,6 +336,7 @@
 
     var openGuest = document.getElementById('openGuest');
     openGuest.href = guestLink;
+    document.getElementById('viewKeepsake').href = location.origin + '/keepsake/?c=' + encodeURIComponent(code);
 
     // QR code image (renders the guest link).
     var qr = 'https://api.qrserver.com/v1/create-qr-code/?size=440x440&margin=8&data=' + encodeURIComponent(guestLink);
