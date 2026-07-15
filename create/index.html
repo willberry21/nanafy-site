@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Create a keepsake · Nanafy</title>
+<meta name="description" content="Start a keepsake for someone or an occasion, and gather everyone's memories in one place.">
+<meta name="theme-color" content="#0a786f">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2222%22%20fill%3D%22%230a786f%22%2F%3E%3Cg%20transform%3D%22translate(14%2014)%20scale(.72)%22%3E%3Cg%20fill%3D%22%23fff%22%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(0%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(45%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(90%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(135%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(180%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(225%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(270%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(315%2050%2050)%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2218.5%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%222%22%20fill%3D%22%230a786f%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<style>
+  :root {
+    --ground: #FBF4EE; --surface: #FFFBF6; --surface-2: #F5E8DE;
+    --ink: #2C1D28; --ink-soft: #6A5460; --line: #E7D7CC;
+    --plum: #8A3F5C; --turq: #0a786f; --turq-deep: #085d56; --turq-ink: #04302C; --turq-soft: #A9E3DE;
+    --shadow: rgba(58, 30, 44, 0.13); --danger: #B23A3A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #1F1620; --surface: #2B1F2C; --surface-2: #362538;
+      --ink: #F1E5DC; --ink-soft: #BFA9B2; --line: #3D2E3C;
+      --plum: #D68CA7; --turq: #0a786f; --turq-deep: #23a99e; --turq-ink: #eafffb; --turq-soft: #2A5C58;
+      --shadow: rgba(0, 0, 0, 0.4); --danger: #F0918C;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    --serif: "Hoefler Text", "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, sans-serif;
+    background: var(--ground); color: var(--ink);
+    font-family: var(--sans); font-size: 17px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 620px; margin: 0 auto; padding: 26px 22px 72px; }
+
+  .brand { display: flex; align-items: center; gap: 9px; margin-bottom: 30px; }
+  .brand .mark { font-family: var(--serif); font-size: 1.4rem; font-weight: 600; color: var(--ink-soft); letter-spacing: -0.02em; }
+  .brand .mark b { color: var(--turq); }
+
+  h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(2rem, 6vw, 2.7rem); line-height: 1.08; margin: 0 0 8px; letter-spacing: -0.01em; text-wrap: balance; }
+  .lede { color: var(--ink-soft); font-size: 1.05rem; margin: 0 0 30px; }
+
+  .label { display: block; font-family: var(--sans); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--plum); margin: 26px 0 10px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 9px; }
+  .chip {
+    font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    padding: 9px 16px; border-radius: 999px; background: var(--surface);
+    border: 1px solid var(--line); color: var(--ink);
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .chip:hover { border-color: var(--turq-soft); }
+  .chip[aria-pressed="true"] {
+    background: var(--turq); border-color: var(--turq); color: var(--turq-ink);
+    box-shadow: 0 6px 16px -8px rgba(10,120,111,0.5);
+  }
+  .chip:active { transform: scale(0.95); }
+
+  input[type="text"] {
+    width: 100%; font: inherit; background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  input[type="text"]:focus { border-color: var(--turq); box-shadow: 0 0 0 3px var(--turq-soft); }
+  #honoree { font-size: 1.35rem; font-family: var(--serif); }
+
+  .note {
+    background: var(--surface-2); border-radius: 14px; padding: 16px 18px; margin-top: 30px;
+    font-size: 0.95rem; color: var(--ink-soft); display: flex; gap: 11px; align-items: flex-start;
+  }
+  .note .bloom-em { font-size: 1.1rem; line-height: 1.3; }
+
+  .submit {
+    width: 100%; margin-top: 26px; border: 0; border-radius: 999px; cursor: pointer;
+    background: var(--turq); color: var(--turq-ink); font: inherit; font-size: 1.05rem; font-weight: 700;
+    padding: 16px; transition: transform 0.12s ease, box-shadow 0.2s ease, opacity 0.15s ease;
+    box-shadow: 0 8px 20px -8px rgba(10,120,111,0.5);
+  }
+  .submit:hover:not(:disabled) { transform: translateY(-1px); }
+  .submit:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+
+  .err { color: var(--danger); font-size: 0.92rem; text-align: center; margin-top: 14px; min-height: 1.1em; }
+
+  .foot { margin-top: 40px; text-align: center; font-size: 0.8rem; color: var(--ink-soft); }
+  .foot a { color: var(--turq-deep); text-decoration: none; }
+
+  /* ---------- The Key (result) ---------- */
+  #keyView { text-align: center; }
+  .key-em { font-size: 3rem; margin: 4px 0 6px; }
+  #keyView h1 { font-size: clamp(1.8rem, 5.5vw, 2.4rem); }
+  .key-sub { color: var(--ink-soft); margin: 6px 0 26px; }
+  .key-sub b { color: var(--ink); font-family: var(--serif); }
+  .qr-card {
+    display: inline-block; background: #fff; padding: 18px; border-radius: 20px;
+    border: 1px solid var(--line); box-shadow: 0 18px 40px -24px var(--shadow);
+  }
+  .qr-card img { display: block; width: 220px; height: 220px; }
+  .qr-loading { width: 220px; height: 220px; display: grid; place-items: center; color: #888; font-size: 0.85rem; }
+
+  .code-chip {
+    display: inline-flex; align-items: baseline; gap: 10px; margin: 22px 0 4px;
+    font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft);
+  }
+  .code-chip b { font-family: var(--serif); font-size: 1.7rem; letter-spacing: 0.28em; color: var(--turq-deep); text-transform: none; }
+
+  .link-row {
+    display: flex; gap: 8px; margin: 24px 0 0; align-items: stretch;
+  }
+  .link-box {
+    flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; font-size: 0.9rem; color: var(--ink); text-align: left;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    display: flex; align-items: center;
+  }
+  .copy-btn {
+    flex: none; border: 0; border-radius: 12px; cursor: pointer; padding: 0 18px;
+    background: var(--turq); color: var(--turq-ink); font: inherit; font-weight: 700; font-size: 0.9rem;
+  }
+  .copy-btn.done { background: var(--surface-2); color: var(--turq-deep); }
+
+  .key-actions { display: grid; gap: 10px; margin-top: 22px; }
+  .action {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border-radius: 999px; padding: 14px; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  }
+  .action.primary { background: var(--turq); color: var(--turq-ink); border-color: var(--turq); }
+
+  .key-hint { margin-top: 24px; font-size: 0.9rem; color: var(--ink-soft); line-height: 1.5; }
+  .newlink { margin-top: 30px; }
+  .newlink button { background: none; border: 0; color: var(--turq-deep); font: inherit; font-size: 0.9rem; cursor: pointer; text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 100 100" width="28" height="28" aria-hidden="true"><g fill="var(--turq)"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(45 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(135 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(225 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(315 50 50)"/><circle cx="50" cy="50" r="18.5"/></g><circle cx="50" cy="50" r="2" fill="var(--ground)"/></svg>
+    <span class="mark"><b>Nana</b>fy</span>
+  </div>
+
+  <!-- ===== FORM VIEW ===== -->
+  <div id="formView">
+    <h1>Create a keepsake</h1>
+    <p class="lede">Start a place to gather everyone's memories — for a person, or an occasion. It takes about a minute.</p>
+
+    <span class="label">What's the occasion?</span>
+    <div class="chips" id="chips" role="group" aria-label="Occasion type">
+      <button type="button" class="chip" data-type="memorial"   aria-pressed="true">🕊️ Memorial</button>
+      <button type="button" class="chip" data-type="wedding"    aria-pressed="false">💍 Wedding</button>
+      <button type="button" class="chip" data-type="birthday"   aria-pressed="false">🎂 Birthday</button>
+      <button type="button" class="chip" data-type="graduation" aria-pressed="false">🎓 Graduation</button>
+      <button type="button" class="chip" data-type="tribute"    aria-pressed="false">⭐ Tribute</button>
+      <button type="button" class="chip" data-type="other"      aria-pressed="false">✨ Other</button>
+    </div>
+
+    <span class="label" id="honoreeLabel">In memory of</span>
+    <input type="text" id="honoree" placeholder="Name" autocomplete="off" autocapitalize="words">
+
+    <span class="label">Title (optional)</span>
+    <input type="text" id="title" placeholder="e.g. Memorial celebration" autocomplete="off">
+
+    <div class="note">
+      <span class="bloom-em">🌻</span>
+      <span>We'll set up <b>five questions</b> to gently guide your guests. Then you'll get a QR code and link to share — everyone adds their memories in a couple of minutes, no app to download.</span>
+    </div>
+
+    <button class="submit" id="create" disabled>Create keepsake</button>
+    <p class="err" id="err"></p>
+  </div>
+
+  <!-- ===== KEY VIEW (shown after creating) ===== -->
+  <div id="keyView" hidden>
+    <div class="key-em">🌻</div>
+    <h1>Your keepsake is ready</h1>
+    <p class="key-sub" id="keySub"></p>
+
+    <div class="qr-card"><div class="qr-loading" id="qrHolder">Making your code…</div></div>
+
+    <div class="code-chip">Code <b id="codeText">——————</b></div>
+
+    <div class="link-row">
+      <div class="link-box" id="linkBox"></div>
+      <button class="copy-btn" id="copyBtn">Copy</button>
+    </div>
+
+    <div class="key-actions">
+      <button class="action primary" id="shareBtn" hidden>Share the link</button>
+      <a class="action" id="openGuest" target="_blank" rel="noopener">Open the guest page ↗</a>
+    </div>
+
+    <p class="key-hint">Print the QR on a card, set it on a table, or text the link. Anyone who scans or taps it can add a memory — no app, no sign-up.</p>
+
+    <p class="newlink"><button id="makeAnother">＋ Create another keepsake</button></p>
+  </div>
+
+  <p class="foot"><a href="/">← Back to nanafy.ai</a></p>
+</div>
+
+<script>
+  // ---- Supabase connection (public anon key — protected by row-level security) ----
+  var SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
+  var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
+  var HEADERS = { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY };
+
+  var PREPOSITIONS = {
+    memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating',
+    graduation: 'Congratulating', tribute: 'A tribute to', other: 'For'
+  };
+  var TITLE_HINTS = {
+    memorial: 'e.g. Memorial celebration', wedding: 'e.g. Sam & Dev’s wedding',
+    birthday: 'e.g. Mom’s 60th', graduation: 'e.g. Maya’s graduation',
+    tribute: 'e.g. Coach Ellis tribute', other: 'e.g. Our celebration'
+  };
+  // Five starter questions per occasion (mirrors the app's prompt bank). {name} → honoree.
+  var PROMPT_BANK = {
+    memorial: [
+      'What is a story about {name} that still makes you smile?',
+      'When did you feel closest to {name}?',
+      'What is something {name} taught you, on purpose or by example?',
+      'Describe {name} in a moment: where were you, what were they doing?',
+      'What do you want future generations to know about {name}?'
+    ],
+    wedding: [
+      'When did you know these two were meant for each other?',
+      'What is your favorite memory with the couple?',
+      'What advice would you give them for the years ahead?',
+      'Describe the moment you met {name}.',
+      'What do you love most about how they are together?'
+    ],
+    birthday: [
+      'What is your favorite memory with {name}?',
+      'What makes {name} one of a kind?',
+      'Share a story that captures who {name} really is.',
+      'What do you admire most about {name}?',
+      'What is your wish for {name} this year?'
+    ],
+    graduation: [
+      'What moment showed you how far {name} has come?',
+      'What are you most proud of {name} for?',
+      'What is your hope for {name}’s next chapter?',
+      'Share a memory from this journey with {name}.',
+      'What advice do you have for {name} as they begin what’s next?'
+    ],
+    tribute: [
+      'What impact has {name} had on you?',
+      'Share a moment that shows who {name} is.',
+      'What would you want {name} to know?',
+      'What is something about {name} that deserves more recognition?',
+      'How is the world better because of {name}?'
+    ],
+    other: [
+      'What is your favorite memory with {name}?',
+      'What makes {name} special to you?',
+      'Share a story you always come back to.',
+      'What do you want to say to {name}?',
+      'What is your wish for {name}?'
+    ]
+  };
+
+  var selectedType = 'memorial';
+  var chips = document.getElementById('chips');
+  var honoreeLabel = document.getElementById('honoreeLabel');
+  var honoree = document.getElementById('honoree');
+  var titleInput = document.getElementById('title');
+  var createBtn = document.getElementById('create');
+  var err = document.getElementById('err');
+
+  chips.addEventListener('click', function (e) {
+    var b = e.target.closest('.chip');
+    if (!b) return;
+    selectedType = b.dataset.type;
+    Array.prototype.forEach.call(chips.querySelectorAll('.chip'), function (c) {
+      c.setAttribute('aria-pressed', String(c === b));
+    });
+    honoreeLabel.textContent = PREPOSITIONS[selectedType];
+    titleInput.placeholder = TITLE_HINTS[selectedType];
+  });
+
+  honoree.addEventListener('input', function () {
+    createBtn.disabled = honoree.value.trim().length === 0;
+    err.textContent = '';
+  });
+
+  createBtn.addEventListener('click', createKeepsake);
+
+  async function createKeepsake() {
+    if (createBtn.disabled) return;
+    createBtn.disabled = true;
+    createBtn.textContent = 'Creating…';
+    err.textContent = '';
+
+    var name = honoree.value.trim();
+    var title = titleInput.value.trim();
+
+    try {
+      // 1) Create the event, and ask the database to hand back its id + share code.
+      var evRes = await fetch(SUPABASE_URL + '/rest/v1/events', {
+        method: 'POST',
+        headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+        body: JSON.stringify({ event_type: selectedType, honoree: name, title: title || null })
+      });
+      if (!evRes.ok) throw new Error('event');
+      var event = (await evRes.json())[0];
+
+      // 2) Seed the five guiding questions for this occasion.
+      var prompts = PROMPT_BANK[selectedType].map(function (q, i) {
+        return { event_id: event.id, text: q.replace(/\{name\}/g, name), position: i };
+      });
+      var pRes = await fetch(SUPABASE_URL + '/rest/v1/prompts', {
+        method: 'POST',
+        headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+        body: JSON.stringify(prompts)
+      });
+      if (!pRes.ok) throw new Error('prompts');
+
+      showKey(event, name, title);
+    } catch (e) {
+      err.textContent = "Something went wrong creating your keepsake. Check your connection and try again.";
+      createBtn.disabled = false;
+      createBtn.textContent = 'Create keepsake';
+    }
+  }
+
+  function showKey(event, name, title) {
+    var display = title || name;
+    var code = event.share_code;
+    var guestLink = location.origin + '/add/?c=' + encodeURIComponent(code);
+
+    document.getElementById('keySub').innerHTML = 'For <b>' + escapeHtml(display) + '</b> · share this so everyone can add their memories.';
+    document.getElementById('codeText').textContent = code;
+    document.getElementById('linkBox').textContent = guestLink;
+
+    var openGuest = document.getElementById('openGuest');
+    openGuest.href = guestLink;
+
+    // QR code image (renders the guest link).
+    var qr = 'https://api.qrserver.com/v1/create-qr-code/?size=440x440&margin=8&data=' + encodeURIComponent(guestLink);
+    var img = new Image();
+    img.alt = 'QR code linking to your keepsake';
+    img.onload = function () {
+      var holder = document.getElementById('qrHolder');
+      holder.parentNode.replaceChild(img, holder);
+    };
+    img.src = qr;
+
+    // Copy button
+    var copyBtn = document.getElementById('copyBtn');
+    copyBtn.addEventListener('click', function () {
+      navigator.clipboard.writeText(guestLink).then(function () {
+        copyBtn.textContent = 'Copied ✓';
+        copyBtn.classList.add('done');
+        setTimeout(function () { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('done'); }, 2000);
+      });
+    });
+
+    // Native share (phones)
+    var shareBtn = document.getElementById('shareBtn');
+    if (navigator.share) {
+      shareBtn.hidden = false;
+      shareBtn.addEventListener('click', function () {
+        navigator.share({ title: 'Add a memory · ' + display, text: 'Add your memory for ' + display + ' on Nanafy:', url: guestLink }).catch(function () {});
+      });
+    }
+
+    document.getElementById('makeAnother').addEventListener('click', function () { location.reload(); });
+
+    document.getElementById('formView').hidden = true;
+    document.getElementById('keyView').hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+</script>
+</body>
+</html>

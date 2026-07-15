@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Add a memory · Nanafy</title>
+<meta name="description" content="Add your memory — no app needed.">
+<meta name="theme-color" content="#0a786f">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2222%22%20fill%3D%22%230a786f%22%2F%3E%3Cg%20transform%3D%22translate(14%2014)%20scale(.72)%22%3E%3Cg%20fill%3D%22%23fff%22%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(0%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(45%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(90%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(135%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(180%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(225%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(270%2050%2050)%22%2F%3E%3Cpath%20d%3D%22M50%205%20C59%2015%2059%2027%2050%2037%20C41%2027%2041%2015%2050%205%20Z%22%20transform%3D%22rotate(315%2050%2050)%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2218.5%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%222%22%20fill%3D%22%230a786f%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<style>
+  :root {
+    --ground: #FBF4EE; --surface: #FFFBF6; --surface-2: #F5E8DE;
+    --ink: #2C1D28; --ink-soft: #6A5460; --line: #E7D7CC;
+    --plum: #8A3F5C; --turq: #0a786f; --turq-deep: #085d56; --turq-ink: #04302C; --turq-soft: #A9E3DE;
+    --shadow: rgba(58, 30, 44, 0.13); --danger: #B23A3A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #1F1620; --surface: #2B1F2C; --surface-2: #362538;
+      --ink: #F1E5DC; --ink-soft: #BFA9B2; --line: #3D2E3C;
+      --plum: #D68CA7; --turq: #0a786f; --turq-deep: #23a99e; --turq-ink: #eafffb; --turq-soft: #2A5C58;
+      --shadow: rgba(0, 0, 0, 0.4); --danger: #F0918C;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    --serif: "Hoefler Text", "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, sans-serif;
+    background: var(--ground); color: var(--ink);
+    font-family: var(--sans); font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 26px 20px 64px; }
+  .brand { display: flex; align-items: center; justify-content: center; gap: 9px; margin: 0 0 26px; }
+  .brand .mark { font-family: var(--serif); font-size: 1.35rem; font-weight: 600; color: var(--ink-soft); letter-spacing: -0.02em; }
+  .brand .mark b { color: var(--turq); }
+  .center { text-align: center; }
+  .prep { font-family: var(--sans); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--plum); margin: 0 0 6px; }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(1.9rem, 6vw, 2.4rem); letter-spacing: -0.01em; line-height: 1.12; margin: 0 0 8px; text-wrap: balance; }
+  .sub { font-size: 1rem; color: var(--ink-soft); margin: 0 0 24px; }
+  .label { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--plum); margin: 24px 0 8px; }
+  .prompts { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+  .prompt-num {
+    flex: none; width: 42px; height: 42px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .prompt-num.sel { background: var(--turq); border-color: var(--turq); color: var(--turq-ink); }
+  .prompt-card { background: var(--surface-2); border-radius: 14px; padding: 15px 17px; font-size: 1.1rem; line-height: 1.45; font-family: var(--serif); color: var(--ink); }
+  textarea, input[type="text"] {
+    width: 100%; border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
+    color: var(--ink); font: inherit; font-size: 16px; padding: 13px 15px; outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  textarea { min-height: 150px; resize: vertical; }
+  textarea:focus, input:focus { border-color: var(--turq); box-shadow: 0 0 0 3px var(--turq-soft); }
+  .count { font-size: 13px; color: var(--ink-soft); margin-top: 6px; }
+  .photo-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    border: 1px dashed var(--line); border-radius: 14px; background: none; color: var(--ink-soft);
+    font: inherit; font-size: 14px; padding: 20px; cursor: pointer;
+  }
+  .photo-wrap { position: relative; }
+  .photo-wrap img { width: 100%; border-radius: 14px; display: block; }
+  .photo-remove {
+    position: absolute; top: 10px; right: 10px; border: 0; border-radius: 999px;
+    background: rgba(0,0,0,0.65); color: #fff; font-size: 13px; font-weight: 600; padding: 6px 12px; cursor: pointer;
+  }
+  .submit {
+    width: 100%; margin-top: 26px; border: 0; border-radius: 999px; background: var(--turq);
+    color: var(--turq-ink); font: inherit; font-size: 1.05rem; font-weight: 700; padding: 16px; cursor: pointer;
+    box-shadow: 0 8px 20px -8px rgba(10,120,111,0.5);
+  }
+  .submit:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+  .error { color: var(--danger); font-size: 14px; margin-top: 12px; }
+  .spinner { text-align: center; color: var(--ink-soft); padding: 60px 0; }
+  .code-form input { text-align: center; letter-spacing: 6px; font-weight: 700; text-transform: uppercase; font-family: var(--serif); }
+  .success-glyph { font-size: 52px; margin: 40px 0 8px; }
+  .again {
+    width: 100%; margin-top: 12px; border: 1px solid var(--line); border-radius: 999px;
+    background: none; color: var(--ink); font: inherit; font-size: 16px; font-weight: 600; padding: 14px; cursor: pointer;
+  }
+  .foot { margin-top: 40px; text-align: center; font-size: 12.5px; color: var(--ink-soft); }
+  button:focus-visible, .prompt-num:focus-visible { outline: 2px solid var(--turq); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><g fill="#0a786f"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(45 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(135 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(225 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(315 50 50)"/><circle cx="50" cy="50" r="18.5"/></g><circle cx="50" cy="50" r="2" fill="#FBF4EE"/></svg>
+    <span class="mark"><b>Nana</b>fy</span>
+  </div>
+  <div id="app"><div class="spinner">Loading…</div></div>
+  <p class="foot">Memories are gathered with Nanafy — stories worth keeping, from the people who were there.</p>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
+const HEADERS = { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY };
+const PREPOSITIONS = { memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating', graduation: 'Congratulating', tribute: 'A tribute to', other: 'For' };
+const TARGET_WORDS = 250;
+
+const app = document.getElementById('app');
+let event = null;
+let promptIndex = 0;
+let photoFile = null;
+let drafts = {};
+let savedName = '';
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+async function fetchEvent(code) {
+  const q = SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(code.toUpperCase()) +
+    '&select=id,title,event_type,honoree,share_code,prompts(text,position)';
+  const res = await fetch(q, { headers: HEADERS });
+  if (!res.ok) throw new Error('server');
+  const rows = await res.json();
+  return rows[0] || null;
+}
+
+function renderCodeEntry(message) {
+  app.innerHTML =
+    '<div class="center"><h1>Add your memory</h1>' +
+    '<p class="sub">Enter the 6-character code you were given.</p></div>' +
+    '<form class="code-form" id="codeForm">' +
+    '<input type="text" id="codeInput" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="ABC123" aria-label="Event code">' +
+    (message ? '<p class="error">' + esc(message) + '</p>' : '') +
+    '<button class="submit" type="submit">Find it</button></form>';
+  document.getElementById('codeForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const code = document.getElementById('codeInput').value.trim();
+    if (code.length === 6) start(code);
+  });
+}
+
+function renderForm() {
+  const prep = PREPOSITIONS[event.event_type] || 'For';
+  const prompts = (event.prompts || []).sort((a, b) => a.position - b.position).map((p) => p.text);
+  const title = event.title || event.honoree;
+  app.innerHTML =
+    '<div class="center"><p class="prep">' + esc(prep) + '</p>' +
+    '<h1>' + esc(title) + '</h1>' +
+    '<p class="sub">Share a memory — it takes a couple of minutes and means more than you know.</p></div>' +
+
+    '<span class="label">Choose a question</span>' +
+    '<div class="prompts" id="promptNums">' +
+    prompts.map((_, i) => '<button type="button" class="prompt-num' + (i === 0 ? ' sel' : '') + '" data-i="' + i + '">' + (i + 1) + '</button>').join('') +
+    '</div>' +
+    '<div class="prompt-card" id="promptText">' + esc(prompts[0] || '') + '</div>' +
+
+    '<span class="label">Your memory</span>' +
+    '<textarea id="body" placeholder="Share your memory…"></textarea>' +
+    '<div class="count" id="count">0 words · aim for around ' + TARGET_WORDS + '</div>' +
+
+    '<span class="label">Add a photo (optional)</span>' +
+    '<div id="photoArea"><button type="button" class="photo-btn" id="photoBtn">📷&nbsp; Choose a photo</button>' +
+    '<input type="file" id="photoInput" accept="image/*" hidden></div>' +
+
+    '<span class="label">Your name</span>' +
+    '<input type="text" id="name" placeholder="Anonymous" autocomplete="name" value="' + esc(savedName) + '">' +
+
+    '<button class="submit" id="submit" disabled>Share memory</button>' +
+    '<p class="error" id="err" hidden></p>';
+
+  const bodyEl = document.getElementById('body');
+  const submitEl = document.getElementById('submit');
+
+  bodyEl.value = drafts[promptIndex] || '';
+  refreshCount();
+
+  function refreshCount() {
+    const words = bodyEl.value.trim() ? bodyEl.value.trim().split(/\s+/).length : 0;
+    document.getElementById('count').textContent = words + ' words · aim for around ' + TARGET_WORDS;
+    submitEl.disabled = bodyEl.value.trim().length === 0;
+  }
+
+  document.getElementById('promptNums').addEventListener('click', (e) => {
+    const b = e.target.closest('.prompt-num'); if (!b) return;
+    drafts[promptIndex] = bodyEl.value;
+    promptIndex = +b.dataset.i;
+    document.querySelectorAll('.prompt-num').forEach((el) => el.classList.toggle('sel', el === b));
+    document.getElementById('promptText').textContent = prompts[promptIndex];
+    bodyEl.value = drafts[promptIndex] || '';
+    refreshCount();
+  });
+
+  bodyEl.addEventListener('input', () => { drafts[promptIndex] = bodyEl.value; refreshCount(); });
+
+  const photoInput = document.getElementById('photoInput');
+  document.getElementById('photoArea').addEventListener('click', (e) => {
+    if (e.target.id === 'photoBtn') photoInput.click();
+    if (e.target.id === 'photoRemove') { photoFile = null; resetPhotoArea(); }
+  });
+  photoInput.addEventListener('change', () => {
+    const f = photoInput.files[0];
+    if (!f) return;
+    photoFile = f;
+    const url = URL.createObjectURL(f);
+    document.getElementById('photoArea').innerHTML =
+      '<div class="photo-wrap"><img src="' + url + '" alt="Your photo">' +
+      '<button type="button" class="photo-remove" id="photoRemove">Remove</button></div>';
+  });
+  function resetPhotoArea() {
+    document.getElementById('photoArea').innerHTML =
+      '<button type="button" class="photo-btn" id="photoBtn">📷&nbsp; Choose a photo</button>';
+    document.getElementById('photoArea').appendChild(photoInput);
+  }
+
+  submitEl.addEventListener('click', async () => {
+    submitEl.disabled = true;
+    submitEl.textContent = 'Sharing…';
+    const err = document.getElementById('err');
+    err.hidden = true;
+    try {
+      let photoUrl = null;
+      if (photoFile) {
+        const ext = (photoFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+        const path = event.id + '/' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+        const up = await fetch(SUPABASE_URL + '/storage/v1/object/memory-photos/' + path, {
+          method: 'POST',
+          headers: { ...HEADERS, 'Content-Type': photoFile.type || 'image/jpeg' },
+          body: photoFile,
+        });
+        if (!up.ok) throw new Error('photo');
+        photoUrl = SUPABASE_URL + '/storage/v1/object/public/memory-photos/' + path;
+      }
+      const ins = await fetch(SUPABASE_URL + '/rest/v1/memories', {
+        method: 'POST',
+        headers: { ...HEADERS, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          event_id: event.id,
+          prompt_text: prompts[promptIndex],
+          contributor_name: document.getElementById('name').value.trim() || null,
+          body: bodyEl.value.trim(),
+          photo_url: photoUrl,
+        }),
+      });
+      if (!ins.ok) throw new Error('insert');
+      savedName = document.getElementById('name').value.trim();
+      delete drafts[promptIndex];
+      renderSuccess();
+    } catch (e) {
+      err.textContent = e.message === 'photo'
+        ? "The photo couldn't be uploaded. Try a smaller photo, or share without one."
+        : "Something went wrong sending your memory. Check your connection and try again.";
+      err.hidden = false;
+      submitEl.disabled = false;
+      submitEl.textContent = 'Share memory';
+    }
+  });
+}
+
+function renderSuccess() {
+  const title = event.title || event.honoree;
+  app.innerHTML =
+    '<div class="center"><div class="success-glyph">🌻</div>' +
+    '<h1>Thank you</h1>' +
+    '<p class="sub">Your memory has been added to ' + esc(title) + '. It will be part of a keepsake the family holds onto.</p>' +
+    '<button class="again" id="again">Share another memory</button></div>';
+  document.getElementById('again').addEventListener('click', () => { photoFile = null; promptIndex = 0; renderForm(); });
+  window.scrollTo(0, 0);
+}
+
+async function start(code) {
+  app.innerHTML = '<div class="spinner">Finding it…</div>';
+  try {
+    event = await fetchEvent(code);
+    if (!event) return renderCodeEntry("No keepsake found with code " + code.toUpperCase() + ". Double-check it and try again.");
+    const u = new URL(location.href);
+    u.searchParams.set('c', code.toUpperCase());
+    history.replaceState(null, '', u);
+    renderForm();
+  } catch {
+    renderCodeEntry("Couldn't reach the server. Check your connection and try again.");
+  }
+}
+
+const initialCode = new URLSearchParams(location.search).get('c');
+if (initialCode && initialCode.trim().length === 6) start(initialCode.trim());
+else renderCodeEntry();
+</script>
+</body>
+</html>
