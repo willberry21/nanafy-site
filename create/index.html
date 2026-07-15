@@ -73,6 +73,12 @@
   }
   .note .bloom-em { font-size: 1.1rem; line-height: 1.3; }
 
+  .mine-banner {
+    display: flex; align-items: center; gap: 8px; text-decoration: none;
+    background: var(--surface); border: 1px solid var(--turq-soft); border-radius: 12px;
+    padding: 11px 15px; margin-bottom: 22px; font-size: 0.92rem; color: var(--turq-deep); font-weight: 600;
+  }
+  .newlink a { color: var(--turq-deep); text-decoration: none; font-weight: 600; }
   .submit {
     width: 100%; margin-top: 26px; border: 0; border-radius: 999px; cursor: pointer;
     background: var(--turq); color: var(--turq-ink); font: inherit; font-size: 1.05rem; font-weight: 700;
@@ -143,6 +149,7 @@
 
   <!-- ===== FORM VIEW ===== -->
   <div id="formView">
+    <a class="mine-banner" id="mineBanner" href="/mine/" hidden></a>
     <h1>Create a keepsake</h1>
     <p class="lede">Start a place to gather everyone's memories — for a person, or an occasion. It takes about a minute.</p>
 
@@ -194,7 +201,7 @@
 
     <p class="key-hint">Print the QR on a card, set it on a table, or text the link. Anyone who scans or taps it can add a memory — no app, no sign-up. <b>Bookmark your keepsake link</b> so you can come back and watch the memories gather.</p>
 
-    <p class="newlink"><button id="makeAnother">＋ Create another keepsake</button></p>
+    <p class="newlink"><a href="/mine/">📁 All my keepsakes</a> &nbsp;·&nbsp; <button id="makeAnother">＋ Create another</button></p>
   </div>
 
   <p class="foot"><a href="/">← Back to nanafy.ai</a></p>
@@ -330,6 +337,9 @@
     var code = event.share_code;
     var guestLink = location.origin + '/add/?c=' + encodeURIComponent(code);
 
+    // Layer 1: remember this keepsake on the host's device so they can find it again.
+    rememberKeepsake({ code: code, name: display, type: event.event_type, created: Date.now() });
+
     document.getElementById('keySub').innerHTML = 'For <b>' + escapeHtml(display) + '</b> · share this so everyone can add their memories.';
     document.getElementById('codeText').textContent = code;
     document.getElementById('linkBox').textContent = guestLink;
@@ -375,6 +385,28 @@
   }
 
   function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+  // ---- Layer 1: "this device remembers your keepsakes" ----
+  function rememberKeepsake(k) {
+    try {
+      var list = JSON.parse(localStorage.getItem('nanafy_keepsakes') || '[]');
+      if (!list.some(function (x) { return x.code === k.code; })) {
+        list.unshift(k);
+        localStorage.setItem('nanafy_keepsakes', JSON.stringify(list));
+      }
+    } catch (e) {}
+  }
+  function showMineBanner() {
+    try {
+      var list = JSON.parse(localStorage.getItem('nanafy_keepsakes') || '[]');
+      if (list.length) {
+        var b = document.getElementById('mineBanner');
+        b.textContent = '📁 You have ' + list.length + ' keepsake' + (list.length > 1 ? 's' : '') + ' on this device — view them →';
+        b.hidden = false;
+      }
+    } catch (e) {}
+  }
+  showMineBanner();
 </script>
 </body>
 </html>
