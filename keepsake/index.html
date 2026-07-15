@@ -36,6 +36,12 @@
   .brand { display: flex; align-items: center; gap: 9px; margin-bottom: 26px; }
   .brand .mark { font-family: var(--serif); font-size: 1.35rem; font-weight: 600; color: var(--ink-soft); letter-spacing: -0.02em; }
   .brand .mark b { color: var(--turq); }
+  .topnav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 26px; }
+  .topnav .brand { margin-bottom: 0; text-decoration: none; }
+  .tn-links { display: flex; gap: 7px; }
+  .tn-links a { font-size: 0.85rem; font-weight: 600; color: var(--turq-deep); text-decoration: none; padding: 7px 12px; border: 1px solid var(--turq-soft); border-radius: 999px; white-space: nowrap; }
+  .tn-links a:hover { background: var(--turq); color: var(--turq-ink); border-color: var(--turq); }
+  @media (max-width: 430px) { .tn-links a { padding: 6px 9px; font-size: 0.78rem; } }
 
   .spinner { text-align: center; color: var(--ink-soft); padding: 70px 0; }
   .center { text-align: center; }
@@ -86,9 +92,12 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="brand">
+  <div class="topnav">
+    <a class="brand" href="/">
     <svg viewBox="0 0 100 100" width="28" height="28" aria-hidden="true"><g fill="#0a786f"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(45 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(135 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(225 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(315 50 50)"/><circle cx="50" cy="50" r="18.5"/></g><circle cx="50" cy="50" r="2" fill="#FBF4EE"/></svg>
     <span class="mark"><b>Nana</b>fy</span>
+    </a>
+    <nav class="tn-links"><a href="/create/">Create</a><a href="/mine/">My keepsakes</a></nav>
   </div>
   <div id="app"><div class="spinner">Loading…</div></div>
   <p class="foot"><a href="/">nanafy.ai</a></p>
