@@ -138,7 +138,7 @@ function renderCodeEntry(message) {
 function renderForm() {
   const prep = PREPOSITIONS[event.event_type] || 'For';
   const prompts = (event.prompts || []).sort((a, b) => a.position - b.position).map((p) => p.text);
-  const title = event.title || event.honoree;
+  const title = event.honoree || event.title;
   app.innerHTML =
     '<div class="center"><p class="prep">' + esc(prep) + '</p>' +
     '<h1>' + esc(title) + '</h1>' +
@@ -253,7 +253,7 @@ function renderForm() {
 }
 
 function renderSuccess() {
-  const title = event.title || event.honoree;
+  const title = event.honoree || event.title;
   app.innerHTML =
     '<div class="center"><div class="success-glyph">🌻</div>' +
     '<h1>Thank you</h1>' +

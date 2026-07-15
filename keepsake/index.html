@@ -140,7 +140,7 @@ function renderCodeEntry(message) {
 
 function render(ev) {
   const prep = PREPOSITIONS[ev.event_type] || 'For';
-  const title = ev.title || ev.honoree;
+  const title = ev.honoree || ev.title;
   const memories = (ev.memories || []).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   const n = memories.length;
   const addLink = location.origin + '/add/?c=' + encodeURIComponent(code.toUpperCase());

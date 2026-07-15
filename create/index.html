@@ -326,7 +326,7 @@
   }
 
   function showKey(event, name, title) {
-    var display = title || name;
+    var display = name || title;
     var code = event.share_code;
     var guestLink = location.origin + '/add/?c=' + encodeURIComponent(code);
 
