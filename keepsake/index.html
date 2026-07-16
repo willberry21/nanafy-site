@@ -135,6 +135,7 @@
   /* --- edit keepsake --- */
   .khead-edit{ position:absolute; top:14px; right:14px; z-index:2; border:1.5px solid rgba(255,255,255,.65); background:rgba(15,28,26,.25); color:#fff; font:inherit; font-weight:800; font-size:.82rem; padding:6px 14px; border-radius:999px; cursor:pointer; }
   .khead-edit:hover{ border-color:#fff; }
+  .edit-panel[hidden]{ display:none !important; }
   .edit-panel{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px 16px 18px; margin:14px 0 0; display:grid; gap:8px; }
   .edit-panel .label{ display:block; font-size:.72rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--turq-deep); margin-top:6px; }
   .edit-panel input[type="text"]{ width:100%; font:inherit; background:var(--surface); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:11px 13px; outline:none; }
@@ -146,6 +147,13 @@
 
   .remove-photo{ justify-self:start; border:0; background:none; color:var(--danger); font:inherit; font-weight:700; font-size:.88rem; cursor:pointer; padding:2px 0; text-align:left; }
   .remove-photo.armed{ text-decoration:underline; }
+
+  .ep-row{ display:flex; gap:8px; align-items:flex-start; }
+  .ep-num{ flex:none; width:24px; height:24px; border-radius:999px; background:#e7f7f5; color:var(--turq-deep); font-weight:800; font-size:.78rem; display:flex; align-items:center; justify-content:center; margin-top:9px; }
+  .ep-input{ flex:1; min-width:0; font:inherit; font-size:.92rem; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:9px 11px; color:var(--ink); resize:vertical; outline:none; }
+  .ep-input:focus{ border-color:var(--turq); box-shadow:0 0 0 3px var(--turq-soft); }
+  .ep-rm{ flex:none; border:0; background:none; color:var(--ink-soft); cursor:pointer; padding:9px 4px; font-size:.95rem; }
+  .ep-add{ justify-self:start; border:1.5px dashed var(--line); background:none; border-radius:8px; padding:9px 14px; color:var(--turq-deep); font:inherit; font-weight:700; font-size:.9rem; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -185,7 +193,7 @@ function when(iso) {
 
 async function fetchKeepsake(c) {
   const q = SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(c.toUpperCase()) +
-    '&select=title,honoree,event_type,photo_url,memories(contributor_name,prompt_text,body,photo_url,created_at)';
+    '&select=id,title,honoree,event_type,photo_url,prompts(text,position),memories(contributor_name,prompt_text,body,photo_url,created_at)';
   const res = await fetch(q, { headers: HEADERS });
   if (!res.ok) throw new Error('server');
   return (await res.json())[0] || null;
@@ -233,6 +241,9 @@ function render(ev) {
     '<input type="text" id="editName" value="' + esc(ev.honoree || '') + '">' +
     '<span class="label">Title (optional)</span>' +
     '<input type="text" id="editTitle" value="' + esc(ev.title || '') + '">' +
+    '<span class="label">Questions guests are asked</span>' +
+    '<div id="editPrompts"></div>' +
+    '<button class="ep-add" id="editAddPrompt" type="button">\uFF0B Add a question</button>' +
     '<div class="edit-row"><button class="btn" id="editSave" type="button">Save changes</button>' +
     '<button class="edit-cancel" id="editCancel" type="button">Cancel</button></div>' +
     '<p class="error" id="editErr"></p>' +
@@ -280,6 +291,26 @@ function render(ev) {
     if (!panel.hidden) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
   document.getElementById('editCancel').addEventListener('click', function () { panel.hidden = true; });
+  var editPromptList = (ev.prompts || []).slice().sort(function(a,b){ return a.position - b.position; }).map(function(p){ return p.text; });
+  function renderEditPrompts(){
+    var box = document.getElementById('editPrompts');
+    box.innerHTML = editPromptList.map(function(p, i){
+      return '<div class="ep-row"><span class="ep-num">' + (i + 1) + '</span>' +
+        '<textarea class="ep-input" rows="2" data-i="' + i + '">' + esc(p) + '</textarea>' +
+        '<button class="ep-rm" type="button" data-rm="' + i + '" aria-label="Remove question">\u2715</button></div>';
+    }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('.ep-input'), function(ta){
+      ta.addEventListener('input', function(){ editPromptList[+ta.dataset.i] = ta.value; });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.ep-rm'), function(btn){
+      btn.addEventListener('click', function(){ editPromptList.splice(+btn.dataset.rm, 1); renderEditPrompts(); });
+    });
+  }
+  renderEditPrompts();
+  document.getElementById('editAddPrompt').addEventListener('click', function(){
+    editPromptList.push(''); renderEditPrompts();
+  });
+
   var removePhoto = false;
   var removeBtn = document.getElementById('editRemovePhoto');
   if (removeBtn) removeBtn.addEventListener('click', function () {
@@ -313,6 +344,21 @@ function render(ev) {
         body: JSON.stringify(patch)
       });
       if (!res.ok) throw new Error('save');
+
+      // Replace the question list (keep at least one non-empty question).
+      var cleaned = editPromptList.map(function(t){ return (t || '').trim(); }).filter(Boolean);
+      if (cleaned.length) {
+        var del = await fetch(SUPABASE_URL + '/rest/v1/prompts?event_id=eq.' + ev.id, {
+          method: 'DELETE', headers: HEADERS
+        });
+        if (!del.ok) throw new Error('prompts');
+        var ins = await fetch(SUPABASE_URL + '/rest/v1/prompts', {
+          method: 'POST',
+          headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+          body: JSON.stringify(cleaned.map(function(text, i){ return { event_id: ev.id, text: text, position: i }; }))
+        });
+        if (!ins.ok) throw new Error('prompts');
+      }
       start(code);
     } catch (e) {
       btn.disabled = false; btn.textContent = 'Save changes';
