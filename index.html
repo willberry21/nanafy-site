@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Nanafy — Keep every story, from every gathering</title>
 <meta name="description" content="Put a small QR code wherever people gather. Anyone who scans it can leave a memory — in their own words, in their own voice. You keep them all, together, for good.">
-<meta name="theme-color" content="#080b0d">
+<meta name="theme-color" content="#0FB0A4">
 <link rel="canonical" href="https://nanafy.ai/">
 
 <!-- Nice previews when the link is shared -->
@@ -246,70 +246,23 @@
   .tn-links a.prof-chip, .prof-chip{ width:34px; height:34px; border-radius:999px !important; background:var(--turq); color:#fff !important; font-weight:800; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; font-size:.95rem; padding:0 !important; border:0 !important; }
   .prof-link{ font-weight:700; color:var(--ink); text-decoration:none; align-self:center; }
 
-  /* ═══ OBSIDIAN — reflective black, deep natural color, motion ═══ */
-  :root{
-    color-scheme:dark;
-    --paper:#080b0d; --ground:#080b0d; --surface:#10161a; --surface-2:#12191e; --warm:#0b1114;
-    --ink:#eef4f2; --ink-soft:#93a7a4; --line:rgba(255,255,255,.09);
-    --turq:#12c9bb; --turq-2:#2ee6d8; --turq-ink:#59e6da; --turq-soft:rgba(18,201,187,.32); --turq-wash:rgba(18,201,187,.12);
-    --pink:#f28ab0; --pink-ink:#f6a5c3; --pink-wash:rgba(242,138,176,.10);
-    --glow:rgba(18,201,187,.34); --glow-2:rgba(242,138,176,.22);
-    --shadow:rgba(0,0,0,.7);
-  }
-  html{ background:#080b0d; }
-  body{ background:transparent; }
-  body::before{ content:""; position:fixed; inset:-40% -20%; z-index:-2; pointer-events:none;
-    background:
-      radial-gradient(38% 32% at 20% 30%, rgba(18,201,187,.15), transparent 70%),
-      radial-gradient(30% 28% at 80% 14%, rgba(242,138,176,.10), transparent 70%),
-      radial-gradient(36% 34% at 66% 86%, rgba(46,134,222,.09), transparent 70%);
-    animation:aurora 34s ease-in-out infinite alternate; }
-  @keyframes aurora{
-    from{ transform:translate3d(-3%,-2%,0) rotate(-2deg) scale(1); }
-    to{ transform:translate3d(3%,3%,0) rotate(2deg) scale(1.14); } }
-  body::after{ content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"); }
 
-  .brand .mark{ color:#f28ab0; }
-  .topnav-center a{ color:var(--ink); }
-  .topnav-center a:hover{ color:var(--turq-2); box-shadow:inset 0 -2px 0 var(--turq); }
-  .nav-cta{ background:linear-gradient(135deg,#19dbcc,#0c9e93); color:#02201d;
-    box-shadow:0 10px 26px -10px rgba(18,201,187,.6); }
-
-  /* hero: deep field that melts into the page */
-  .hero-n{ background:linear-gradient(168deg,#0e2a26 0%,#091715 48%,#080b0d 100%); }
+  /* ═══ BLACK-ACCENT refinements on the white canvas ═══ */
+  /* hero: deeper field with edge light, headline with metallic fade */
+  .hero-n{ background:linear-gradient(168deg,#0e2a26 0%,#091715 48%,#070d0c 100%); }
   .hero-n::before{ background:
     radial-gradient(60% 80% at 78% 28%, rgba(18,201,187,.42), transparent 66%),
     radial-gradient(42% 55% at 12% 88%, rgba(242,138,176,.16), transparent 70%); }
   .hero-n h1{ background:linear-gradient(180deg,#ffffff 30%,#8fb5af 100%);
     -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .hbtn.solid{ background:linear-gradient(135deg,#19dbcc,#0c9e93); color:#02201d;
-    box-shadow:0 14px 34px -12px rgba(18,201,187,.65); }
-  .hbtn.solid:hover{ background:linear-gradient(135deg,#2ee6d8,#0fb0a4); color:#02201d; transform:translateY(-2px); }
-  .hbtn.line{ border-color:rgba(255,255,255,.35); backdrop-filter:blur(6px); }
   .hbtn{ transition:transform .18s ease, box-shadow .25s ease, border-color .2s ease; }
-
-  /* glass panels everywhere something used to be a white card */
-  .step, .occ, .keep-visual, .signup-ok{
-    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025)) !important;
-    border:1px solid var(--line) !important; backdrop-filter:blur(14px);
-    box-shadow:0 26px 54px -36px rgba(0,0,0,.95), inset 0 1px 0 rgba(255,255,255,.08) !important; }
-  .step:hover{ transform:translateY(-4px); border-color:rgba(255,255,255,.18) !important; }
-  .step .num{ background:rgba(18,201,187,.13); color:var(--turq-2); }
-  .mcard{ background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));
-    border:1px solid rgba(255,255,255,.12); backdrop-filter:blur(14px);
-    box-shadow:0 26px 54px -30px rgba(0,0,0,.95), inset 0 1px 0 rgba(255,255,255,.1) !important; }
-  .keep-visual .kv-head, .kv-row{ border-color:var(--line); }
-  .kv-row .kv-play{ background:rgba(18,201,187,.13); color:var(--turq-2); }
-  .btn-ghost{ background:transparent; color:var(--ink); border-color:rgba(255,255,255,.2); }
-  .btn-ghost:hover{ border-color:var(--turq); }
-  .btn-primary{ background:linear-gradient(135deg,#19dbcc,#0c9e93); color:#02201d; }
+  .hbtn.solid:hover{ transform:translateY(-2px); }
 
   /* occasion tiles: deep gradient fields with hover lift */
   .occ-tile{ transition:transform .3s cubic-bezier(.2,.7,.3,1), box-shadow .35s ease;
-    box-shadow:0 26px 54px -32px rgba(0,0,0,.95), inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.05); }
+    box-shadow:0 26px 54px -36px rgba(6,15,14,.75), inset 0 1px 0 rgba(255,255,255,.14); }
   .occ-cell:hover .occ-tile{ opacity:1; transform:translateY(-6px);
-    box-shadow:0 40px 74px -30px rgba(0,0,0,.95), inset 0 1px 0 rgba(255,255,255,.2), 0 0 46px -16px rgba(18,201,187,.4); }
+    box-shadow:0 40px 74px -34px rgba(6,15,14,.85), inset 0 1px 0 rgba(255,255,255,.2); }
   .occ-grid .occ-cell:nth-child(1) .occ-tile{ background:
     radial-gradient(130% 110% at 14% -6%, rgba(255,255,255,.18), transparent 47%),
     radial-gradient(120% 130% at 90% 115%, rgba(0,0,0,.45), transparent 58%),
@@ -323,13 +276,7 @@
     radial-gradient(120% 130% at 90% 115%, rgba(0,0,0,.45), transparent 58%),
     linear-gradient(162deg,#a5652c 0%,#5f3617 52%,#221105 100%) !important; }
 
-  .signup-form input[type="email"]{ background:rgba(255,255,255,.05); color:var(--ink); border-color:var(--line); }
-  .signup-form input[type="email"]:focus{ border-color:var(--turq); box-shadow:0 0 0 3px rgba(18,201,187,.2); }
-  .signup-ok{ color:var(--turq-2); }
-  .why p .hl{ color:var(--pink-ink); }
-  .eyebrow{ color:var(--turq-2); }
-
-  @media(prefers-reduced-motion:reduce){ body::before{ animation:none; } .occ-tile{ transition:none; } }
+  @media(prefers-reduced-motion:reduce){ .occ-tile{ transition:none; } }
 </style>
 </head>
 <body>
