@@ -192,11 +192,26 @@
       '<div class="klist">' + list.map(function (k, i) {
         var m = META[k.type] || META.other;
         var tile = FIELD_COLORS[i % FIELD_COLORS.length];
-        return '<a class="kcard" href="/keepsake/?c=' + encodeURIComponent(k.code) + '" style="background:' + tile + '">' +
+        return '<a class="kcard" data-code="' + esc(k.code) + '" href="/keepsake/?c=' + encodeURIComponent(k.code) + '" style="background:' + tile + '">' +
           '<span class="bloom-wm">' + BLOOM_WM + '</span>' +
           '<span class="kname">' + esc(k.name || 'Keepsake') + '</span>' +
           '<span class="kmeta">' + esc(m.label) + ' · ' + esc(fmtDate(k.created)) + ' · code ' + esc(k.code) + '</span></a>';
       }).join('') + '</div>';
+    loadTilePhotos(list.map(function(k){ return k.code; }));
+  }
+
+  // Honoree photos as tile backgrounds, when set.
+  function loadTilePhotos(codes){
+    if (!codes.length) return;
+    sb.from('events').select('share_code,photo_url').in('share_code', codes)
+      .then(function(res){
+        (res.data || []).forEach(function(row){
+          if (!row.photo_url) return;
+          var el = document.querySelector('.kcard[data-code="' + row.share_code + '"]');
+          if (el) el.style.background =
+            'linear-gradient(rgba(15,28,26,.25),rgba(15,28,26,.72)), url(' + row.photo_url + ') center/cover';
+        });
+      });
   }
 
   function renderAuth(session){

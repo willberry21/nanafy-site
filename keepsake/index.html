@@ -131,6 +131,18 @@
   .khead h1{ color:#fff; text-transform:uppercase; line-height:.95; font-size:clamp(2.1rem,8vw,3.1rem); position:relative; }
   .khead .count{ color:rgba(255,255,255,.85) !important; position:relative; }
   .khead .count b{ color:#fff !important; }
+
+  /* --- edit keepsake --- */
+  .khead-edit{ position:absolute; top:14px; right:14px; z-index:2; border:1.5px solid rgba(255,255,255,.65); background:rgba(15,28,26,.25); color:#fff; font:inherit; font-weight:800; font-size:.82rem; padding:6px 14px; border-radius:999px; cursor:pointer; }
+  .khead-edit:hover{ border-color:#fff; }
+  .edit-panel{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px 16px 18px; margin:14px 0 0; display:grid; gap:8px; }
+  .edit-panel .label{ display:block; font-size:.72rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--turq-deep); margin-top:6px; }
+  .edit-panel input[type="text"]{ width:100%; font:inherit; background:var(--surface); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:11px 13px; outline:none; }
+  .edit-panel input[type="text"]:focus{ border-color:var(--turq); box-shadow:0 0 0 3px var(--turq-soft); }
+  .edit-panel input[type="file"]{ font-size:.9rem; color:var(--ink-soft); }
+  .edit-row{ display:flex; gap:10px; align-items:center; margin-top:8px; }
+  .edit-row .btn{ width:auto; margin:0; padding:12px 22px; }
+  .edit-cancel{ border:0; background:none; color:var(--ink-soft); font:inherit; font-weight:700; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -170,7 +182,7 @@ function when(iso) {
 
 async function fetchKeepsake(c) {
   const q = SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(c.toUpperCase()) +
-    '&select=title,honoree,event_type,memories(contributor_name,prompt_text,body,photo_url,created_at)';
+    '&select=title,honoree,event_type,photo_url,memories(contributor_name,prompt_text,body,photo_url,created_at)';
   const res = await fetch(q, { headers: HEADERS });
   if (!res.ok) throw new Error('server');
   return (await res.json())[0] || null;
@@ -198,12 +210,28 @@ function render(ev) {
   const n = memories.length;
   const addLink = location.origin + '/add/?c=' + encodeURIComponent(code.toUpperCase());
 
+  const kheadStyle = ev.photo_url
+    ? ' style="background-image:linear-gradient(rgba(15,28,26,.30),rgba(15,28,26,.78)),url(' + esc(ev.photo_url) + ');background-size:cover;background-position:center"'
+    : '';
   let html =
-    '<div class="khead">' +
-    '<div class="bloom-wm">' + BLOOM_WM + '</div>' +
+    '<div class="khead"' + kheadStyle + '>' +
+    (ev.photo_url ? '' : '<div class="bloom-wm">' + BLOOM_WM + '</div>') +
+    '<button class="khead-edit" id="editBtn" type="button">Edit</button>' +
     '<p class="prep">' + esc(prep) + '</p>' +
     '<h1>' + esc(title) + '</h1>' +
     '<p class="count">' + (n === 0 ? 'No memories yet' : '<b>' + n + '</b> ' + (n === 1 ? 'memory' : 'memories') + ' gathered') + '</p>' +
+    '</div>' +
+
+    '<div class="edit-panel" id="editPanel" hidden>' +
+    '<span class="label">Photo of them (the card background)</span>' +
+    '<input type="file" id="editPhoto" accept="image/*">' +
+    '<span class="label">Name</span>' +
+    '<input type="text" id="editName" value="' + esc(ev.honoree || '') + '">' +
+    '<span class="label">Title (optional)</span>' +
+    '<input type="text" id="editTitle" value="' + esc(ev.title || '') + '">' +
+    '<div class="edit-row"><button class="btn" id="editSave" type="button">Save changes</button>' +
+    '<button class="edit-cancel" id="editCancel" type="button">Cancel</button></div>' +
+    '<p class="error" id="editErr"></p>' +
     '</div>' +
 
     '<div class="gather"><p class="g-t">Scan or share this to gather more memories:</p>' +
@@ -240,6 +268,45 @@ function render(ev) {
     });
   });
   document.getElementById('refresh').addEventListener('click', function () { start(code); });
+
+  // --- edit keepsake ---
+  var panel = document.getElementById('editPanel');
+  document.getElementById('editBtn').addEventListener('click', function () {
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  document.getElementById('editCancel').addEventListener('click', function () { panel.hidden = true; });
+  document.getElementById('editSave').addEventListener('click', async function () {
+    var btn = this, errEl = document.getElementById('editErr');
+    var name = document.getElementById('editName').value.trim();
+    if (!name) { errEl.textContent = 'Please keep a name.'; return; }
+    btn.disabled = true; btn.textContent = 'Saving…'; errEl.textContent = '';
+    try {
+      var patch = { honoree: name, title: document.getElementById('editTitle').value.trim() || null };
+      var file = document.getElementById('editPhoto').files[0];
+      if (file) {
+        var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+        var path = 'honoree/' + code.toUpperCase() + '-' + Date.now() + '.' + ext;
+        var up = await fetch(SUPABASE_URL + '/storage/v1/object/memory-photos/' + path, {
+          method: 'POST',
+          headers: Object.assign({}, HEADERS, { 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' }),
+          body: file
+        });
+        if (!up.ok) throw new Error('upload');
+        patch.photo_url = SUPABASE_URL + '/storage/v1/object/public/memory-photos/' + path;
+      }
+      var res = await fetch(SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(code.toUpperCase()), {
+        method: 'PATCH',
+        headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+        body: JSON.stringify(patch)
+      });
+      if (!res.ok) throw new Error('save');
+      start(code);
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Save changes';
+      errEl.textContent = "Couldn't save. Check your connection and try again.";
+    }
+  });
 }
 
 async function start(c) {
