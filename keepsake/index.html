@@ -143,6 +143,9 @@
   .edit-row{ display:flex; gap:10px; align-items:center; margin-top:8px; }
   .edit-row .btn{ width:auto; margin:0; padding:12px 22px; }
   .edit-cancel{ border:0; background:none; color:var(--ink-soft); font:inherit; font-weight:700; cursor:pointer; }
+
+  .remove-photo{ justify-self:start; border:0; background:none; color:var(--danger); font:inherit; font-weight:700; font-size:.88rem; cursor:pointer; padding:2px 0; text-align:left; }
+  .remove-photo.armed{ text-decoration:underline; }
 </style>
 </head>
 <body>
@@ -225,6 +228,7 @@ function render(ev) {
     '<div class="edit-panel" id="editPanel" hidden>' +
     '<span class="label">Photo of them (the card background)</span>' +
     '<input type="file" id="editPhoto" accept="image/*">' +
+    (ev.photo_url ? '<button class="remove-photo" id="editRemovePhoto" type="button">Remove current photo</button>' : '') +
     '<span class="label">Name</span>' +
     '<input type="text" id="editName" value="' + esc(ev.honoree || '') + '">' +
     '<span class="label">Title (optional)</span>' +
@@ -276,6 +280,13 @@ function render(ev) {
     if (!panel.hidden) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
   document.getElementById('editCancel').addEventListener('click', function () { panel.hidden = true; });
+  var removePhoto = false;
+  var removeBtn = document.getElementById('editRemovePhoto');
+  if (removeBtn) removeBtn.addEventListener('click', function () {
+    removePhoto = !removePhoto;
+    removeBtn.textContent = removePhoto ? 'Photo will be removed — undo' : 'Remove current photo';
+    removeBtn.classList.toggle('armed', removePhoto);
+  });
   document.getElementById('editSave').addEventListener('click', async function () {
     var btn = this, errEl = document.getElementById('editErr');
     var name = document.getElementById('editName').value.trim();
@@ -283,6 +294,7 @@ function render(ev) {
     btn.disabled = true; btn.textContent = 'Saving…'; errEl.textContent = '';
     try {
       var patch = { honoree: name, title: document.getElementById('editTitle').value.trim() || null };
+      if (removePhoto) patch.photo_url = null;
       var file = document.getElementById('editPhoto').files[0];
       if (file) {
         var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
