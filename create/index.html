@@ -291,7 +291,7 @@
       </div>
       <aside class="pv-side">
         <div id="nanaSection" hidden>
-          <span class="label nana-label">From Nana — tap to add</span>
+          <span class="label nana-label">From Nana AI — tap to add</span>
           <div id="nanaList"></div>
         </div>
         <span class="label">Ideas — tap to add</span>
@@ -429,9 +429,8 @@
   });
   var nanaIdeas = [];
   var nanaReplies = [
-    'Oh, they sound wonderful. I wrote five questions just for them \u2014 look under \u201cFrom Nana.\u201d Tap the ones you love, or tell me more and I\u2019ll write different ones.',
-    'What a special person, honey. Five more questions are waiting under \u201cFrom Nana.\u201d Want another angle? Just keep talking to me.',
-    'I loved hearing that. I\u2019ve tucked five new questions under \u201cFrom Nana.\u201d I could do this all day.'
+    'Added 5 questions under \u201cFrom Nana AI\u201d below. Tap to add the ones you want, or send more details for different ones.',
+    'Added 5 more under \u201cFrom Nana AI.\u201d Send more details any time for another set.'
   ];
   var nanaReplyCount = 0;
 
@@ -451,7 +450,7 @@
     if (!box.hidden) {
       if (!document.getElementById('nanaChat').children.length) {
         var who = honoree.value.trim() || 'them';
-        nanaBubble('Hi honey \u2014 I\u2019m Nana. Tell me a little about ' + who + ': what did they love? What made them, well\u2026 them?');
+        nanaBubble('Describe ' + who + ' in a few words \u2014 what they loved, what made them unique \u2014 and I\u2019ll write questions for your guests.');
       }
       document.getElementById('nanaDetails').focus();
     }
@@ -479,7 +478,7 @@
       });
       var data = await res.json().catch(function () { return {}; });
       typing.remove();
-      if (res.status === 503) { nanaBubble('I\u2019m not quite awake yet, honey \u2014 check back a little later.'); return; }
+      if (res.status === 503) { nanaBubble('Nana AI isn\u2019t available yet \u2014 check back soon.'); return; }
       if (!res.ok || !data.questions || !data.questions.length) throw new Error('nana');
       nanaIdeas = data.questions.concat(nanaIdeas);
       renderEditor();
@@ -487,7 +486,7 @@
       nanaReplyCount++;
     } catch (e) {
       typing.remove();
-      nanaBubble('I couldn\u2019t hear you just then \u2014 try me again in a moment, honey.');
+      nanaBubble('Something went wrong \u2014 try again in a moment.');
     } finally {
       btn.disabled = false;
       input.focus();
