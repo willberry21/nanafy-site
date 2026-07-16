@@ -81,6 +81,8 @@
   .otp-btn:disabled { opacity: 0.5; cursor: default; }
   .auth-msg { font-size: 0.9rem; color: var(--turq-deep); margin: 12px 0 0; min-height: 1.1em; line-height: 1.4; }
   .auth-msg.err { color: var(--danger); }
+  .auth-fine { font-size: 0.78rem; color: var(--ink-soft); margin: 12px 0 0; line-height: 1.45; }
+  .auth-alt { border: 0; background: none; color: var(--turq-deep); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: underline; margin-top: 10px; padding: 0; }
   .auth-card.signed { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .auth-card.signed .who b { color: var(--ink); }
   .auth-card.signed .who .auth-sub { margin: 3px 0 0; }
@@ -171,13 +173,27 @@
         sb.auth.signOut().then(function(){ location.reload(); });
       });
     } else {
+      var savedEmail = '';
+      try { savedEmail = localStorage.getItem('nanafy_signin_email') || ''; } catch (e) {}
+      var returning = !!savedEmail;
       el.innerHTML =
-        '<div class="auth-card"><div class="auth-title">📧 Get back from any device</div>' +
-        '<p class="auth-sub">Add your email and we’ll send you a magic link. Tap it to sign in — no password — and your keepsakes will follow you to any phone or computer.</p>' +
+        '<div class="auth-card">' +
+        '<div class="auth-title">' + (returning ? '👋 Welcome back' : '🔐 Sign in') + '</div>' +
+        '<p class="auth-sub">' + (returning
+          ? 'Sign back in to reach your keepsakes on any device. No password — we’ll send a one-tap link.'
+          : 'Enter your email and we’ll send a one-tap sign-in link — no password. Your keepsakes then follow you to any phone or computer.') + '</p>' +
         '<form class="otp-form" id="otpForm">' +
-        '<input type="email" id="otpEmail" placeholder="you@example.com" autocomplete="email" required>' +
-        '<button class="otp-btn" type="submit">Email me a link</button></form>' +
-        '<p class="auth-msg" id="authMsg"></p></div>';
+        '<input type="email" id="otpEmail" placeholder="you@example.com" autocomplete="email" value="' + esc(savedEmail) + '" required>' +
+        '<button class="otp-btn" type="submit">' + (returning ? 'Send my sign-in link' : 'Send sign-in link') + '</button></form>' +
+        (returning ? '<button type="button" class="auth-alt" id="useOther">Use a different email</button>' : '') +
+        '<p class="auth-msg" id="authMsg"></p>' +
+        '<p class="auth-fine">You stay signed in on this device — you’ll only need to do this again if you sign out or use a new device.</p>' +
+        '</div>';
+      var useOther = document.getElementById('useOther');
+      if (useOther) useOther.addEventListener('click', function () {
+        try { localStorage.removeItem('nanafy_signin_email'); } catch (e) {}
+        var inp = document.getElementById('otpEmail'); inp.value = ''; inp.focus();
+      });
       document.getElementById('otpForm').addEventListener('submit', function(e){
         e.preventDefault();
         var email = document.getElementById('otpEmail').value.trim();
@@ -185,6 +201,7 @@
         var msg = document.getElementById('authMsg');
         msg.className = 'auth-msg'; msg.textContent = '';
         if (!email || email.indexOf('@') < 1) { msg.className='auth-msg err'; msg.textContent='Please enter a valid email.'; return; }
+        try { localStorage.setItem('nanafy_signin_email', email); } catch (e) {}
         btn.disabled = true; btn.textContent = 'Sending…';
         sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: location.origin + '/mine/' } })
           .then(function(res){
