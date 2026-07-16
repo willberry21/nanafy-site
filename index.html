@@ -206,6 +206,41 @@
   .mcard,.step,.occ,.keep-visual,.note,.qr-card,.gather,.signup-ok{ border-radius:10px !important; }
   .mcard,.step,.occ,.keep-visual{ box-shadow:none !important; }
   h1,h2,.khead h1{ letter-spacing:-.04em !important; }
+
+  /* --- Nike-desktop structure: centered nav, full-bleed hero, tile grid --- */
+  .topbar{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; }
+  .topnav-center{ display:flex; gap:30px; justify-self:center; }
+  .topnav-center a{ font-weight:700; font-size:.98rem; color:var(--ink); text-decoration:none; border:0 !important; padding:6px 2px; border-radius:0 !important; }
+  .topnav-center a:hover{ color:var(--turq-deep); box-shadow:inset 0 -2px 0 var(--turq); }
+  .topnav-right{ justify-self:end; }
+  @media(max-width:820px){ .topnav-center .dt{ display:none; } .topnav-center{ gap:16px; } }
+
+  .hero-n{ position:relative; background:#0f1c1a; min-height:86vh; display:flex; align-items:flex-end; overflow:hidden; }
+  .hero-n::before{ content:""; position:absolute; inset:0;
+    background:radial-gradient(60% 80% at 78% 28%, rgba(15,176,164,.34), transparent 66%),
+               radial-gradient(42% 55% at 12% 88%, rgba(242,138,176,.14), transparent 70%); }
+  .hero-n-mark{ position:absolute; top:-14%; right:-12%; width:62vmin; pointer-events:none; }
+  .hero-n-inner{ position:relative; z-index:1; width:100%; max-width:1560px; margin:0 auto;
+    padding:120px clamp(20px,4vw,64px) clamp(48px,7vh,88px); }
+  .hero-n h1{ color:#fff; font-weight:900; text-transform:uppercase; letter-spacing:-.02em;
+    line-height:.92; font-size:clamp(3.1rem,9vw,7.5rem); margin:0; }
+  .hero-n p{ color:rgba(255,255,255,.82); font-size:1.12rem; max-width:34em; margin:22px 0 28px; }
+  .hbtn{ display:inline-flex; align-items:center; font-weight:800; border-radius:999px !important;
+    padding:14px 28px; text-decoration:none; font-size:1rem; }
+  .hbtn.solid{ background:#fff; color:#111; }
+  .hbtn.solid:hover{ background:var(--turq); color:#fff; }
+  .hbtn.line{ border:1.5px solid rgba(255,255,255,.7); color:#fff; margin-left:10px; }
+  .hbtn.line:hover{ border-color:#fff; }
+
+  .occ-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; padding:0 14px;
+    max-width:1560px; margin:40px auto 0; }
+  .occ-cell{ display:block; text-decoration:none; color:inherit; }
+  .occ-tile{ aspect-ratio:4/5; border-radius:10px; position:relative; overflow:hidden; }
+  .occ-tile svg{ position:absolute; width:125%; top:-32%; right:-38%; }
+  .occ-cell:hover .occ-tile{ opacity:.92; }
+  .occ-cap{ font-weight:800; font-size:1.35rem; letter-spacing:-.02em; margin:14px 2px 2px; }
+  .occ-sub{ color:var(--ink-soft); font-size:.95rem; margin:2px 2px 0; }
+  @media(max-width:760px){ .occ-grid{ grid-template-columns:1fr; } .occ-tile{ aspect-ratio:16/10; } .hero-n{ min-height:72vh; } }
 </style>
 </head>
 <body>
@@ -215,47 +250,25 @@
         <svg class="bloom" viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)" fill="#0FB0A4"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)" fill="#0FB0A4"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)" fill="#0FB0A4"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)" fill="#0FB0A4"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)" fill="#0FB0A4"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)" fill="#0FB0A4"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)" fill="#0FB0A4"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)" fill="#0FB0A4"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)" fill="#0FB0A4"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)" fill="#0FB0A4"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)" fill="#0FB0A4"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)" fill="#0FB0A4"/><circle cx="50" cy="50" r="18.5" fill="#0FB0A4"/><circle cx="50.0" cy="50.0" r="0.55" fill="#FFFFFF"/><circle cx="48.49" cy="51.38" r="0.72" fill="#FFFFFF"/><circle cx="50.25" cy="47.11" r="0.8" fill="#FFFFFF"/><circle cx="52.16" cy="52.82" r="0.85" fill="#FFFFFF"/><circle cx="45.96" cy="49.29" r="0.9" fill="#FFFFFF"/><circle cx="53.87" cy="47.54" r="0.94" fill="#FFFFFF"/><circle cx="48.7" cy="54.85" r="0.98" fill="#FFFFFF"/><circle cx="47.5" cy="45.19" r="1.01" fill="#FFFFFF"/><circle cx="55.45" cy="51.99" r="1.04" fill="#FFFFFF"/><circle cx="44.32" cy="52.35" r="1.07" fill="#FFFFFF"/><circle cx="52.75" cy="44.13" r="1.1" fill="#FFFFFF"/><circle cx="52.03" cy="56.49" r="1.13" fill="#FFFFFF"/><circle cx="43.86" cy="46.44" r="1.15" fill="#FFFFFF"/><circle cx="57.22" cy="48.41" r="1.18" fill="#FFFFFF"/><circle cx="45.59" cy="56.27" r="1.2" fill="#FFFFFF"/><circle cx="48.98" cy="42.13" r="1.22" fill="#FFFFFF"/><circle cx="56.27" cy="55.28" r="1.25" fill="#FFFFFF"/><circle cx="41.55" cy="50.35" r="1.27" fill="#FFFFFF"/><circle cx="56.16" cy="43.87" r="1.29" fill="#FFFFFF"/><circle cx="49.59" cy="58.93" r="1.31" fill="#FFFFFF"/><circle cx="44.13" cy="42.96" r="1.33" fill="#FFFFFF"/><circle cx="59.31" cy="51.25" r="1.35" fill="#FFFFFF"/><circle cx="42.11" cy="55.49" r="1.37" fill="#FFFFFF"/><circle cx="52.16" cy="40.41" r="1.39" fill="#FFFFFF"/><circle cx="54.99" cy="58.71" r="1.4" fill="#FFFFFF"/><circle cx="40.23" cy="46.88" r="1.42" fill="#FFFFFF"/><circle cx="59.49" cy="45.62" r="1.44" fill="#FFFFFF"/><circle cx="45.89" cy="59.83" r="1.46" fill="#FFFFFF"/><circle cx="46.33" cy="39.79" r="1.47" fill="#FFFFFF"/><circle cx="59.77" cy="55.14" r="1.49" fill="#FFFFFF"/><circle cx="39.14" cy="52.86" r="1.5" fill="#FFFFFF"/><circle cx="56.17" cy="40.4" r="1.52" fill="#FFFFFF"/><circle cx="51.96" cy="61.43" r="1.54" fill="#FFFFFF"/><circle cx="40.69" cy="42.79" r="1.55" fill="#FFFFFF"/><circle cx="61.91" cy="49.01" r="1.57" fill="#FFFFFF"/><circle cx="41.76" cy="58.9" r="1.58" fill="#FFFFFF"/><circle cx="50.06" cy="37.7" r="1.6" fill="#FFFFFF"/><circle cx="58.38" cy="59.24" r="1.61" fill="#FFFFFF"/><circle cx="37.42" cy="48.83" r="1.62" fill="#FFFFFF"/><circle cx="60.2" cy="42.26" r="1.64" fill="#FFFFFF"/><circle cx="47.68" cy="62.76" r="1.65" fill="#FFFFFF"/><circle cx="43.01" cy="38.89" r="1.67" fill="#FFFFFF"/><circle cx="62.81" cy="53.51" r="1.68" fill="#FFFFFF"/><circle cx="38.04" cy="56.14" r="1.69" fill="#FFFFFF"/><circle cx="54.73" cy="37.25" r="1.71" fill="#FFFFFF"/><circle cx="55.19" cy="62.74" r="1.72" fill="#FFFFFF"/><circle cx="37.44" cy="44.05" r="1.73" fill="#FFFFFF"/><circle cx="63.43" cy="45.86" r="1.74" fill="#FFFFFF"/><circle cx="42.82" cy="62.25" r="1.76" fill="#FFFFFF"/><circle cx="46.99" cy="35.97" r="1.77" fill="#FFFFFF"/><circle cx="61.82" cy="58.39" r="1.78" fill="#FFFFFF"/><circle cx="35.47" cy="51.81" r="1.79" fill="#FFFFFF"/><circle cx="59.58" cy="38.74" r="1.81" fill="#FFFFFF"/><circle cx="50.54" cy="64.91" r="1.82" fill="#FFFFFF"/><circle cx="39.43" cy="39.27" r="1.83" fill="#FFFFFF"/><circle cx="65.18" cy="50.78" r="1.84" fill="#FFFFFF"/><circle cx="38.17" cy="59.77" r="1.85" fill="#FFFFFF"/><circle cx="52.14" cy="34.67" r="1.85" fill="#FFFFFF"/><circle cx="58.85" cy="62.86" r="1.85" fill="#FFFFFF"/><circle cx="34.65" cy="46.47" r="1.85" fill="#FFFFFF"/><circle cx="63.82" cy="42.17" r="1.85" fill="#FFFFFF"/><circle cx="45.06" cy="65.23" r="1.85" fill="#FFFFFF"/><circle cx="43.3" cy="35.31" r="1.85" fill="#FFFFFF"/><circle cx="64.98" cy="56.35" r="1.85" fill="#FFFFFF"/><circle cx="34.54" cy="55.48" r="1.85" fill="#FFFFFF"/></svg>
         <span class="mark"><b>Nana</b>fy</span>
       </div>
-      <nav class="topnav-links">
+      <nav class="topnav-center">
+        <a class="dt" href="#how">How it works</a>
+        <a class="dt" href="#occasions">Occasions</a>
         <a href="/create/">Create</a>
         <a href="/mine/">My keepsakes</a>
       </nav>
+      <div class="topnav-right"><a class="nav-cta" href="#start">Get early access</a></div>
     </div>
   </div>
 
   <!-- HERO -->
-  <section class="hero">
-    <div class="wrap">
-      <div class="hero-grid">
-        <div class="reveal in">
-          <span class="eyebrow">For memorials, weddings &amp; milestones</span>
-          <h1>Everyone came with a story. Nanafy keeps <em>every one</em>.</h1>
-          <p class="lede">Put a small QR code wherever people gather. Anyone who scans it can leave a memory — in their own words, in their own voice. You keep them all, together, for good.</p>
-          <div class="cta-row">
-            <a class="btn btn-primary" href="#start">Get early access</a>
-            <a class="btn btn-ghost" href="#how">See how it works</a>
-          </div>
-        </div>
-
-        <div class="stack stagger reveal">
-          <div class="mcard c1">
-            <div class="q">“She never let a single person leave her house hungry. Not once in forty years.”</div>
-            <div class="by"><span class="who">Marcus</span> · on his Nana
-              <span class="wave"><i style="height:6px"></i><i style="height:12px"></i><i style="height:16px"></i><i style="height:9px"></i><i style="height:14px"></i><i style="height:5px"></i></span>
-            </div>
-          </div>
-          <div class="mcard c2">
-            <div class="q">“Her advice at the rehearsal dinner: marry the one who makes the ordinary days good.”</div>
-            <div class="by"><span class="who">Priya</span> · at Sam &amp; Dev’s wedding
-              <span class="wave"><i style="height:10px"></i><i style="height:5px"></i><i style="height:15px"></i><i style="height:8px"></i><i style="height:12px"></i><i style="height:6px"></i></span>
-            </div>
-          </div>
-          <div class="mcard c3">
-            <div class="q">“Grandpa made pancakes shaped like whatever animal you asked for. Mine was always a turtle.”</div>
-            <div class="by"><span class="who">Theo</span> · age 9
-              <span class="wave"><i style="height:7px"></i><i style="height:14px"></i><i style="height:9px"></i><i style="height:16px"></i><i style="height:6px"></i><i style="height:11px"></i></span>
-            </div>
-          </div>
-        </div>
+  <section class="hero-n">
+    <div class="hero-n-mark"><svg viewBox="0 0 100 100" aria-hidden="true"><g fill="rgba(255,255,255,.05)"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)"/><circle cx="50" cy="50" r="18.5"/></g></svg></div>
+    <div class="hero-n-inner reveal in">
+      <h1>Every voice.<br>Kept forever.</h1>
+      <p>One code at the gathering. Every story, in their own words. Memorials, weddings, and the milestones in between.</p>
+      <div class="hero-n-cta">
+        <a class="hbtn solid" href="#start">Get early access</a>
+        <a class="hbtn line" href="#how">How it works</a>
       </div>
     </div>
   </section>
@@ -305,20 +318,29 @@
   </section>
 
   <!-- OCCASIONS -->
-  <section class="band">
+  <section class="band" id="occasions">
     <div class="wrap">
       <div class="reveal">
         <span class="eyebrow">One idea, many gatherings</span>
         <h2>Wherever the people who love someone are already in one place.</h2>
       </div>
-      <div class="occasions">
-        <div class="occ reveal"><div class="oc-t"><span class="dot"></span>Memorials</div><div class="oc-d">Gather the stories a eulogy never has room for.</div></div>
-        <div class="occ reveal"><div class="oc-t"><span class="dot"></span>Weddings</div><div class="oc-d">Advice and well-wishes from everyone who came.</div></div>
-        <div class="occ reveal"><div class="oc-t"><span class="dot"></span>Big birthdays</div><div class="oc-d">A surprise book of memories for the guest of honor.</div></div>
-        <div class="occ reveal"><div class="oc-t"><span class="dot"></span>Retirements</div><div class="oc-d">Years of colleagues, saying what it meant.</div></div>
-        <div class="occ reveal"><div class="oc-t"><span class="dot"></span>New babies</div><div class="oc-d">Letters and hopes to open years from now.</div></div>
-        <div class="occ reveal"><div class="oc-t"><span class="dot"></span>Anniversaries</div><div class="oc-d">The story of a couple, told by everyone around them.</div></div>
-      </div>
+    </div>
+    <div class="occ-grid">
+      <a class="occ-cell reveal" href="#start">
+        <div class="occ-tile" style="background:#0B8A80"><svg viewBox="0 0 100 100" aria-hidden="true"><g fill="rgba(255,255,255,.13)"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)"/><circle cx="50" cy="50" r="18.5"/></g></svg></div>
+        <div class="occ-cap">Memorials</div>
+        <div class="occ-sub">The stories a eulogy never has room for.</div>
+      </a>
+      <a class="occ-cell reveal" href="#start">
+        <div class="occ-tile" style="background:#A94069"><svg viewBox="0 0 100 100" aria-hidden="true"><g fill="rgba(255,255,255,.13)"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)"/><circle cx="50" cy="50" r="18.5"/></g></svg></div>
+        <div class="occ-cap">Weddings</div>
+        <div class="occ-sub">Advice and well-wishes from everyone who came.</div>
+      </a>
+      <a class="occ-cell reveal" href="#start">
+        <div class="occ-tile" style="background:#B98A2E"><svg viewBox="0 0 100 100" aria-hidden="true"><g fill="rgba(255,255,255,.13)"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)"/><circle cx="50" cy="50" r="18.5"/></g></svg></div>
+        <div class="occ-cap">Milestones</div>
+        <div class="occ-sub">Birthdays, graduations, retirements — kept for good.</div>
+      </a>
     </div>
   </section>
 
