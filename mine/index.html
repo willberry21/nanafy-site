@@ -126,6 +126,12 @@
   .kcard .bloom-wm{ position:absolute; top:-42%; right:-16%; width:62%; pointer-events:none; }
   .kcard .kname{ color:#fff; font-weight:900; font-size:1.65rem; letter-spacing:-.02em; line-height:1.05; position:relative; }
   .kcard .kmeta{ color:rgba(255,255,255,.82); font-size:.85rem; position:relative; margin-top:5px; }
+
+  /* --- desktop posture: fill the screen --- */
+  .wrap{ max-width:1140px; }
+  #list h1{ font-size:clamp(2.4rem,5vw,3.8rem); line-height:1; }
+  .klist{ grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:14px; }
+  @media(min-width:760px){ .kcard{ min-height:240px; } .kcard .kname{ font-size:1.9rem; } }
 </style>
 </head>
 <body>

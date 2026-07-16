@@ -185,6 +185,20 @@
   /* --- Nike flow: plain header links --- */
   .tn-links a{ border:0 !important; border-radius:0 !important; padding:6px 2px !important; font-weight:700; color:var(--ink); }
   .tn-links a:hover{ background:none !important; color:var(--turq-deep) !important; box-shadow:inset 0 -2px 0 var(--turq); }
+
+  /* --- desktop posture: fill the screen --- */
+  .wrap{ max-width:1140px; }
+  #formView, .foot{ max-width:720px; }
+  h1{ font-size:clamp(2.2rem,4.5vw,3.4rem); }
+  .pv-grid{ display:grid; gap:24px; }
+  .pv-side .label{ margin-top:0; }
+  @media(min-width:960px){
+    .pv-grid{ grid-template-columns:1fr 400px; gap:10px 60px; align-items:start; }
+    #keyView{ text-align:left; }
+    .kv-grid{ display:grid; grid-template-columns:auto 1fr; gap:40px; align-items:start; margin-top:26px; }
+    .kv-left{ text-align:center; }
+    .key-actions{ margin-top:0; }
+  }
 </style>
 </head>
 <body>
@@ -232,37 +246,44 @@
     <button class="backlink" id="backToForm" type="button">← Back</button>
     <h1>Your questions</h1>
     <p class="lede">These are what your guests will answer. Edit them, remove any, write your own, or tap an idea to add it.</p>
-    <button class="nana" id="nanaBtn" type="button">Ask Nana AI to suggest questions<span>Coming soon</span></button>
-    <div id="promptList"></div>
-    <button class="addown" id="addOwn" type="button">＋ Add your own question</button>
-    <span class="label">Ideas — tap to add</span>
-    <div id="suggestList"></div>
-    <button class="submit" id="create">Create keepsake</button>
-    <p class="err" id="err"></p>
+    <div class="pv-grid">
+      <div class="pv-main">
+        <button class="nana" id="nanaBtn" type="button">Ask Nana AI to suggest questions<span>Coming soon</span></button>
+        <div id="promptList"></div>
+        <button class="addown" id="addOwn" type="button">＋ Add your own question</button>
+        <button class="submit" id="create">Create keepsake</button>
+        <p class="err" id="err"></p>
+      </div>
+      <aside class="pv-side">
+        <span class="label">Ideas — tap to add</span>
+        <div id="suggestList"></div>
+      </aside>
+    </div>
   </div>
 
   <!-- ===== KEY VIEW (shown after creating) ===== -->
   <div id="keyView" hidden>
-    <div class="key-em"></div>
     <h1>Your keepsake is ready</h1>
     <p class="key-sub" id="keySub"></p>
 
-    <div class="qr-card"><div class="qr-loading" id="qrHolder">Making your code…</div></div>
-
-    <div class="code-chip">Code <b id="codeText">——————</b></div>
-
-    <div class="link-row">
-      <div class="link-box" id="linkBox"></div>
-      <button class="copy-btn" id="copyBtn">Copy</button>
+    <div class="kv-grid">
+      <div class="kv-left">
+        <div class="qr-card"><div class="qr-loading" id="qrHolder">Making your code…</div></div>
+        <div class="code-chip">Code <b id="codeText">——————</b></div>
+      </div>
+      <div class="kv-right">
+        <div class="link-row">
+          <div class="link-box" id="linkBox"></div>
+          <button class="copy-btn" id="copyBtn">Copy</button>
+        </div>
+        <div class="key-actions">
+          <a class="action primary" id="viewKeepsake">See your keepsake &amp; memories</a>
+          <button class="action" id="shareBtn" hidden>Share the link</button>
+          <a class="action" id="openGuest" target="_blank" rel="noopener">Preview the guest page ↗</a>
+        </div>
+        <p class="key-hint">Print the QR on a card, set it on a table, or text the link. Anyone who scans or taps it can add a memory — no app, no sign-up. <b>Bookmark your keepsake link</b> so you can come back and watch the memories gather.</p>
+      </div>
     </div>
-
-    <div class="key-actions">
-      <a class="action primary" id="viewKeepsake">See your keepsake &amp; memories</a>
-      <button class="action" id="shareBtn" hidden>Share the link</button>
-      <a class="action" id="openGuest" target="_blank" rel="noopener">Preview the guest page ↗</a>
-    </div>
-
-    <p class="key-hint">Print the QR on a card, set it on a table, or text the link. Anyone who scans or taps it can add a memory — no app, no sign-up. <b>Bookmark your keepsake link</b> so you can come back and watch the memories gather.</p>
 
     <p class="newlink"><a href="/mine/">All my keepsakes</a> &nbsp;·&nbsp; <button id="makeAnother">＋ Create another</button></p>
   </div>
