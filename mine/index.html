@@ -115,6 +115,17 @@
   .mcard,.step,.occ,.keep-visual,.note,.qr-card,.gather,.signup-ok{ border-radius:10px !important; }
   .mcard,.step,.occ,.keep-visual{ box-shadow:none !important; }
   h1,h2,.khead h1{ letter-spacing:-.04em !important; }
+
+  /* --- Nike flow: plain header links --- */
+  .tn-links a{ border:0 !important; border-radius:0 !important; padding:6px 2px !important; font-weight:700; color:var(--ink); }
+  .tn-links a:hover{ background:none !important; color:var(--turq-deep) !important; box-shadow:inset 0 -2px 0 var(--turq); }
+
+  /* --- Nike flow: keepsake list tiles --- */
+  .klist{ display:grid; gap:12px; }
+  .kcard{ position:relative; overflow:hidden; display:flex !important; flex-direction:column; justify-content:flex-end; align-items:flex-start; min-height:180px; border-radius:10px !important; padding:18px !important; text-decoration:none; border:0 !important; }
+  .kcard .bloom-wm{ position:absolute; top:-42%; right:-16%; width:62%; pointer-events:none; }
+  .kcard .kname{ color:#fff; font-weight:900; font-size:1.65rem; letter-spacing:-.02em; line-height:1.05; position:relative; }
+  .kcard .kmeta{ color:rgba(255,255,255,.82); font-size:.85rem; position:relative; margin-top:5px; }
 </style>
 </head>
 <body>
@@ -138,6 +149,8 @@
   var SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
   var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
 
+  var FIELD_COLORS = ['#0B8A80', '#A94069'];
+  var BLOOM_WM = '<svg viewBox="0 0 100 100" aria-hidden="true"><g fill="rgba(255,255,255,.13)"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)"/><circle cx="50" cy="50" r="18.5"/></g></svg>';
   var META = {
     memorial:   { emoji: '', label: 'Memorial' },
     wedding:    { emoji: '', label: 'Wedding' },
@@ -166,7 +179,7 @@
     var el = document.getElementById('list');
     if (!list.length) {
       el.innerHTML =
-        '<div class="empty"><div class="em"></div>' +
+        '<div class="empty">' +
         '<h2>No keepsakes yet</h2>' +
         '<p>Keepsakes you create show up here. Sign in below to keep them safe and reach them from any device.</p>' +
         '<a class="create-btn" href="/create/">＋ Create a keepsake</a></div>';
@@ -176,13 +189,13 @@
       '<h1>My keepsakes</h1>' +
       '<p class="lede">' + list.length + ' keepsake' + (list.length>1?'s':'') + '.</p>' +
       '<a class="create-btn" href="/create/">＋ Create a keepsake</a>' +
-      '<div class="klist">' + list.map(function (k) {
+      '<div class="klist">' + list.map(function (k, i) {
         var m = META[k.type] || META.other;
-        return '<a class="kcard" href="/keepsake/?c=' + encodeURIComponent(k.code) + '">' +
-          '<span class="emoji">' + m.emoji + '</span>' +
-          '<span class="info"><span class="name">' + esc(k.name || 'Keepsake') + '</span>' +
-          '<span class="meta">' + esc(m.label) + ' · ' + esc(fmtDate(k.created)) + ' · code ' + esc(k.code) + '</span></span>' +
-          '<span class="arrow">›</span></a>';
+        var tile = FIELD_COLORS[i % FIELD_COLORS.length];
+        return '<a class="kcard" href="/keepsake/?c=' + encodeURIComponent(k.code) + '" style="background:' + tile + '">' +
+          '<span class="bloom-wm">' + BLOOM_WM + '</span>' +
+          '<span class="kname">' + esc(k.name || 'Keepsake') + '</span>' +
+          '<span class="kmeta">' + esc(m.label) + ' · ' + esc(fmtDate(k.created)) + ' · code ' + esc(k.code) + '</span></a>';
       }).join('') + '</div>';
   }
 
@@ -202,7 +215,7 @@
       var returning = !!savedEmail;
       el.innerHTML =
         '<div class="auth-card">' +
-        '<div class="auth-title">' + (returning ? '👋 Welcome back' : '🔐 Sign in') + '</div>' +
+        '<div class="auth-title">' + (returning ? 'Welcome back' : 'Sign in') + '</div>' +
         '<p class="auth-sub">' + (returning
           ? 'Sign back in to reach your keepsakes on any device. No password — we’ll send a one-tap link.'
           : 'Enter your email and we’ll send a one-tap sign-in link — no password. Your keepsakes then follow you to any phone or computer.') + '</p>' +

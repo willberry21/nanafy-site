@@ -118,6 +118,19 @@
   .mcard,.step,.occ,.keep-visual,.note,.qr-card,.gather,.signup-ok{ border-radius:10px !important; }
   .mcard,.step,.occ,.keep-visual{ box-shadow:none !important; }
   h1,h2,.khead h1{ letter-spacing:-.04em !important; }
+
+  /* --- Nike flow: plain header links --- */
+  .tn-links a{ border:0 !important; border-radius:0 !important; padding:6px 2px !important; font-weight:700; color:var(--ink); }
+  .tn-links a:hover{ background:none !important; color:var(--turq-deep) !important; box-shadow:inset 0 -2px 0 var(--turq); }
+
+  /* --- Nike flow: keepsake dark hero tile --- */
+  .khead{ text-align:left !important; background:#0f1c1a; border-radius:10px; padding:34px 22px 24px; position:relative; overflow:hidden; }
+  .khead::before{ content:""; position:absolute; inset:0; background:radial-gradient(70% 90% at 82% 18%, rgba(15,176,164,.32), transparent 65%); }
+  .khead .bloom-wm{ position:absolute; top:-34%; right:-20%; width:70%; pointer-events:none; }
+  .khead .prep{ color:rgba(255,255,255,.8) !important; position:relative; }
+  .khead h1{ color:#fff; text-transform:uppercase; line-height:.95; font-size:clamp(2.1rem,8vw,3.1rem); position:relative; }
+  .khead .count{ color:rgba(255,255,255,.85) !important; position:relative; }
+  .khead .count b{ color:#fff !important; }
 </style>
 </head>
 <body>
@@ -139,6 +152,7 @@ const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const HEADERS = { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY };
 const PREPOSITIONS = { memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating', graduation: 'Congratulating', tribute: 'A tribute to', other: 'For' };
 
+const BLOOM_WM = '<svg viewBox="0 0 100 100" aria-hidden="true"><g fill="rgba(255,255,255,.13)"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)"/><circle cx="50" cy="50" r="18.5"/></g></svg>';
 const app = document.getElementById('app');
 let code = '';
 
@@ -186,6 +200,7 @@ function render(ev) {
 
   let html =
     '<div class="khead">' +
+    '<div class="bloom-wm">' + BLOOM_WM + '</div>' +
     '<p class="prep">' + esc(prep) + '</p>' +
     '<h1>' + esc(title) + '</h1>' +
     '<p class="count">' + (n === 0 ? 'No memories yet' : '<b>' + n + '</b> ' + (n === 1 ? 'memory' : 'memories') + ' gathered') + '</p>' +
