@@ -203,6 +203,15 @@
   /* --- header profile chip --- */
   .tn-links a.prof-chip, .prof-chip{ width:34px; height:34px; border-radius:999px !important; background:var(--turq); color:#fff !important; font-weight:800; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; font-size:.95rem; padding:0 !important; border:0 !important; }
   .prof-link{ font-weight:700; color:var(--ink); text-decoration:none; align-self:center; }
+
+  /* --- Nana AI box --- */
+  .nana-box{ display:grid; gap:10px; border:1.5px solid var(--turq); border-top:0; border-radius:0 0 12px 12px; padding:14px 16px 16px; margin:-24px 0 22px; background:#f3fbfa; }
+  .nana-box textarea{ width:100%; font:inherit; font-size:.95rem; background:#fff; border:1px solid var(--line); border-radius:8px; padding:11px 13px; color:var(--ink); resize:vertical; outline:none; }
+  .nana-box textarea:focus{ border-color:var(--turq); box-shadow:0 0 0 3px var(--turq-soft); }
+  .nana-row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .nana-go{ border:0; border-radius:8px; background:var(--turq); color:#fff; font:inherit; font-weight:800; font-size:.92rem; padding:11px 18px; cursor:pointer; }
+  .nana-go:disabled{ opacity:.6; cursor:default; }
+  .nana-msg{ font-size:.85rem; color:var(--ink-soft); }
 </style>
 </head>
 <body>
@@ -252,7 +261,14 @@
     <p class="lede">These are what your guests will answer. Edit them, remove any, write your own, or tap an idea to add it.</p>
     <div class="pv-grid">
       <div class="pv-main">
-        <button class="nana" id="nanaBtn" type="button">Ask Nana AI to suggest questions<span>Coming soon</span></button>
+        <button class="nana" id="nanaBtn" type="button">Ask Nana AI to suggest questions<span>Tell Nana a little about them and she'll write questions just for you</span></button>
+        <div class="nana-box" id="nanaBox" hidden>
+          <textarea id="nanaDetails" rows="3" placeholder="What did they love? What made them them? e.g. 'She raised four kids, loved her garden, and made butterscotch candy for every visitor.'"></textarea>
+          <div class="nana-row">
+            <button class="nana-go" id="nanaGo" type="button">Write my questions</button>
+            <span class="nana-msg" id="nanaMsg"></span>
+          </div>
+        </div>
         <div id="promptList"></div>
         <button class="addown" id="addOwn" type="button">＋ Add your own question</button>
         <button class="submit" id="create">Create keepsake</button>
@@ -392,8 +408,34 @@
   document.getElementById('addOwn').addEventListener('click', function () {
     editorPrompts.push(''); renderEditor();
   });
+  var nanaIdeas = [];
   document.getElementById('nanaBtn').addEventListener('click', function () {
-    alert('Nana AI is coming soon.\n\nSoon it will write questions tailored to your person from a few details. For now, edit these or add your own below.');
+    var box = document.getElementById('nanaBox');
+    box.hidden = !box.hidden;
+    if (!box.hidden) document.getElementById('nanaDetails').focus();
+  });
+  document.getElementById('nanaGo').addEventListener('click', async function () {
+    var btn = this, msg = document.getElementById('nanaMsg');
+    var details = document.getElementById('nanaDetails').value.trim();
+    if (!details) { msg.textContent = 'Tell Nana a little about them first.'; return; }
+    btn.disabled = true; btn.textContent = 'Nana is writing…'; msg.textContent = '';
+    try {
+      var res = await fetch(SUPABASE_URL + '/functions/v1/nana-ai', {
+        method: 'POST',
+        headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ type: selectedType, honoreeName: honoree.value.trim(), details: details })
+      });
+      var data = await res.json().catch(function () { return {}; });
+      if (res.status === 503) { msg.textContent = "Nana AI isn't switched on yet — check back soon."; return; }
+      if (!res.ok || !data.questions || !data.questions.length) throw new Error('nana');
+      nanaIdeas = data.questions.concat(nanaIdeas);
+      renderEditor();
+      msg.textContent = 'Done — ' + data.questions.length + ' ideas added below. Tap the ones you like.';
+    } catch (e) {
+      msg.textContent = "Couldn't reach Nana right now — try again in a moment.";
+    } finally {
+      btn.disabled = false; btn.textContent = 'Write my questions';
+    }
   });
 
   // Extra question ideas per occasion (beyond the default five).
@@ -432,8 +474,9 @@
     });
     var current = {};
     editorPrompts.forEach(function (p) { current[p.trim()] = true; });
-    var sug = (PROMPT_SUGGESTIONS[selectedType] || []).map(function (q) { return q.replace(/\{name\}/g, name); })
-      .filter(function (s) { return !current[s.trim()]; });
+    var sug = nanaIdeas.concat(
+      (PROMPT_SUGGESTIONS[selectedType] || []).map(function (q) { return q.replace(/\{name\}/g, name); })
+    ).filter(function (s) { return !current[s.trim()]; });
     var sl = document.getElementById('suggestList');
     sl.innerHTML = sug.map(function (s) {
       return '<button class="suggestion" type="button" data-add="' + encodeURIComponent(s) + '"><span>' + escapeHtml(s) + '</span><b>＋</b></button>';
