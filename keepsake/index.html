@@ -289,7 +289,7 @@ function render(ev) {
         var path = 'honoree/' + code.toUpperCase() + '-' + Date.now() + '.' + ext;
         var up = await fetch(SUPABASE_URL + '/storage/v1/object/memory-photos/' + path, {
           method: 'POST',
-          headers: Object.assign({}, HEADERS, { 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' }),
+          headers: Object.assign({}, HEADERS, { 'Content-Type': file.type || 'image/jpeg' }),
           body: file
         });
         if (!up.ok) throw new Error('upload');
