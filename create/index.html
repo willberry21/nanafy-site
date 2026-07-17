@@ -231,6 +231,63 @@
 </style>
 </head>
 <body>
+<!-- Pre-launch gate: friends & family password. A curtain, not a vault —
+     guests with a keepsake QR/link (/add, /keepsake) are never gated. -->
+<div id="gate" hidden>
+  <div class="gate-card">
+    <div class="gate-mark"><b>Nana</b>fy</div>
+    <p class="gate-eyebrow">For friends &amp; family</p>
+    <h2 class="gate-h">Almost ready.</h2>
+    <p class="gate-sub">Nanafy is still being polished before launch. If William shared the password with you, enter it here.</p>
+    <form id="gateForm">
+      <input type="password" id="gatePw" placeholder="Password" autocomplete="off" aria-label="Site password">
+      <button type="submit">Enter</button>
+    </form>
+    <p class="gate-err" id="gateErr"></p>
+  </div>
+</div>
+<style>
+  #gate{ position:fixed; inset:0; z-index:99999; background:#ffffff; display:grid; place-items:center; padding:24px; }
+  #gate[hidden]{ display:none; }
+  .gate-card{ max-width:400px; width:100%; text-align:center; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif; }
+  .gate-mark{ font-size:1.6rem; font-weight:900; letter-spacing:-.02em; color:#f28ab0; }
+  .gate-mark b{ color:#0FB0A4; }
+  .gate-eyebrow{ text-transform:uppercase; letter-spacing:.16em; font-size:.72rem; font-weight:800; color:#0a7a72; margin:26px 0 6px; }
+  .gate-h{ font-size:2rem; font-weight:900; letter-spacing:-.03em; color:#14201f; margin:0 0 10px; }
+  .gate-sub{ color:#5a6a68; font-size:.98rem; line-height:1.55; margin:0 0 22px; }
+  #gateForm{ display:flex; gap:8px; }
+  #gatePw{ flex:1; min-width:0; font:inherit; font-size:1rem; padding:13px 15px; border-radius:8px; border:1.5px solid #ece6dd; color:#14201f; outline:none; }
+  #gatePw:focus{ border-color:#0fb0a4; box-shadow:0 0 0 3px #bfeae6; }
+  #gateForm button{ flex:none; border:0; border-radius:8px; padding:0 22px; background:#0fb0a4; color:#fff; font:inherit; font-weight:800; cursor:pointer; }
+  .gate-err{ color:#c0392b; font-size:.9rem; min-height:1.2em; margin:12px 0 0; }
+</style>
+<script>
+(function(){
+  var KEY = 'nanafy_gate_ok';
+  var HASH = '8f398886c326b5f8f07b20ac250c87de6723e062474465273fe1524f2b9092fa';
+  try { if (localStorage.getItem(KEY) === HASH) return; } catch (e) {}
+  var gate = document.getElementById('gate');
+  gate.hidden = false;
+  document.documentElement.style.overflow = 'hidden';
+  document.getElementById('gateForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var v = document.getElementById('gatePw').value.trim().toLowerCase();
+    if (!v || !(window.crypto && crypto.subtle)) return;
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(v)).then(function(buf){
+      var hex = Array.prototype.map.call(new Uint8Array(buf), function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+      if (hex === HASH) {
+        try { localStorage.setItem(KEY, HASH); } catch (e) {}
+        gate.hidden = true;
+        document.documentElement.style.overflow = '';
+      } else {
+        document.getElementById('gateErr').textContent = 'That\u2019s not it \u2014 double-check with William.';
+        document.getElementById('gatePw').select();
+      }
+    });
+  });
+})();
+</script>
+
 <div class="wrap">
   <div class="topnav">
     <a class="brand" href="/">
