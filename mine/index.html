@@ -295,7 +295,9 @@
   // Honoree photos as tile backgrounds + live memory counts per keepsake.
   function loadTileExtras(codes){
     if (!codes.length) return;
-    sb.from('events').select('share_code,photo_url,memories(count)').in('share_code', codes)
+    // Count approved memories only — a signed-in owner can also see their
+    // pending/rejected queue, which shouldn't inflate the keepsake counts.
+    sb.from('events').select('share_code,photo_url,memories(count)').eq('memories.status', 'approved').in('share_code', codes)
       .then(function(res){
         var total = 0;
         (res.data || []).forEach(function(row){

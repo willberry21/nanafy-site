@@ -149,7 +149,7 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s || 
 
 async function fetchEvent(code) {
   const q = SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(code.toUpperCase()) +
-    '&select=id,title,event_type,honoree,share_code,prompts(text,position)';
+    '&select=id,title,event_type,honoree,share_code,owner_id,prompts(text,position)';
   const res = await fetch(q, { headers: HEADERS });
   if (!res.ok) throw new Error('server');
   const rows = await res.json();
@@ -294,10 +294,14 @@ function renderSuccess() {
   const promoLine = gentle
     ? 'If you ever want to gather memories for someone you love, you can make a keepsake of your own.'
     : 'Want one of these for your own gathering? It takes about a minute.';
+  // Owned keepsakes are moderated: the memory waits for the host's approval.
+  const sub = event.owner_id
+    ? 'Your memory has been sent to the host to review. Once they approve it, it will be part of the keepsake for ' + esc(title) + '.'
+    : 'Your memory has been added to ' + esc(title) + '. It will be part of a keepsake the family holds onto.';
   app.innerHTML =
     '<div class="center"><div class="success-glyph"></div>' +
     '<h1>Thank you</h1>' +
-    '<p class="sub">Your memory has been added to ' + esc(title) + '. It will be part of a keepsake the family holds onto.</p>' +
+    '<p class="sub">' + sub + '</p>' +
     '<button class="again" id="again">Share another memory</button>' +
     '<div class="promo">' +
     '<div class="promo-kicker">Nanafy is free for everyone</div>' +
