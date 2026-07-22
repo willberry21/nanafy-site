@@ -70,6 +70,18 @@
   .mcard .q { font-family: var(--serif); font-style: italic; color: var(--ink-soft); font-size: 0.95rem; margin: 10px 0 10px; line-height: 1.4; }
   .mcard .body { font-family: var(--serif); font-size: 1.12rem; line-height: 1.5; color: var(--ink); white-space: pre-wrap; }
   .mcard .photo { margin-top: 14px; }
+  /* owner review queue */
+  .pending { display: grid; gap: 16px; margin: 0 0 28px; }
+  .pending .p-title { font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 9px; }
+  .pending .p-n { background: var(--turq); color: #fff; border-radius: 999px; font-size: 0.8rem; padding: 2px 10px; }
+  .pending .p-sub { color: var(--ink-soft); font-size: 0.9rem; margin: -8px 0 0; line-height: 1.45; }
+  .pending .p-sub a { color: var(--turq-deep); font-weight: 600; }
+  .mcard.is-pending { border: 1.5px dashed var(--turq); }
+  .rvw { display: flex; gap: 10px; margin-top: 16px; }
+  .rvw button { flex: 1; border-radius: 999px; padding: 12px 16px; font: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
+  .rvw button:disabled { opacity: 0.55; cursor: default; }
+  .rvw .rvw-yes { background: var(--turq); border: 1px solid var(--turq); color: #fff; }
+  .rvw .rvw-no { background: none; border: 1px solid var(--line); color: var(--ink); }
   .mcard .photo img { width: 100%; border-radius: 12px; display: block; }
 
   /* empty */
@@ -214,6 +226,24 @@ const BLOOM_WM = '<svg viewBox="0 0 100 100" aria-hidden="true"><g fill="rgba(25
 const app = document.getElementById('app');
 let code = '';
 
+// Signed-in session (if any) — read from the session Supabase stores locally,
+// same trick as the header profile chip. Lets a keepsake's owner edit it and
+// moderate pending memories from the web; RLS requires their token for both.
+function session() {
+  try {
+    const raw = localStorage.getItem('sb-vigenqlwwoknxjzahvtv-auth-token');
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    const token = s.access_token || (s.currentSession && s.currentSession.access_token);
+    const user = s.user || (s.currentSession && s.currentSession.user);
+    return token && user ? { token: token, userId: user.id } : null;
+  } catch (e) { return null; }
+}
+function authHeaders() {
+  const s = session();
+  return s ? Object.assign({}, HEADERS, { Authorization: 'Bearer ' + s.token }) : HEADERS;
+}
+
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
 function when(iso) {
@@ -227,11 +257,28 @@ function when(iso) {
 }
 
 async function fetchKeepsake(c) {
+  // Deliberately fetched with the anon key: the memories embed then only
+  // contains approved ones (RLS), which is the public keepsake view.
   const q = SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(c.toUpperCase()) +
-    '&select=id,title,honoree,event_type,photo_url,prompts(text,position),memories(contributor_name,prompt_text,body,photo_url,created_at)';
+    '&select=id,title,honoree,event_type,photo_url,owner_id,prompts(text,position),memories(contributor_name,prompt_text,body,photo_url,created_at)';
   const res = await fetch(q, { headers: HEADERS });
   if (!res.ok) throw new Error('server');
   return (await res.json())[0] || null;
+}
+
+// The owner's review queue. Returns [] for everyone else (and skips the
+// request entirely unless the signed-in user owns this keepsake). Returns
+// 'stale' when the stored session has expired, so the page can say so
+// instead of silently hiding the queue.
+async function fetchPending(ev) {
+  const s = session();
+  if (!s || !ev.owner_id || ev.owner_id !== s.userId) return [];
+  const q = SUPABASE_URL + '/rest/v1/memories?event_id=eq.' + ev.id +
+    '&status=eq.pending&order=created_at.asc&select=id,contributor_name,prompt_text,body,photo_url,created_at';
+  const res = await fetch(q, { headers: authHeaders() });
+  if (res.status === 401) return 'stale';
+  if (!res.ok) return [];
+  return res.json();
 }
 
 function renderCodeEntry(message) {
@@ -249,11 +296,13 @@ function renderCodeEntry(message) {
   });
 }
 
-function render(ev) {
+function render(ev, pending) {
   const prep = PREPOSITIONS[ev.event_type] || 'For';
   const title = ev.honoree || ev.title;
   const memories = (ev.memories || []).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   const n = memories.length;
+  const staleSession = pending === 'stale';
+  const pendingList = Array.isArray(pending) ? pending : [];
   const addLink = location.origin + '/add/?c=' + encodeURIComponent(code.toUpperCase());
 
   const kheadStyle = ev.photo_url
@@ -292,10 +341,31 @@ function render(ev) {
     '<button class="g-copy" id="gCopy">Copy</button></div></div>' +
     '</div></div>';
 
-  if (n === 0) {
+  // Owner-only review queue: memories waiting for approval. RLS means only
+  // the signed-in owner ever receives these.
+  if (staleSession) {
+    html += '<div class="pending"><p class="p-sub">You may have memories waiting for review — ' +
+      '<a href="/mine/#account">sign in again on Mine</a>, then come back here.</p></div>';
+  } else if (pendingList.length) {
+    html += '<div class="pending"><h2 class="p-title">Waiting for your review <span class="p-n">' + pendingList.length + '</span></h2>' +
+      '<p class="p-sub">Only you can see these. Approve to add one to the keepsake; decline keeps it hidden.</p>' +
+      pendingList.map(function (m) {
+        return '<div class="mcard is-pending" data-mid="' + esc(m.id) + '">' +
+          '<div class="who"><span class="name">' + esc(m.contributor_name || 'Anonymous') + '</span>' +
+          '<span class="when">' + esc(when(m.created_at)) + '</span></div>' +
+          (m.prompt_text ? '<div class="q">' + esc(m.prompt_text) + '</div>' : '') +
+          '<div class="body">' + esc(m.body) + '</div>' +
+          (m.photo_url ? '<div class="photo"><img src="' + esc(m.photo_url) + '" alt="Shared photo" loading="lazy"></div>' : '') +
+          '<div class="rvw"><button type="button" class="rvw-no" data-decide="rejected">Decline</button>' +
+          '<button type="button" class="rvw-yes" data-decide="approved">Approve</button></div>' +
+          '</div>';
+      }).join('') + '</div>';
+  }
+
+  if (n === 0 && !pendingList.length && !staleSession) {
     html += '<div class="empty"><div class="em"></div><h2>Waiting for the first memory</h2>' +
       '<p>Share the link above — as people add their memories, they’ll appear right here.</p></div>';
-  } else {
+  } else if (n > 0) {
     html += '<div class="mlist">' + memories.map(function (m) {
       return '<div class="mcard">' +
         '<div class="who"><span class="name">' + esc(m.contributor_name || 'Anonymous') + '</span>' +
@@ -320,6 +390,29 @@ function render(ev) {
   });
   document.getElementById('refresh').addEventListener('click', function () { start(code); });
 
+  // Approve / decline pending memories (owner only — the buttons only render
+  // for the owner, and RLS enforces it server-side regardless).
+  Array.prototype.forEach.call(app.querySelectorAll('[data-decide]'), function (btn) {
+    btn.addEventListener('click', async function () {
+      const card = btn.closest('.mcard');
+      const decision = btn.dataset.decide;
+      Array.prototype.forEach.call(card.querySelectorAll('button'), function (b) { b.disabled = true; });
+      btn.textContent = decision === 'approved' ? 'Approving…' : 'Declining…';
+      try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/memories?id=eq.' + encodeURIComponent(card.dataset.mid), {
+          method: 'PATCH',
+          headers: Object.assign({}, authHeaders(), { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+          body: JSON.stringify({ status: decision })
+        });
+        if (!res.ok) throw new Error('decide');
+        start(code); // refresh: approved memories join the grid, the queue shrinks
+      } catch (e) {
+        Array.prototype.forEach.call(card.querySelectorAll('button'), function (b) { b.disabled = false; });
+        btn.textContent = decision === 'approved' ? 'Approve' : 'Decline';
+      }
+    });
+  });
+
   // --- edit keepsake ---
   var panel = document.getElementById('editPanel');
   document.getElementById('editBtn').addEventListener('click', function () {
@@ -333,7 +426,7 @@ function render(ev) {
     if (!window.confirm('Really delete it forever?')) return;
     var btn = this; btn.disabled = true; btn.textContent = 'Deleting…';
     try {
-      var res = await fetch(SUPABASE_URL + '/rest/v1/events?id=eq.' + ev.id, { method: 'DELETE', headers: HEADERS });
+      var res = await fetch(SUPABASE_URL + '/rest/v1/events?id=eq.' + ev.id, { method: 'DELETE', headers: authHeaders() });
       if (!res.ok) throw new Error('delete');
       try {
         var list = JSON.parse(localStorage.getItem('nanafy_keepsakes') || '[]');
@@ -394,7 +487,7 @@ function render(ev) {
       }
       var res = await fetch(SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(code.toUpperCase()), {
         method: 'PATCH',
-        headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+        headers: Object.assign({}, authHeaders(), { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
         body: JSON.stringify(patch)
       });
       if (!res.ok) throw new Error('save');
@@ -403,7 +496,7 @@ function render(ev) {
       var cleaned = editPromptList.map(function(t){ return (t || '').trim(); }).filter(Boolean);
       if (cleaned.length) {
         var del = await fetch(SUPABASE_URL + '/rest/v1/prompts?event_id=eq.' + ev.id, {
-          method: 'DELETE', headers: HEADERS
+          method: 'DELETE', headers: authHeaders()
         });
         if (!del.ok) throw new Error('prompts');
         var ins = await fetch(SUPABASE_URL + '/rest/v1/prompts', {
@@ -427,10 +520,11 @@ async function start(c) {
   try {
     const ev = await fetchKeepsake(c);
     if (!ev) return renderCodeEntry('No keepsake found with code ' + c.toUpperCase() + '. Double-check it and try again.');
+    const pending = await fetchPending(ev);
     const u = new URL(location.href);
     u.searchParams.set('c', c.toUpperCase());
     history.replaceState(null, '', u);
-    render(ev);
+    render(ev, pending);
     window.scrollTo(0, 0);
   } catch {
     renderCodeEntry("Couldn't reach the server. Check your connection and try again.");

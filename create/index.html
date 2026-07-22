@@ -394,6 +394,25 @@
   var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
   var HEADERS = { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY };
 
+  // Signed-in session (if any) — read from the session Supabase stores
+  // locally, same trick as the header profile chip. A keepsake created while
+  // signed in belongs to the account: it syncs to Mine everywhere AND new
+  // guest memories wait for the owner's approval (host moderation).
+  function session() {
+    try {
+      var raw = localStorage.getItem('sb-vigenqlwwoknxjzahvtv-auth-token');
+      if (!raw) return null;
+      var s = JSON.parse(raw);
+      var token = s.access_token || (s.currentSession && s.currentSession.access_token);
+      var user = s.user || (s.currentSession && s.currentSession.user);
+      return token && user ? { token: token, userId: user.id } : null;
+    } catch (e) { return null; }
+  }
+  function authHeaders() {
+    var s = session();
+    return s ? Object.assign({}, HEADERS, { Authorization: 'Bearer ' + s.token }) : HEADERS;
+  }
+
   var PREPOSITIONS = {
     memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating',
     graduation: 'Congratulating', tribute: 'A tribute to', other: 'For'
@@ -618,10 +637,13 @@
 
     try {
       // 1) Create the event, and ask the database to hand back its id + share code.
+      // Signed in → the keepsake belongs to the account (owner_id), which also
+      // turns on host moderation for its guest memories.
+      var sess = session();
       var evRes = await fetch(SUPABASE_URL + '/rest/v1/events', {
         method: 'POST',
-        headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
-        body: JSON.stringify({ event_type: selectedType, honoree: name, title: title || null })
+        headers: Object.assign({}, authHeaders(), { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+        body: JSON.stringify({ event_type: selectedType, honoree: name, title: title || null, owner_id: sess ? sess.userId : null })
       });
       if (!evRes.ok) throw new Error('event');
       var event = (await evRes.json())[0];
