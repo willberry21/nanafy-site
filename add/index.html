@@ -112,6 +112,13 @@
   .tn-links a{ border:0 !important; border-radius:0 !important; padding:6px 2px !important; font-weight:700; color:var(--ink); }
   .tn-links a:hover{ background:none !important; color:var(--turq-deep) !important; box-shadow:inset 0 -2px 0 var(--turq); }
 
+
+  /* --- growth loop: create-your-own promo on the thank-you screen --- */
+  .promo{ margin-top:34px; border:1.5px solid var(--turq-soft); background:#f3fbfa; border-radius:12px; padding:22px 20px; text-align:center; }
+  .promo-kicker{ font-size:.72rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--turq-deep); }
+  .promo-line{ margin:10px 0 16px; color:var(--ink); font-size:.98rem; }
+  .promo-btn{ display:inline-block; background:var(--turq); color:#fff; text-decoration:none; font-weight:800; font-size:1rem; padding:13px 24px; border-radius:8px; box-shadow:0 10px 24px -10px rgba(15,176,164,.55); }
+  .promo-fine{ margin:12px 0 0; font-size:.8rem; color:var(--ink-soft); }
 </style>
 </head>
 <body>
@@ -283,11 +290,21 @@ function renderForm() {
 
 function renderSuccess() {
   const title = event.honoree || event.title;
+  const gentle = event.event_type === 'memorial' || event.event_type === 'tribute';
+  const promoLine = gentle
+    ? 'If you ever want to gather memories for someone you love, you can make a keepsake of your own.'
+    : 'Want one of these for your own gathering? It takes about a minute.';
   app.innerHTML =
     '<div class="center"><div class="success-glyph"></div>' +
     '<h1>Thank you</h1>' +
     '<p class="sub">Your memory has been added to ' + esc(title) + '. It will be part of a keepsake the family holds onto.</p>' +
-    '<button class="again" id="again">Share another memory</button></div>';
+    '<button class="again" id="again">Share another memory</button>' +
+    '<div class="promo">' +
+    '<div class="promo-kicker">Nanafy is free for everyone</div>' +
+    '<p class="promo-line">' + promoLine + '</p>' +
+    '<a class="promo-btn" href="/create/?ref=guest">Create your own keepsake</a>' +
+    '<p class="promo-fine">Free &#183; No app &#183; No sign-up for your guests</p>' +
+    '</div></div>';
   document.getElementById('again').addEventListener('click', () => { photoFile = null; promptIndex = 0; renderForm(); });
   window.scrollTo(0, 0);
 }
