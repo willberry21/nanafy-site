@@ -82,6 +82,9 @@
   .rvw button:disabled { opacity: 0.55; cursor: default; }
   .rvw .rvw-yes { background: var(--turq); border: 1px solid var(--turq); color: #fff; }
   .rvw .rvw-no { background: none; border: 1px solid var(--line); color: var(--ink); }
+  .m-remove { display: block; margin-top: 12px; border: 0; background: none; padding: 0; font: inherit; font-size: 0.82rem; font-weight: 600; color: var(--ink-soft); cursor: pointer; }
+  .m-remove:hover { color: var(--danger); text-decoration: underline; }
+  .m-remove:disabled { opacity: 0.55; cursor: default; }
   .mcard .photo img { width: 100%; border-radius: 12px; display: block; }
 
   /* empty */
@@ -98,6 +101,12 @@
   .error { color: var(--danger); font-size: 14px; margin-top: 12px; text-align: center; }
 
   .refresh { display: block; margin: 26px auto 0; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 11px 22px; font: inherit; font-weight: 600; font-size: 0.92rem; cursor: pointer; }
+  /* --- the keepsake book --- */
+  .bookcta { display: block; margin: 30px 0 0; text-decoration: none; background: var(--surface); border: 1.5px solid var(--turq-soft); border-radius: 12px; padding: 22px 20px; text-align: center; box-shadow: 0 14px 34px -28px var(--shadow); }
+  .bookcta:hover { border-color: var(--turq); }
+  .bc-kicker { display: block; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--turq-deep); }
+  .bc-line { display: block; margin: 10px 0 16px; color: var(--ink); font-size: 0.98rem; }
+  .bc-btn { display: inline-block; background: var(--turq); color: #fff; font-weight: 800; font-size: 1rem; padding: 13px 24px; border-radius: 8px; }
   .foot { margin-top: 34px; text-align: center; font-size: 12.5px; color: var(--ink-soft); }
   .foot a { color: var(--turq-deep); text-decoration: none; }
 
@@ -260,7 +269,7 @@ async function fetchKeepsake(c) {
   // Deliberately fetched with the anon key: the memories embed then only
   // contains approved ones (RLS), which is the public keepsake view.
   const q = SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(c.toUpperCase()) +
-    '&select=id,title,honoree,event_type,photo_url,owner_id,prompts(text,position),memories(contributor_name,prompt_text,body,photo_url,created_at)';
+    '&select=id,title,honoree,event_type,photo_url,owner_id,prompts(text,position),memories(id,contributor_name,prompt_text,body,photo_url,created_at)';
   const res = await fetch(q, { headers: HEADERS });
   if (!res.ok) throw new Error('server');
   return (await res.json())[0] || null;
@@ -366,15 +375,28 @@ function render(ev, pending) {
     html += '<div class="empty"><div class="em"></div><h2>Waiting for the first memory</h2>' +
       '<p>Share the link above — as people add their memories, they’ll appear right here.</p></div>';
   } else if (n > 0) {
+    // The owner gets a per-memory Remove control; RLS enforces ownership
+    // server-side regardless of what renders here.
+    const s = session();
+    const isOwner = !!(s && ev.owner_id && ev.owner_id === s.userId);
     html += '<div class="mlist">' + memories.map(function (m) {
-      return '<div class="mcard">' +
+      return '<div class="mcard" data-mid="' + esc(m.id) + '">' +
         '<div class="who"><span class="name">' + esc(m.contributor_name || 'Anonymous') + '</span>' +
         '<span class="when">' + esc(when(m.created_at)) + '</span></div>' +
         (m.prompt_text ? '<div class="q">' + esc(m.prompt_text) + '</div>' : '') +
         '<div class="body">' + esc(m.body) + '</div>' +
         (m.photo_url ? '<div class="photo"><img src="' + esc(m.photo_url) + '" alt="Shared photo" loading="lazy"></div>' : '') +
+        (isOwner ? '<button type="button" class="m-remove" data-remove>Remove from keepsake</button>' : '') +
         '</div>';
     }).join('') + '</div>';
+  }
+
+  if (n > 0) {
+    html += '<a class="bookcta" href="/book/?c=' + encodeURIComponent(code) + '">' +
+      '<span class="bc-kicker">The keepsake book</span>' +
+      '<span class="bc-line">All ' + n + ' ' + (n === 1 ? 'memory' : 'memories') +
+      ', laid out as a book you can keep.</span>' +
+      '<span class="bc-btn">See the book</span></a>';
   }
 
   html += '<button class="refresh" id="refresh">↻ Check for new memories</button>';
@@ -409,6 +431,28 @@ function render(ev, pending) {
       } catch (e) {
         Array.prototype.forEach.call(card.querySelectorAll('button'), function (b) { b.disabled = false; });
         btn.textContent = decision === 'approved' ? 'Approve' : 'Decline';
+      }
+    });
+  });
+
+  // Owner removes a visible memory: same rejected-not-deleted state the
+  // review queue uses, so it's hidden everywhere (keepsake + book) but
+  // recoverable in the database.
+  Array.prototype.forEach.call(app.querySelectorAll('[data-remove]'), function (btn) {
+    btn.addEventListener('click', async function () {
+      const card = btn.closest('.mcard');
+      if (!window.confirm('Remove this memory from the keepsake?\n\nIt will be hidden, not deleted — you can ask us to restore it.')) return;
+      btn.disabled = true; btn.textContent = 'Removing…';
+      try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/memories?id=eq.' + encodeURIComponent(card.dataset.mid), {
+          method: 'PATCH',
+          headers: Object.assign({}, authHeaders(), { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+          body: JSON.stringify({ status: 'rejected' })
+        });
+        if (!res.ok) throw new Error('remove');
+        start(code);
+      } catch (e) {
+        btn.disabled = false; btn.textContent = 'Remove from keepsake';
       }
     });
   });

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The keepsake book · Nanafy</title>
+<meta name="description" content="Every memory, gathered into a book.">
+<meta name="theme-color" content="#0FB0A4">
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --ground: #FBF4EE; --surface: #FFFBF6; --surface-2: #F5E8DE;
+    --ink: #2C1D28; --ink-soft: #6A5460; --line: #E7D7CC;
+    --plum: #8A3F5C; --turq: #0a786f; --turq-deep: #085d56; --turq-ink: #04302C; --turq-soft: #A9E3DE;
+    --shadow: rgba(58, 30, 44, 0.13);
+    --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--sans); -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Screen-only toolbar ---------- */
+  .bar {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(255,251,246,.92); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .bar .mark { font-family: var(--serif); font-size: 1.05rem; letter-spacing: -.01em; }
+  .bar .mark b { color: var(--turq); }
+  .bar .spacer { flex: 1 1 auto; }
+  .bar .meta { font-size: .82rem; color: var(--ink-soft); }
+  .bar a.back {
+    font-size: .84rem; font-weight: 700; color: var(--turq-deep);
+    text-decoration: none; padding: 7px 13px; border: 1px solid var(--turq-soft); border-radius: 8px;
+  }
+  .bar a.back:hover { background: var(--turq); color: #fff; border-color: var(--turq); }
+  .bar button {
+    border: 0; border-radius: 8px; background: var(--turq); color: #fff;
+    font: inherit; font-weight: 800; font-size: .92rem; padding: 11px 20px; cursor: pointer;
+    box-shadow: 0 10px 22px -12px rgba(10,120,111,.7);
+  }
+  .bar button[disabled] { opacity: .5; cursor: default; box-shadow: none; }
+
+  .hint {
+    max-width: 760px; margin: 18px auto 0; padding: 0 22px;
+    font-size: .86rem; color: var(--ink-soft); text-align: center;
+  }
+
+  /* ---------- The book ---------- */
+  .book { max-width: 760px; margin: 26px auto 60px; padding: 0 22px; }
+  .sheet {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: 0 26px 60px -40px var(--shadow); padding: 54px 52px 46px; margin-bottom: 26px;
+  }
+
+  /* Cover */
+  .cover { text-align: center; padding: 74px 52px 66px; }
+  .cover .kicker {
+    font-size: .68rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--turq-deep);
+  }
+  .cover .rule { width: 44px; height: 2px; background: var(--turq); margin: 20px auto 26px; border-radius: 2px; }
+  .cover h1 {
+    font-family: var(--serif); font-weight: 400; font-size: 2.9rem; line-height: 1.12;
+    margin: 0 0 6px; letter-spacing: -.02em;
+  }
+  .cover .sub { font-family: var(--serif); font-style: italic; color: var(--plum); font-size: 1.12rem; margin: 10px 0 0; }
+  .cover .portrait {
+    width: 190px; height: 190px; border-radius: 50%; object-fit: cover;
+    margin: 30px auto 4px; display: block; border: 5px solid var(--surface-2);
+  }
+  .cover .foot { margin-top: 34px; font-size: .88rem; color: var(--ink-soft); line-height: 1.7; }
+
+  /* Questions page */
+  .qs h2, .closing h2 {
+    font-family: var(--serif); font-weight: 400; font-size: 1.55rem; margin: 0 0 4px; letter-spacing: -.01em;
+  }
+  .qs .lead, .closing .lead { color: var(--ink-soft); font-size: .92rem; margin: 0 0 26px; }
+  .qs ol { margin: 0; padding: 0; list-style: none; counter-reset: q; }
+  .qs li {
+    counter-increment: q; position: relative; padding: 0 0 18px 42px;
+    font-family: var(--serif); font-size: 1.06rem; line-height: 1.55;
+  }
+  .qs li::before {
+    content: counter(q); position: absolute; left: 0; top: 1px;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--surface-2); color: var(--turq-deep);
+    font-family: var(--sans); font-weight: 800; font-size: .78rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Memories */
+  .memories { }
+  .memories .section-head {
+    text-align: center; padding: 6px 0 30px; border-bottom: 1px solid var(--line); margin-bottom: 34px;
+  }
+  .memories .section-head h2 {
+    font-family: var(--serif); font-weight: 400; font-size: 1.55rem; margin: 0;
+  }
+  .memories .section-head p { margin: 6px 0 0; font-size: .88rem; color: var(--ink-soft); }
+
+  .mem { break-inside: avoid; page-break-inside: avoid; padding: 0 0 40px; }
+  .mem + .mem { border-top: 1px solid var(--line); padding-top: 34px; }
+  .mem .q {
+    font-size: .7rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--turq-deep); margin: 0 0 12px;
+  }
+  .mem .body {
+    font-family: var(--serif); font-size: 1.1rem; line-height: 1.72; margin: 0;
+    white-space: pre-wrap; word-wrap: break-word;
+  }
+  .mem .body::first-letter { }
+  .mem .who {
+    margin: 18px 0 0; font-family: var(--serif); font-style: italic; color: var(--plum); font-size: 1rem;
+  }
+  .mem .who .when { font-style: normal; color: var(--ink-soft); font-size: .84rem; font-family: var(--sans); }
+  .mem figure { margin: 20px 0 0; }
+  .mem figure img {
+    width: 100%; max-height: 460px; object-fit: cover; border-radius: 10px; display: block;
+    border: 1px solid var(--line);
+  }
+
+  /* Closing */
+  .closing { text-align: center; }
+  .closing .flower { width: 46px; height: 46px; margin: 0 auto 20px; display: block; }
+  .closing .count { font-family: var(--serif); font-size: 2rem; color: var(--turq-deep); margin: 0; }
+  .closing .fine { margin: 26px 0 0; font-size: .8rem; color: var(--ink-soft); }
+
+  .state { max-width: 520px; margin: 70px auto; padding: 0 22px; text-align: center; }
+  .state h1 { font-family: var(--serif); font-weight: 400; font-size: 1.6rem; margin: 0 0 10px; }
+  .state p { color: var(--ink-soft); font-size: .95rem; line-height: 1.6; }
+  .state input {
+    width: 100%; text-align: center; letter-spacing: 6px; font-weight: 700; text-transform: uppercase;
+    font-family: var(--serif); font-size: 16px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); color: var(--ink); padding: 13px 15px; outline: none; margin-top: 18px;
+  }
+  .state input:focus { border-color: var(--turq); box-shadow: 0 0 0 3px var(--turq-soft); }
+  .state button {
+    width: 100%; margin-top: 12px; border: 0; border-radius: 10px; background: var(--turq); color: #fff;
+    font: inherit; font-size: 1rem; font-weight: 800; padding: 14px; cursor: pointer;
+  }
+
+  @media (max-width: 640px) {
+    .sheet { padding: 34px 24px 30px; border-radius: 12px; }
+    .cover { padding: 48px 24px 42px; }
+    .cover h1 { font-size: 2.15rem; }
+    .cover .portrait { width: 150px; height: 150px; }
+  }
+
+  /* ---------- Print / Save as PDF ---------- */
+  @page { size: Letter; margin: 16mm 15mm; }
+  @media print {
+    :root {
+      --ground: #fff; --surface: #fff; --surface-2: #F2ECE6;
+      --ink: #23181f; --ink-soft: #5d4f57; --line: #ded2c9;
+    }
+    html, body { background: #fff; }
+    .bar, .hint, .state { display: none !important; }
+    .book { max-width: none; margin: 0; padding: 0; }
+    .sheet {
+      border: 0; border-radius: 0; box-shadow: none; padding: 0; margin: 0;
+      break-after: page; page-break-after: always;
+    }
+    .sheet:last-child { break-after: auto; page-break-after: auto; }
+    .cover { padding: 34mm 0 0; }
+    .cover h1 { font-size: 34pt; }
+    .cover .sub { font-size: 13pt; }
+    .cover .portrait { width: 54mm; height: 54mm; border-width: 3px; }
+    .qs li, .mem .body { font-size: 12pt; }
+    .mem figure img { max-height: 105mm; }
+    .memories { break-after: auto; page-break-after: auto; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bar" id="bar" hidden>
+  <span class="mark"><b>Nana</b>fy</span>
+  <a class="back" id="backLink" href="/keepsake/">Back to keepsake</a>
+  <span class="spacer"></span>
+  <span class="meta" id="barMeta"></span>
+  <button id="printBtn" disabled>Preparing…</button>
+</div>
+
+<p class="hint" id="hint" hidden>
+  This is the full keepsake book. Use <b>Save as PDF</b> in the print dialog to keep a copy.
+</p>
+
+<div id="root"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
+  var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
+  var HEADERS = { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY };
+
+  var root = document.getElementById('root');
+  var bar = document.getElementById('bar');
+  var hint = document.getElementById('hint');
+  var barMeta = document.getElementById('barMeta');
+  var printBtn = document.getElementById('printBtn');
+  var backLink = document.getElementById('backLink');
+
+  var TYPE_WORD = {
+    memorial: 'In loving memory of',
+    wedding: 'In celebration of',
+    birthday: 'In celebration of',
+    graduation: 'In celebration of',
+    tribute: 'In tribute to',
+    other: 'For'
+  };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function niceDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function getCode() {
+    var m = /[?&]c=([^&]+)/.exec(location.search);
+    return m ? decodeURIComponent(m[1]).toUpperCase().trim() : '';
+  }
+
+  function showState(title, msg, withForm) {
+    root.innerHTML =
+      '<div class="state">' +
+        '<h1>' + esc(title) + '</h1>' +
+        '<p>' + msg + '</p>' +
+        (withForm
+          ? '<form id="codeForm">' +
+              '<input id="codeInput" maxlength="6" placeholder="ABC123" aria-label="Keepsake code">' +
+              '<button type="submit">Open the book</button>' +
+            '</form>'
+          : '') +
+      '</div>';
+    var f = document.getElementById('codeForm');
+    if (f) {
+      f.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var v = document.getElementById('codeInput').value.trim().toUpperCase();
+        if (v) location.search = '?c=' + encodeURIComponent(v);
+      });
+    }
+  }
+
+  function coverSheet(ev, count) {
+    var word = TYPE_WORD[ev.event_type] || TYPE_WORD.other;
+    var name = ev.honoree || ev.title || 'A life worth remembering';
+    return '' +
+      '<section class="sheet cover">' +
+        '<div class="kicker">A Nanafy Keepsake</div>' +
+        '<div class="rule"></div>' +
+        '<p class="sub" style="margin:0 0 14px">' + esc(word) + '</p>' +
+        '<h1>' + esc(name) + '</h1>' +
+        (ev.title && ev.honoree && ev.title !== ev.honoree
+          ? '<p class="sub">' + esc(ev.title) + '</p>' : '') +
+        (ev.photo_url
+          ? '<img class="portrait" src="' + esc(ev.photo_url) + '" alt="">' : '') +
+        '<div class="foot">' +
+          esc(count) + ' ' + (count === 1 ? 'memory' : 'memories') + ' gathered' +
+          (ev.event_date ? '<br>' + esc(niceDate(ev.event_date)) : '') +
+        '</div>' +
+      '</section>';
+  }
+
+  function questionsSheet(prompts) {
+    if (!prompts.length) return '';
+    var items = prompts.map(function (p) {
+      return '<li>' + esc(p.text) + '</li>';
+    }).join('');
+    return '' +
+      '<section class="sheet qs">' +
+        '<h2>The questions we asked</h2>' +
+        '<p class="lead">Everyone who came was invited to answer in their own words.</p>' +
+        '<ol>' + items + '</ol>' +
+      '</section>';
+  }
+
+  function memoriesSheet(mems) {
+    var cards = mems.map(function (m) {
+      return '' +
+        '<article class="mem">' +
+          (m.prompt_text ? '<p class="q">' + esc(m.prompt_text) + '</p>' : '') +
+          '<p class="body">' + esc(m.body) + '</p>' +
+          '<p class="who">' +
+            (m.contributor_name ? '— ' + esc(m.contributor_name) : '— A friend') +
+            (m.created_at ? ' <span class="when">' + esc(niceDate(m.created_at)) + '</span>' : '') +
+          '</p>' +
+          (m.photo_url
+            ? '<figure><img src="' + esc(m.photo_url) + '" alt=""></figure>' : '') +
+        '</article>';
+    }).join('');
+
+    return '' +
+      '<section class="sheet memories">' +
+        '<div class="section-head">' +
+          '<h2>The memories</h2>' +
+          '<p>In the order they were shared.</p>' +
+        '</div>' +
+        cards +
+      '</section>';
+  }
+
+  function closingSheet(ev, mems) {
+    var names = [];
+    mems.forEach(function (m) {
+      var n = (m.contributor_name || '').trim();
+      if (n && names.indexOf(n) === -1) names.push(n);
+    });
+    var name = ev.honoree || ev.title || 'them';
+    return '' +
+      '<section class="sheet closing">' +
+        '<p class="count">' + mems.length + '</p>' +
+        '<h2>' + (mems.length === 1 ? 'memory' : 'memories') + ' of ' + esc(name) + '</h2>' +
+        '<p class="lead">' +
+          (names.length
+            ? 'Gathered by ' + esc(names.join(' · '))
+            : 'Gathered by everyone who was there') +
+        '</p>' +
+        '<p class="fine">Kept forever at nanafy.ai</p>' +
+      '</section>';
+  }
+
+  function waitForImages(done) {
+    var imgs = Array.prototype.slice.call(root.querySelectorAll('img'));
+    if (!imgs.length) return done();
+    var left = imgs.length;
+    var settled = false;
+    function tick() {
+      if (--left <= 0 && !settled) { settled = true; done(); }
+    }
+    imgs.forEach(function (img) {
+      if (img.complete) return tick();
+      img.addEventListener('load', tick);
+      img.addEventListener('error', tick);
+    });
+    // Never block the button forever on a stubborn image.
+    setTimeout(function () { if (!settled) { settled = true; done(); } }, 8000);
+  }
+
+  async function load() {
+    var code = getCode();
+    if (!code) {
+      showState('Which keepsake?', 'Enter the 6-character code from your keepsake link.', true);
+      return;
+    }
+
+    showState('Gathering the book…', 'One moment.', false);
+
+    var q = SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(code) +
+      '&select=id,title,honoree,event_type,event_date,description,photo_url,' +
+      'prompts(text,position),memories(contributor_name,prompt_text,body,photo_url,created_at)';
+
+    var rows;
+    try {
+      var res = await fetch(q, { headers: HEADERS });
+      if (!res.ok) throw new Error('http ' + res.status);
+      rows = await res.json();
+    } catch (err) {
+      showState('Could not load the book',
+        'Something went wrong reaching the keepsake. Check your connection and try again.', false);
+      return;
+    }
+
+    if (!rows || !rows.length) {
+      showState('No keepsake with that code',
+        'Double-check the 6 characters — they are case-insensitive.', true);
+      return;
+    }
+
+    var ev = rows[0];
+    var prompts = (ev.prompts || []).slice().sort(function (a, b) {
+      return (a.position || 0) - (b.position || 0);
+    });
+    var mems = (ev.memories || []).slice().sort(function (a, b) {
+      return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+    });
+
+    document.title = (ev.honoree || ev.title || 'Keepsake') + ' · The book · Nanafy';
+    backLink.href = '/keepsake/?c=' + encodeURIComponent(code);
+
+    if (!mems.length) {
+      showState('The book is still empty',
+        'No memories have been added yet. Share the keepsake link with your guests, then come back — ' +
+        'the book fills itself in.', false);
+      bar.hidden = false;
+      printBtn.hidden = true;
+      return;
+    }
+
+    root.innerHTML =
+      '<div class="book">' +
+        coverSheet(ev, mems.length) +
+        questionsSheet(prompts) +
+        memoriesSheet(mems) +
+        closingSheet(ev, mems) +
+      '</div>';
+
+    bar.hidden = false;
+    hint.hidden = false;
+    barMeta.textContent = mems.length + (mems.length === 1 ? ' memory' : ' memories');
+
+    waitForImages(function () {
+      printBtn.disabled = false;
+      printBtn.textContent = 'Save as PDF';
+    });
+  }
+
+  printBtn.addEventListener('click', function () { window.print(); });
+
+  load();
+})();
+</script>
+
+</body>
+</html>
