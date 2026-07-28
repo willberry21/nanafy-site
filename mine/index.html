@@ -299,6 +299,21 @@
     // pending/rejected queue, which shouldn't inflate the keepsake counts.
     sb.from('events').select('share_code,photo_url,memories(count)').eq('memories.status', 'approved').in('share_code', codes)
       .then(function(res){
+        // Prune ghosts: a saved code the server no longer knows means the
+        // keepsake was deleted (possibly from another device or the app).
+        // Only trust an actual successful response — never prune on error.
+        if (!res.error && Array.isArray(res.data)) {
+          var live = {};
+          res.data.forEach(function(row){ live[(row.share_code || '').toUpperCase()] = true; });
+          var kept = getDeviceList().filter(function(k){
+            return live[(k.code || '').toUpperCase()] || codes.indexOf((k.code || '').toUpperCase()) === -1;
+          });
+          if (kept.length !== getDeviceList().length) {
+            saveDeviceList(kept);
+            renderList();
+            return;
+          }
+        }
         var total = 0;
         (res.data || []).forEach(function(row){
           var el = document.querySelector('.kcard[data-code="' + row.share_code + '"]');
