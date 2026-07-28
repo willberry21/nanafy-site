@@ -401,6 +401,8 @@
     bar.hidden = false;
     hint.hidden = false;
     barMeta.textContent = mems.length + (mems.length === 1 ? ' memory' : ' memories');
+    hint.innerHTML = 'You’re previewing the real book — the printed copy contains every page below, ' +
+      'as a ' + bookPageCount(prompts.length, mems.length) + '-page softcover (A4).';
 
     mountOrderButton(ev, prompts, mems);
   }
@@ -427,7 +429,11 @@
     a.setAttribute('data-noprice', 'true');
     a.setAttribute('data-currency', 'USD');
     a.setAttribute('data-reference', ref);
-    if (ev.photo_url) a.setAttribute('data-thumbnail', ev.photo_url);
+    // Fills the preview box in Peecho's checkout: the honoree's photo, or
+    // the Nanafy mark. Hosted on Supabase storage — nanafy.ai itself is
+    // behind the Cloudflare gate, which Peecho's servers can't pass.
+    a.setAttribute('data-thumbnail', ev.photo_url ||
+      SUPABASE_URL + '/storage/v1/object/public/books/brand/nanafy-icon.png');
     a.textContent = 'Order the printed book';
     document.getElementById('orderWrap').appendChild(a);
 
