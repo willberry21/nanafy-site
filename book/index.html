@@ -45,6 +45,13 @@
     box-shadow: 0 10px 22px -12px rgba(10,120,111,.7);
   }
   .bar button[disabled] { opacity: .5; cursor: default; box-shadow: none; }
+  /* Peecho order button, dressed as ours */
+  #orderWrap a, #orderWrap a:visited {
+    display: inline-block; border-radius: 8px; background: var(--turq); color: #fff !important;
+    font-weight: 800; font-size: .92rem; padding: 11px 20px; text-decoration: none;
+    box-shadow: 0 10px 22px -12px rgba(10,120,111,.7); cursor: pointer;
+  }
+  #orderWrap a:hover { background: var(--turq-deep); }
 
   .hint {
     max-width: 760px; margin: 18px auto 0; padding: 0 22px;
@@ -174,10 +181,11 @@
   <a class="back" id="backLink" href="/keepsake/">Back to keepsake</a>
   <span class="spacer"></span>
   <span class="meta" id="barMeta"></span>
+  <span id="orderWrap"></span>
 </div>
 
 <p class="hint" id="hint" hidden>
-  A preview of the keepsake book. The printed book is coming soon.
+  A preview of the keepsake book. Order it as a printed, bound book with the button above.
 </p>
 
 <div class="print-guard">
@@ -190,6 +198,11 @@
 <script>
 (function () {
   'use strict';
+
+  // Peecho async print button: the buyer pays in Peecho's checkout, Peecho
+  // pings our webhook, and the print-orders worker generates + delivers the
+  // book PDF afterwards (see nanify repo, tools/book-pdf/).
+  var PEECHO_BUTTON_KEY = '178526714163067446';
 
   var SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
   var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
@@ -388,6 +401,45 @@
     bar.hidden = false;
     hint.hidden = false;
     barMeta.textContent = mems.length + (mems.length === 1 ? ' memory' : ' memories');
+
+    mountOrderButton(ev, prompts, mems);
+  }
+
+  // MUST mirror the sheet math in nanify/tools/book-pdf/generate-book-pdf.mjs:
+  // cover + questions page (if any prompts) + one page per memory + closing,
+  // padded to Peecho's softcover rules (min 20 pages, even count), + back cover.
+  function bookPageCount(promptCount, memCount) {
+    var sheets = 1 + (promptCount ? 1 : 0) + memCount + 1;
+    while (sheets + 1 < 20 || (sheets + 1) % 2 !== 0) sheets++;
+    return sheets + 1;
+  }
+
+  function mountOrderButton(ev, prompts, mems) {
+    var ref = getCode() + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    var a = document.createElement('a');
+    a.className = 'peecho-print-button';
+    a.title = 'Order the printed keepsake book';
+    a.href = 'https://www.peecho.com/';
+    a.setAttribute('data-filetype', 'pdf');
+    a.setAttribute('data-width', '210');
+    a.setAttribute('data-height', '297');
+    a.setAttribute('data-pages', String(bookPageCount(prompts.length, mems.length)));
+    a.setAttribute('data-noprice', 'true');
+    a.setAttribute('data-currency', 'USD');
+    a.setAttribute('data-reference', ref);
+    if (ev.photo_url) a.setAttribute('data-thumbnail', ev.photo_url);
+    a.textContent = 'Order the printed book';
+    document.getElementById('orderWrap').appendChild(a);
+
+    var p = document.createElement('script');
+    p.async = true;
+    // The script's own DOM scan runs at page load, which has already passed
+    // by the time we inject it — attach() explicitly once it arrives.
+    p.onload = function () {
+      if (window.peecho && window.peecho.attach) window.peecho.attach();
+    };
+    p.src = 'https://d3aln0nj58oevo.cloudfront.net/button/script/' + PEECHO_BUTTON_KEY + '.js';
+    document.head.appendChild(p);
   }
 
   load();
