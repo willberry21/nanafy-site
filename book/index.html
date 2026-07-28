@@ -151,29 +151,19 @@
     .cover .portrait { width: 150px; height: 150px; }
   }
 
-  /* ---------- Print / Save as PDF ---------- */
-  @page { size: Letter; margin: 16mm 15mm; }
+  /* ---------- Print guard ----------
+     The on-screen book is a preview. The real book is the printed
+     keepsake (coming via print-on-demand) — so browser print/PDF
+     export shows a note instead of the pages. */
+  .print-guard { display: none; }
   @media print {
-    :root {
-      --ground: #fff; --surface: #fff; --surface-2: #F2ECE6;
-      --ink: #23181f; --ink-soft: #5d4f57; --line: #ded2c9;
+    .bar, .hint, .state, .book { display: none !important; }
+    .print-guard {
+      display: block; padding: 40mm 20mm 0; text-align: center;
+      font-family: var(--serif); color: #23181f;
     }
-    html, body { background: #fff; }
-    .bar, .hint, .state { display: none !important; }
-    .book { max-width: none; margin: 0; padding: 0; }
-    .sheet {
-      border: 0; border-radius: 0; box-shadow: none; padding: 0; margin: 0;
-      break-after: page; page-break-after: always;
-    }
-    .sheet:last-child { break-after: auto; page-break-after: auto; }
-    .cover { padding: 34mm 0 0; }
-    .cover h1 { font-size: 34pt; }
-    .cover .sub { font-size: 13pt; }
-    .cover .portrait { width: 54mm; height: 54mm; border-width: 3px; }
-    .qs li, .mem .body { font-size: 12pt; }
-    .mem figure img { max-height: 105mm; }
-    .memories { break-after: auto; page-break-after: auto; }
-    a { color: inherit; text-decoration: none; }
+    .print-guard h1 { font-weight: 400; font-size: 22pt; margin: 0 0 8pt; }
+    .print-guard p { font-family: var(--sans); font-size: 11pt; color: #5d4f57; }
   }
 </style>
 </head>
@@ -184,12 +174,16 @@
   <a class="back" id="backLink" href="/keepsake/">Back to keepsake</a>
   <span class="spacer"></span>
   <span class="meta" id="barMeta"></span>
-  <button id="printBtn" disabled>Preparing…</button>
 </div>
 
 <p class="hint" id="hint" hidden>
-  This is the full keepsake book. Use <b>Save as PDF</b> in the print dialog to keep a copy.
+  A preview of the keepsake book. The printed book is coming soon.
 </p>
+
+<div class="print-guard">
+  <h1>This book lives at nanafy.ai</h1>
+  <p>The keepsake book will be available as a beautifully printed, bound book — coming soon.</p>
+</div>
 
 <div id="root"></div>
 
@@ -205,7 +199,6 @@
   var bar = document.getElementById('bar');
   var hint = document.getElementById('hint');
   var barMeta = document.getElementById('barMeta');
-  var printBtn = document.getElementById('printBtn');
   var backLink = document.getElementById('backLink');
 
   var TYPE_WORD = {
@@ -335,23 +328,6 @@
       '</section>';
   }
 
-  function waitForImages(done) {
-    var imgs = Array.prototype.slice.call(root.querySelectorAll('img'));
-    if (!imgs.length) return done();
-    var left = imgs.length;
-    var settled = false;
-    function tick() {
-      if (--left <= 0 && !settled) { settled = true; done(); }
-    }
-    imgs.forEach(function (img) {
-      if (img.complete) return tick();
-      img.addEventListener('load', tick);
-      img.addEventListener('error', tick);
-    });
-    // Never block the button forever on a stubborn image.
-    setTimeout(function () { if (!settled) { settled = true; done(); } }, 8000);
-  }
-
   async function load() {
     var code = getCode();
     if (!code) {
@@ -398,7 +374,6 @@
         'No memories have been added yet. Share the keepsake link with your guests, then come back — ' +
         'the book fills itself in.', false);
       bar.hidden = false;
-      printBtn.hidden = true;
       return;
     }
 
@@ -413,14 +388,7 @@
     bar.hidden = false;
     hint.hidden = false;
     barMeta.textContent = mems.length + (mems.length === 1 ? ' memory' : ' memories');
-
-    waitForImages(function () {
-      printBtn.disabled = false;
-      printBtn.textContent = 'Save as PDF';
-    });
   }
-
-  printBtn.addEventListener('click', function () { window.print(); });
 
   load();
 })();
