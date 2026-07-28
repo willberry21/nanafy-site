@@ -82,7 +82,8 @@
   .rvw button:disabled { opacity: 0.55; cursor: default; }
   .rvw .rvw-yes { background: var(--turq); border: 1px solid var(--turq); color: #fff; }
   .rvw .rvw-no { background: none; border: 1px solid var(--line); color: var(--ink); }
-  .m-remove { display: block; margin-top: 12px; border: 0; background: none; padding: 0; font: inherit; font-size: 0.82rem; font-weight: 600; color: var(--ink-soft); cursor: pointer; }
+  .m-tools { display: flex; gap: 18px; margin-top: 12px; }
+  .m-remove { display: block; border: 0; background: none; padding: 0; font: inherit; font-size: 0.82rem; font-weight: 600; color: var(--ink-soft); cursor: pointer; }
   .m-remove:hover { color: var(--danger); text-decoration: underline; }
   .m-remove:disabled { opacity: 0.55; cursor: default; }
   .mcard .photo img { width: 100%; border-radius: 12px; display: block; }
@@ -386,7 +387,12 @@ function render(ev, pending) {
         (m.prompt_text ? '<div class="q">' + esc(m.prompt_text) + '</div>' : '') +
         '<div class="body">' + esc(m.body) + '</div>' +
         (m.photo_url ? '<div class="photo"><img src="' + esc(m.photo_url) + '" alt="Shared photo" loading="lazy"></div>' : '') +
-        (isOwner ? '<button type="button" class="m-remove" data-remove>Remove from keepsake</button>' : '') +
+        (isOwner
+          ? '<div class="m-tools">' +
+            (m.photo_url ? '<button type="button" class="m-remove" data-remove-photo>Remove the photo</button>' : '') +
+            '<button type="button" class="m-remove" data-remove>Remove from keepsake</button>' +
+            '</div>'
+          : '') +
         '</div>';
     }).join('') + '</div>';
   }
@@ -453,6 +459,28 @@ function render(ev, pending) {
         start(code);
       } catch (e) {
         btn.disabled = false; btn.textContent = 'Remove from keepsake';
+      }
+    });
+  });
+
+  // Owner strips just the photo from a memory; the words stay. (The photo
+  // reference is cleared, not the storage file — same as removing a
+  // keepsake's honoree photo.)
+  Array.prototype.forEach.call(app.querySelectorAll('[data-remove-photo]'), function (btn) {
+    btn.addEventListener('click', async function () {
+      const card = btn.closest('.mcard');
+      if (!window.confirm('Remove the photo from this memory?\n\nThe written memory stays.')) return;
+      btn.disabled = true; btn.textContent = 'Removing…';
+      try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/memories?id=eq.' + encodeURIComponent(card.dataset.mid), {
+          method: 'PATCH',
+          headers: Object.assign({}, authHeaders(), { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+          body: JSON.stringify({ photo_url: null })
+        });
+        if (!res.ok) throw new Error('removePhoto');
+        start(code);
+      } catch (e) {
+        btn.disabled = false; btn.textContent = 'Remove the photo';
       }
     });
   });
