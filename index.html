@@ -350,7 +350,7 @@
         <a href="/create/">Create</a>
         <a href="/mine/">My keepsakes</a>
       </nav>
-      <div class="topnav-right"><span id="navProfile"></span><a class="nav-cta" href="#start">Get early access</a></div>
+      <div class="topnav-right"><span id="navProfile"></span><a class="nav-cta" href="/create/">Create a keepsake</a></div>
     </div>
   </div>
 
@@ -361,7 +361,7 @@
       <h1>Every voice.<br>Kept forever.</h1>
       <p>One code at the gathering. Every story, in their own words. Memorials, weddings, and the milestones in between.</p>
       <div class="hero-n-cta">
-        <a class="hbtn solid" href="#start">Get early access</a>
+        <a class="hbtn solid" href="/create/">Create a keepsake</a>
         <a class="hbtn line" href="#how">How it works</a>
       </div>
     </div>
@@ -468,25 +468,13 @@
     </div>
   </section>
 
-  <!-- CLOSING + EARLY ACCESS -->
+  <!-- CLOSING -->
   <section class="closing" id="start">
     <div class="wrap">
       <div class="reveal">
         <h2>Don’t let the stories leave with everyone.</h2>
-        <p class="lede">Nanafy is being built now. Leave your email and we’ll invite you the moment you can create your first keepsake.</p>
-
-        <div class="signup">
-          <form class="signup-form" id="signup-form" novalidate>
-            <input type="email" id="signup-email" name="email" placeholder="you@example.com" autocomplete="email" required aria-label="Your email address">
-            <button type="submit" class="btn btn-primary">Get early access</button>
-          </form>
-          <p class="signup-note">No spam, ever — just one note when it’s ready.</p>
-
-          <div class="signup-ok" id="signup-ok" role="status" aria-live="polite">
-            <span class="em"></span>
-            You’re on the list. We’ll be in touch — thank you for being early.
-          </div>
-        </div>
+        <p class="lede">A keepsake takes a minute to create — free, no sign-up needed. Share one code at the gathering, and every voice is kept.</p>
+        <a class="btn btn-primary" href="/create/">Create a keepsake</a>
       </div>
     </div>
   </section>
@@ -520,36 +508,6 @@
 
   // Current year in footer
   document.getElementById('year').textContent = new Date().getFullYear();
-
-  // Early-access signup. Until a real waitlist backend is wired, this opens a
-  // pre-filled email to the Nanafy inbox (will@nanafy.ai). Address is assembled
-  // in JS to keep it off the raw page (light spam protection).
-  (function () {
-    var form = document.getElementById('signup-form');
-    var input = document.getElementById('signup-email');
-    var ok = document.getElementById('signup-ok');
-    if (!form) return;
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var email = (input.value || '').trim();
-      if (!email || email.indexOf('@') < 1 || email.indexOf('.') < 0) {
-        input.focus();
-        input.style.borderColor = 'var(--plum)';
-        return;
-      }
-      var to = ['will', 'nanafy.ai'].join('@');
-      var subject = 'Nanafy early access';
-      var body = 'Please add me to the Nanafy early-access list.\n\nMy email: ' + email;
-      var href = 'mailto:' + to +
-        '?subject=' + encodeURIComponent(subject) +
-        '&body=' + encodeURIComponent(body);
-      // Swap the form for the thank-you, then open the mail draft.
-      form.style.display = 'none';
-      document.querySelector('.signup-note').style.display = 'none';
-      ok.classList.add('show');
-      window.location.href = href;
-    });
-  })();
 </script>
 <script>
   // Header profile chip: shows your initial when signed in (reads the
