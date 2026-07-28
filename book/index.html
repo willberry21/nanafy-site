@@ -409,10 +409,11 @@
 
   // MUST mirror the sheet math in nanify/tools/book-pdf/generate-book-pdf.mjs:
   // cover + questions page (if any prompts) + one page per memory + closing,
-  // padded to Peecho's softcover rules (min 20 pages, even count), + back cover.
+  // padded to min 24 pages / even count (24 qualifies for both softcover
+  // and hardcover), + back cover.
   function bookPageCount(promptCount, memCount) {
     var sheets = 1 + (promptCount ? 1 : 0) + memCount + 1;
-    while (sheets + 1 < 20 || (sheets + 1) % 2 !== 0) sheets++;
+    while (sheets + 1 < 24 || (sheets + 1) % 2 !== 0) sheets++;
     return sheets + 1;
   }
 
