@@ -226,9 +226,10 @@
   <p class="foot"><a href="/">nanafy.ai</a></p>
 </div>
 
+<script src="/js/session.js"></script>
 <script>
-const SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
+const SUPABASE_URL = Nanafy.SUPABASE_URL;
+const ANON_KEY = Nanafy.ANON_KEY;
 const HEADERS = { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY };
 const PREPOSITIONS = { memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating', graduation: 'Congratulating', tribute: 'A tribute to', other: 'For' };
 
@@ -267,13 +268,13 @@ function when(iso) {
 }
 
 async function fetchKeepsake(c) {
-  // Deliberately fetched with the anon key: the memories embed then only
-  // contains approved ones (RLS), which is the public keepsake view.
-  const q = SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(c.toUpperCase()) +
-    '&select=id,title,honoree,event_type,photo_url,owner_id,prompts(text,position),memories(id,contributor_name,prompt_text,body,photo_url,created_at)';
-  const res = await fetch(q, { headers: HEADERS });
-  if (!res.ok) throw new Error('server');
-  return (await res.json())[0] || null;
+  // The join RPC records membership and returns the event; the memories embed
+  // then only contains approved ones (RLS), which is the keepsake view.
+  const ev = await Nanafy.join(c,
+    'id,title,honoree,event_type,photo_url,owner_id,prompts(text,position),memories(id,status,contributor_name,prompt_text,body,photo_url,created_at)');
+  // Owners can read every status; the keepsake grid shows only approved.
+  if (ev && Array.isArray(ev.memories)) ev.memories = ev.memories.filter((m) => m.status === 'approved');
+  return ev;
 }
 
 // The owner's review queue. Returns [] for everyone else (and skips the
@@ -573,7 +574,7 @@ function render(ev, pending) {
         if (!del.ok) throw new Error('prompts');
         var ins = await fetch(SUPABASE_URL + '/rest/v1/prompts', {
           method: 'POST',
-          headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+          headers: Object.assign({}, authHeaders(), { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
           body: JSON.stringify(cleaned.map(function(text, i){ return { event_id: ev.id, text: text, position: i }; }))
         });
         if (!ins.ok) throw new Error('prompts');

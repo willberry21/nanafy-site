@@ -218,6 +218,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/session.js"></script>
 <script>
   var SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
   var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
@@ -293,27 +294,39 @@
   }
 
   // Honoree photos as tile backgrounds + live memory counts per keepsake.
-  function loadTileExtras(codes){
+  async function loadTileExtras(codes){
     if (!codes.length) return;
-    // Count approved memories only — a signed-in owner can also see their
-    // pending/rejected queue, which shouldn't inflate the keepsake counts.
-    sb.from('events').select('share_code,photo_url,memories(count)').eq('memories.status', 'approved').in('share_code', codes)
-      .then(function(res){
-        // Prune ghosts: a saved code the server no longer knows means the
-        // keepsake was deleted (possibly from another device or the app).
-        // Only trust an actual successful response — never prune on error.
-        if (!res.error && Array.isArray(res.data)) {
-          var live = {};
-          res.data.forEach(function(row){ live[(row.share_code || '').toUpperCase()] = true; });
-          var kept = getDeviceList().filter(function(k){
-            return live[(k.code || '').toUpperCase()] || codes.indexOf((k.code || '').toUpperCase()) === -1;
-          });
-          if (kept.length !== getDeviceList().length) {
-            saveDeviceList(kept);
-            renderList();
-            return;
-          }
+    // Reads are membership-scoped now: exchange each saved code through the
+    // join RPC first (idempotent — repeat joins are no-ops). A join that
+    // succeeds but returns nothing means the keepsake was deleted, which is
+    // also our ghost-prune signal; a thrown join (network/server) proves
+    // nothing, so it never prunes.
+    var live = {};
+    var certain = {};
+    await Promise.all(codes.map(async function(c){
+      try {
+        var ev = await window.Nanafy.join(c, 'share_code,photo_url,memories(status)');
+        if (ev && Array.isArray(ev.memories)) {
+          // Count approved only — owners can also read their pending/rejected queue.
+          ev.memories = [{ count: ev.memories.filter(function(m){ return m.status === 'approved'; }).length }];
         }
+        certain[c.toUpperCase()] = true;
+        if (ev) live[(ev.share_code || c).toUpperCase()] = ev;
+      } catch (e) { /* unreachable — leave this code alone */ }
+    }));
+    var kept = getDeviceList().filter(function(k){
+      var u = (k.code || '').toUpperCase();
+      return live[u] || !certain[u];
+    });
+    if (kept.length !== getDeviceList().length) {
+      saveDeviceList(kept);
+      renderList();
+      return;
+    }
+    var res = { data: Object.keys(live).map(function(u){ return live[u]; }) };
+    (function(){
+        // Count approved memories only — a signed-in owner can also see their
+        // pending/rejected queue, which shouldn't inflate the keepsake counts.
         var total = 0;
         (res.data || []).forEach(function(row){
           var el = document.querySelector('.kcard[data-code="' + row.share_code + '"]');
@@ -338,7 +351,7 @@
           if (lede) lede.innerHTML = codes.length + ' keepsake' + (codes.length > 1 ? 's' : '') +
             ' · <b>' + total + '</b> ' + (total === 1 ? 'memory' : 'memories') + ' kept';
         }
-      });
+    })();
   }
 
   // The reflection: a light spot + gentle 3D tilt that follows the cursor.
@@ -450,16 +463,13 @@
       var device = getDeviceList();
       var codes = device.map(function(k){ return (k.code||'').toUpperCase(); }).filter(Boolean);
 
-      // Resolve device codes -> event ids, then record account membership.
+      // Record account membership for each device code. The join RPC is the
+      // only path that can see an event from just its code now, and it writes
+      // the membership row itself (idempotent).
       if (codes.length) {
-        var evByCode = await sb.from('events').select('id,share_code').in('share_code', codes);
-        var rows = evByCode.data || [];
-        if (rows.length) {
-          await sb.from('event_members').upsert(
-            rows.map(function(r){ return { user_id: uid, event_id: r.id }; }),
-            { onConflict: 'user_id,event_id' }
-          );
-        }
+        await Promise.all(codes.map(function(c){
+          return sb.rpc('join_event_by_code', { p_code: c });
+        }));
       }
 
       // Pull every keepsake tied to this account (from any device).

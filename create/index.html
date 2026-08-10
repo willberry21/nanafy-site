@@ -388,10 +388,11 @@
   <p class="foot"><a href="/">← Back to nanafy.ai</a></p>
 </div>
 
+<script src="/js/session.js"></script>
 <script>
   // ---- Supabase connection (public anon key — protected by row-level security) ----
-  var SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
-  var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
+  var SUPABASE_URL = Nanafy.SUPABASE_URL;
+  var ANON_KEY = Nanafy.ANON_KEY;
   var HEADERS = { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY };
 
   // Signed-in session (if any) — read from the session Supabase stores
@@ -637,13 +638,16 @@
 
     try {
       // 1) Create the event, and ask the database to hand back its id + share code.
-      // Signed in → the keepsake belongs to the account (owner_id), which also
-      // turns on host moderation for its guest memories.
-      var sess = session();
+      // Every keepsake now belongs to a session — a signed-in account when there
+      // is one, else this device's anonymous session. The database requires it
+      // (no more ownerless events), and it is what makes moderation possible.
+      var sess = await Nanafy.session();
+      if (!sess) throw new Error('event');
+      var sessHeaders = { apikey: ANON_KEY, Authorization: 'Bearer ' + sess.token };
       var evRes = await fetch(SUPABASE_URL + '/rest/v1/events', {
         method: 'POST',
-        headers: Object.assign({}, authHeaders(), { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
-        body: JSON.stringify({ event_type: selectedType, honoree: name, title: title || null, owner_id: sess ? sess.userId : null })
+        headers: Object.assign({}, sessHeaders, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+        body: JSON.stringify({ event_type: selectedType, honoree: name, title: title || null, owner_id: sess.userId })
       });
       if (!evRes.ok) throw new Error('event');
       var event = (await evRes.json())[0];
@@ -656,7 +660,7 @@
       });
       var pRes = await fetch(SUPABASE_URL + '/rest/v1/prompts', {
         method: 'POST',
-        headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+        headers: Object.assign({}, sessHeaders, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
         body: JSON.stringify(prompts)
       });
       if (!pRes.ok) throw new Error('prompts');

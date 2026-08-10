@@ -195,6 +195,7 @@
 
 <div id="root"></div>
 
+<script src="/js/session.js"></script>
 <script>
 (function () {
   'use strict';
@@ -204,8 +205,8 @@
   // book PDF afterwards (see nanify repo, tools/book-pdf/).
   var PEECHO_BUTTON_KEY = '178526714163067446';
 
-  var SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
-  var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
+  var SUPABASE_URL = Nanafy.SUPABASE_URL;
+  var ANON_KEY = Nanafy.ANON_KEY;
   var HEADERS = { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY };
 
   var root = document.getElementById('root');
@@ -350,28 +351,27 @@
 
     showState('Gathering the book…', 'One moment.', false);
 
-    var q = SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(code) +
-      '&select=id,title,honoree,event_type,event_date,description,photo_url,' +
-      'prompts(text,position),memories(contributor_name,prompt_text,body,photo_url,created_at)';
-
-    var rows;
+    var ev;
     try {
-      var res = await fetch(q, { headers: HEADERS });
-      if (!res.ok) throw new Error('http ' + res.status);
-      rows = await res.json();
+      // Membership-scoped read: the join RPC is the way in with a share code.
+      ev = await Nanafy.join(code,
+        'id,title,honoree,event_type,event_date,description,photo_url,' +
+        'prompts(text,position),memories(status,contributor_name,prompt_text,body,photo_url,created_at)');
+      // Owners can read every status; the book prints only approved memories.
+      if (ev && Array.isArray(ev.memories)) {
+        ev.memories = ev.memories.filter(function (m) { return m.status === 'approved'; });
+      }
     } catch (err) {
       showState('Could not load the book',
         'Something went wrong reaching the keepsake. Check your connection and try again.', false);
       return;
     }
 
-    if (!rows || !rows.length) {
+    if (!ev) {
       showState('No keepsake with that code',
         'Double-check the 6 characters — they are case-insensitive.', true);
       return;
     }
-
-    var ev = rows[0];
     var prompts = (ev.prompts || []).slice().sort(function (a, b) {
       return (a.position || 0) - (b.position || 0);
     });

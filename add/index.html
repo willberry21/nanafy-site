@@ -131,9 +131,10 @@
   <p class="foot">Memories are gathered with Nanafy — stories worth keeping, from the people who were there.</p>
 </div>
 
+<script src="/js/session.js"></script>
 <script>
-const SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
+const SUPABASE_URL = Nanafy.SUPABASE_URL;
+const ANON_KEY = Nanafy.ANON_KEY;
 const HEADERS = { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY };
 const PREPOSITIONS = { memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating', graduation: 'Congratulating', tribute: 'A tribute to', other: 'For' };
 const TARGET_WORDS = 250;
@@ -148,12 +149,9 @@ let savedName = '';
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
 async function fetchEvent(code) {
-  const q = SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(code.toUpperCase()) +
-    '&select=id,title,event_type,honoree,share_code,owner_id,prompts(text,position)';
-  const res = await fetch(q, { headers: HEADERS });
-  if (!res.ok) throw new Error('server');
-  const rows = await res.json();
-  return rows[0] || null;
+  // The share code is exchanged for membership through the join RPC — the
+  // database no longer answers direct reads without it.
+  return Nanafy.join(code, 'id,title,event_type,honoree,share_code,owner_id,prompts(text,position)');
 }
 
 function renderCodeEntry(message) {
@@ -264,7 +262,7 @@ function renderForm() {
       }
       const ins = await fetch(SUPABASE_URL + '/rest/v1/memories', {
         method: 'POST',
-        headers: { ...HEADERS, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        headers: { ...(await Nanafy.headers()), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({
           event_id: event.id,
           prompt_text: prompts[promptIndex],
