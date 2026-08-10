@@ -121,10 +121,22 @@ window.Nanafy = (function () {
     var ev = (rows && rows[0]) || null;
     if (!ev) return null;
     if (!select) return ev;
-    var r2 = await fetch(SUPABASE_URL + '/rest/v1/events?id=eq.' + ev.id + '&select=' + select, { headers: h });
-    if (!r2.ok) throw new Error('server');
-    var full = await r2.json();
-    return (full && full[0]) || null;
+    async function readFull() {
+      var r2 = await fetch(SUPABASE_URL + '/rest/v1/events?id=eq.' + ev.id + '&select=' + select, { headers: h });
+      if (!r2.ok) throw new Error('server');
+      var full = await r2.json();
+      return (full && full[0]) || null;
+    }
+    var row = await readFull();
+    // Brand-new memberships can race the embedded reads: the event arrives
+    // but its relations (prompts, memories) come back empty on the very
+    // first contact. If every requested embed is empty, look once more.
+    var embeds = (select.match(/([a-z_]+)\(/g) || []).map(function (e) { return e.slice(0, -1); });
+    if (row && embeds.length && embeds.every(function (k) { return Array.isArray(row[k]) && row[k].length === 0; })) {
+      await new Promise(function (res) { setTimeout(res, 350); });
+      row = (await readFull()) || row;
+    }
+    return row;
   }
 
   return { SUPABASE_URL: SUPABASE_URL, ANON_KEY: ANON_KEY, session: session, headers: headers, join: join };
