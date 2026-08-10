@@ -266,9 +266,9 @@ function authHeaders() {
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-// Gently fold a decided card away while the in-place refresh loads, so the
-// next one slides up to meet the host instead of the page jumping around.
-function collapse(el) {
+// Gently fold a decided card away — no page refresh, nothing else moves.
+// The next card simply slides up to meet the host.
+function collapse(el, then) {
   el.style.overflow = 'hidden';
   el.style.height = el.offsetHeight + 'px';
   el.style.transition = 'height .3s ease, opacity .25s ease, margin .3s ease, padding .3s ease';
@@ -277,6 +277,21 @@ function collapse(el) {
     el.style.marginTop = '0'; el.style.marginBottom = '0';
     el.style.paddingTop = '0'; el.style.paddingBottom = '0';
   });
+  setTimeout(function () { el.remove(); if (then) then(); }, 320);
+}
+
+// Tick the review-queue badge down after a decision; when the queue is
+// empty, fold the whole section away.
+function queueShrunk(by) {
+  const badge = document.querySelector('.pending .p-n');
+  if (badge) {
+    const n = Math.max(0, (parseInt(badge.textContent, 10) || 0) - by);
+    badge.textContent = n;
+  }
+  const box = document.querySelector('.pending');
+  if (box && !box.querySelector('.mcard.is-pending') && !box.querySelector('.pgrid-batch')) {
+    collapse(box);
+  }
 }
 
 function when(iso) {
@@ -494,8 +509,28 @@ function render(ev, pending) {
           body: JSON.stringify({ status: decision })
         });
         if (!res.ok) throw new Error('batch');
-        collapse(batch);
-        start(code, true);
+        const cells = batch.querySelectorAll('.pg-cell[aria-pressed="true"]');
+        const remaining = batch.querySelectorAll('.pg-cell').length - cells.length;
+        if (remaining === 0) {
+          // whole batch decided — fold it away as one
+          collapse(batch, function () { queueShrunk(ids.length); });
+        } else {
+          // some photos left unselected: fade the decided ones out, keep the
+          // batch open for a second look at the rest
+          Array.prototype.forEach.call(cells, function (c) {
+            c.style.transition = 'opacity .25s ease'; c.style.opacity = '0';
+            setTimeout(function () { c.remove(); }, 260);
+          });
+          queueShrunk(ids.length);
+          batch.querySelector('[data-batch-approve]').textContent = 'Approve selected (' + remaining + ')';
+          batch.querySelector('[data-batch-decline]').textContent = 'Decline selected';
+          batch.querySelector('.who .when').textContent = remaining + ' photo' + (remaining > 1 ? 's' : '');
+          Array.prototype.forEach.call(batch.querySelectorAll('.rvw button'), function (b) { b.disabled = false; });
+          // the survivors start selected, ready for the next decision
+          setTimeout(function () {
+            Array.prototype.forEach.call(batch.querySelectorAll('.pg-cell'), function (c) { c.setAttribute('aria-pressed', 'true'); });
+          }, 280);
+        }
       } catch (e) {
         Array.prototype.forEach.call(batch.querySelectorAll('button'), function (b) { b.disabled = false; });
         btn.textContent = decision === 'approved' ? 'Approve selected (' + ids.length + ')' : 'Decline selected';
@@ -518,8 +553,7 @@ function render(ev, pending) {
           body: JSON.stringify({ status: decision })
         });
         if (!res.ok) throw new Error('decide');
-        collapse(card);
-        start(code, true); // refresh in place: the queue shrinks under the cursor
+        collapse(card, function () { queueShrunk(1); }); // no refresh — nothing else moves
       } catch (e) {
         Array.prototype.forEach.call(card.querySelectorAll('button'), function (b) { b.disabled = false; });
         btn.textContent = decision === 'approved' ? 'Approve' : 'Decline';
@@ -542,8 +576,7 @@ function render(ev, pending) {
           body: JSON.stringify({ status: 'rejected' })
         });
         if (!res.ok) throw new Error('remove');
-        collapse(card);
-        start(code, true);
+        collapse(card); // no refresh — the card simply leaves
       } catch (e) {
         btn.disabled = false; btn.textContent = 'Remove from keepsake';
       }
@@ -565,7 +598,9 @@ function render(ev, pending) {
           body: JSON.stringify({ photo_url: null })
         });
         if (!res.ok) throw new Error('removePhoto');
-        start(code, true);
+        const ph = card.querySelector('.photo');
+        if (ph) collapse(ph);
+        btn.remove(); // the photo is gone; so is its button
       } catch (e) {
         btn.disabled = false; btn.textContent = 'Remove the photo';
       }
