@@ -316,7 +316,7 @@
     <span class="label" id="honoreeLabel">In memory of</span>
     <input type="text" id="honoree" placeholder="Name" autocomplete="off" autocapitalize="words">
 
-    <span class="label">Title (optional)</span>
+    <span class="label" id="titleLabel">Title (optional)</span>
     <input type="text" id="title" placeholder="e.g. Memorial celebration" autocomplete="off">
 
     <div class="note">
@@ -416,12 +416,20 @@
 
   var PREPOSITIONS = {
     memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating',
-    graduation: 'Congratulating', tribute: 'A tribute to', other: 'For'
+    graduation: 'Congratulating', tribute: 'A tribute to', other: 'What should we call it?'
   };
   var TITLE_HINTS = {
     memorial: 'e.g. Memorial celebration', wedding: 'e.g. Sam & Dev’s wedding',
     birthday: 'e.g. Mom’s 60th', graduation: 'e.g. Maya’s graduation',
-    tribute: 'e.g. Coach Ellis tribute', other: 'e.g. Our celebration'
+    tribute: 'e.g. Coach Ellis tribute', other: ''
+  };
+  // Person-occasions ask for a name AND an optional title. "Other" is for
+  // occasions themselves — a trip, a reunion, a season — so it asks ONE
+  // question (the occasion's name) and skips the title, which would just be
+  // the same words twice.
+  var NAME_HINTS = {
+    memorial: 'Name', wedding: 'Name', birthday: 'Name',
+    graduation: 'Name', tribute: 'Name', other: 'e.g. The Orcas Island Trip'
   };
   // Five starter questions per occasion (mirrors the app's prompt bank). {name} → honoree.
   var PROMPT_BANK = {
@@ -461,11 +469,11 @@
       'How is the world better because of {name}?'
     ],
     other: [
-      'What is your favorite memory with {name}?',
-      'What makes {name} special to you?',
-      'Share a story you always come back to.',
-      'What do you want to say to {name}?',
-      'What is your wish for {name}?'
+      'What is your favorite memory from {name}?',
+      'What moment made you laugh the hardest?',
+      'Share a story from {name} you’ll still be telling in ten years.',
+      'What surprised you the most?',
+      'What do you hope we do again next time?'
     ]
   };
 
@@ -487,7 +495,13 @@
       c.setAttribute('aria-pressed', String(c === b));
     });
     honoreeLabel.textContent = PREPOSITIONS[selectedType];
+    honoree.placeholder = NAME_HINTS[selectedType];
     titleInput.placeholder = TITLE_HINTS[selectedType];
+    // "Other" keepsakes are named once — no separate title field.
+    var isOther = selectedType === 'other';
+    document.getElementById('titleLabel').hidden = isOther;
+    titleInput.hidden = isOther;
+    if (isOther) titleInput.value = '';
   });
 
   honoree.addEventListener('input', function () {
@@ -582,7 +596,7 @@
     birthday: ['What is a lesson {name} has taught you?','What is your funniest memory with {name}?','Describe {name} in three words.','What are you grateful to {name} for?','What makes {name} laugh?'],
     graduation: ['What has impressed you most about {name}?','What is a challenge you watched {name} overcome?','What is your favorite memory from these years?','What is one word for {name}’s future?','What should {name} always remember?'],
     tribute: ['What is a story that sums up {name}?','What has {name} done that meant the most to you?','How would you describe {name} to a stranger?','What is a quality of {name} you admire?','What thanks do you want to give {name}?'],
-    other: ['What is a moment with {name} you treasure?','What do you appreciate about {name}?','Describe {name} in three words.','What is a story you love about {name}?','What is your hope for {name}?']
+    other: ['What is a moment from {name} you treasure?','Describe {name} in three words.','What was the best meal, and who was there?','Who made {name} what it was, and how?','What would you tell someone who missed it?']
   };
 
   function goToPrompts() {
