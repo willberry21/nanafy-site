@@ -266,6 +266,19 @@ function authHeaders() {
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
+// Gently fold a decided card away while the in-place refresh loads, so the
+// next one slides up to meet the host instead of the page jumping around.
+function collapse(el) {
+  el.style.overflow = 'hidden';
+  el.style.height = el.offsetHeight + 'px';
+  el.style.transition = 'height .3s ease, opacity .25s ease, margin .3s ease, padding .3s ease';
+  requestAnimationFrame(function () {
+    el.style.height = '0'; el.style.opacity = '0';
+    el.style.marginTop = '0'; el.style.marginBottom = '0';
+    el.style.paddingTop = '0'; el.style.paddingBottom = '0';
+  });
+}
+
 function when(iso) {
   const d = new Date(iso), now = new Date();
   const mins = Math.round((now - d) / 60000);
@@ -481,7 +494,8 @@ function render(ev, pending) {
           body: JSON.stringify({ status: decision })
         });
         if (!res.ok) throw new Error('batch');
-        start(code);
+        collapse(batch);
+        start(code, true);
       } catch (e) {
         Array.prototype.forEach.call(batch.querySelectorAll('button'), function (b) { b.disabled = false; });
         btn.textContent = decision === 'approved' ? 'Approve selected (' + ids.length + ')' : 'Decline selected';
@@ -504,7 +518,8 @@ function render(ev, pending) {
           body: JSON.stringify({ status: decision })
         });
         if (!res.ok) throw new Error('decide');
-        start(code); // refresh: approved memories join the grid, the queue shrinks
+        collapse(card);
+        start(code, true); // refresh in place: the queue shrinks under the cursor
       } catch (e) {
         Array.prototype.forEach.call(card.querySelectorAll('button'), function (b) { b.disabled = false; });
         btn.textContent = decision === 'approved' ? 'Approve' : 'Decline';
@@ -527,7 +542,8 @@ function render(ev, pending) {
           body: JSON.stringify({ status: 'rejected' })
         });
         if (!res.ok) throw new Error('remove');
-        start(code);
+        collapse(card);
+        start(code, true);
       } catch (e) {
         btn.disabled = false; btn.textContent = 'Remove from keepsake';
       }
@@ -549,7 +565,7 @@ function render(ev, pending) {
           body: JSON.stringify({ photo_url: null })
         });
         if (!res.ok) throw new Error('removePhoto');
-        start(code);
+        start(code, true);
       } catch (e) {
         btn.disabled = false; btn.textContent = 'Remove the photo';
       }
@@ -657,9 +673,13 @@ function render(ev, pending) {
   });
 }
 
-async function start(c) {
+// keepScroll: refreshes after an approve/decline stay exactly where the
+// host was reading — the queue shrinks under the cursor instead of
+// bouncing back to the top of the page.
+async function start(c, keepScroll) {
   code = c;
-  app.innerHTML = '<div class="spinner">Gathering the memories…</div>';
+  const y = keepScroll ? window.scrollY : 0;
+  if (!keepScroll) app.innerHTML = '<div class="spinner">Gathering the memories…</div>';
   try {
     const ev = await fetchKeepsake(c);
     if (!ev) return renderCodeEntry('No keepsake found with code ' + c.toUpperCase() + '. Double-check it and try again.');
@@ -668,9 +688,9 @@ async function start(c) {
     u.searchParams.set('c', c.toUpperCase());
     history.replaceState(null, '', u);
     render(ev, pending);
-    window.scrollTo(0, 0);
+    window.scrollTo(0, keepScroll ? Math.min(y, document.body.scrollHeight) : 0);
   } catch {
-    renderCodeEntry("Couldn't reach the server. Check your connection and try again.");
+    if (!keepScroll) renderCodeEntry("Couldn't reach the server. Check your connection and try again.");
   }
 }
 
