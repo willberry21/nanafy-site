@@ -77,6 +77,15 @@
   .pending .p-sub { color: var(--ink-soft); font-size: 0.9rem; margin: -8px 0 0; line-height: 1.45; }
   .pending .p-sub a { color: var(--turq-deep); font-weight: 600; }
   .mcard.is-pending { border: 1.5px dashed var(--turq); }
+  /* photo-batch review grid */
+  .pgrid-batch { border: 1.5px dashed var(--turq); border-radius: 10px; padding: 15px; background: var(--surface); }
+  .pgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0 12px; }
+  .pg-cell { position: relative; padding: 0; border: 3px solid transparent; border-radius: 8px; overflow: hidden; cursor: pointer; background: none; aspect-ratio: 1; }
+  .pg-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pg-cell .pg-check { position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; border-radius: 999px; background: var(--turq); color: #fff; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .pg-cell[aria-pressed="false"] { border-color: transparent; opacity: 0.45; }
+  .pg-cell[aria-pressed="false"] .pg-check { background: rgba(0,0,0,0.35); }
+  .pg-cell[aria-pressed="true"] { border-color: var(--turq); }
   .rvw { display: flex; gap: 10px; margin-top: 16px; }
   .rvw button { flex: 1; border-radius: 999px; padding: 12px 16px; font: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
   .rvw button:disabled { opacity: 0.55; cursor: default; }
@@ -358,9 +367,36 @@ function render(ev, pending) {
     html += '<div class="pending"><p class="p-sub">You may have memories waiting for review — ' +
       '<a href="/mine/#account">sign in again on Mine</a>, then come back here.</p></div>';
   } else if (pendingList.length) {
+    // Photo-lane submissions (a photo with no question attached) review as a
+    // tap-to-select grid, batched by contributor — approving Elizabeth's
+    // forty photos is two taps, not forty cards. Written memories keep the
+    // one-at-a-time cards, because words deserve a read.
+    const photoPending = pendingList.filter(function (m) { return m.photo_url && !m.prompt_text && !(m.body || '').trim(); });
+    const cardPending = pendingList.filter(function (m) { return photoPending.indexOf(m) === -1; });
+
     html += '<div class="pending"><h2 class="p-title">Waiting for your review <span class="p-n">' + pendingList.length + '</span></h2>' +
-      '<p class="p-sub">Only you can see these. Approve to add one to the keepsake; decline keeps it hidden.</p>' +
-      pendingList.map(function (m) {
+      '<p class="p-sub">Only you can see these. Approve to add to the keepsake; decline keeps it hidden.</p>';
+
+    if (photoPending.length) {
+      const byWho = {};
+      photoPending.forEach(function (m) { const k = m.contributor_name || 'Anonymous'; (byWho[k] = byWho[k] || []).push(m); });
+      Object.keys(byWho).forEach(function (who) {
+        const batch = byWho[who];
+        html += '<div class="pgrid-batch" data-who="' + esc(who) + '">' +
+          '<div class="who"><span class="name">' + esc(who) + '</span>' +
+          '<span class="when">' + batch.length + ' photo' + (batch.length > 1 ? 's' : '') + '</span></div>' +
+          '<div class="pgrid">' + batch.map(function (m) {
+            return '<button type="button" class="pg-cell" data-mid="' + esc(m.id) + '" aria-pressed="true">' +
+              '<img src="' + esc(m.photo_url) + '" alt="Photo from ' + esc(who) + '" loading="lazy"><span class="pg-check">✓</span></button>';
+          }).join('') + '</div>' +
+          '<div class="rvw">' +
+          '<button type="button" class="rvw-no" data-batch-decline>Decline selected</button>' +
+          '<button type="button" class="rvw-yes" data-batch-approve>Approve selected (' + batch.length + ')</button>' +
+          '</div></div>';
+      });
+    }
+
+    html += cardPending.map(function (m) {
         return '<div class="mcard is-pending" data-mid="' + esc(m.id) + '">' +
           '<div class="who"><span class="name">' + esc(m.contributor_name || 'Anonymous') + '</span>' +
           '<span class="when">' + esc(when(m.created_at)) + '</span></div>' +
@@ -418,6 +454,40 @@ function render(ev, pending) {
     });
   });
   document.getElementById('refresh').addEventListener('click', function () { start(code); });
+
+  // Photo batches: tap to select, then approve/decline the selection in one
+  // request. Unselected photos stay pending for a later look.
+  Array.prototype.forEach.call(app.querySelectorAll('.pg-cell'), function (cell) {
+    cell.addEventListener('click', function () {
+      const on = cell.getAttribute('aria-pressed') === 'true';
+      cell.setAttribute('aria-pressed', String(!on));
+      const batch = cell.closest('.pgrid-batch');
+      const nSel = batch.querySelectorAll('.pg-cell[aria-pressed="true"]').length;
+      batch.querySelector('[data-batch-approve]').textContent = 'Approve selected (' + nSel + ')';
+    });
+  });
+  Array.prototype.forEach.call(app.querySelectorAll('[data-batch-approve],[data-batch-decline]'), function (btn) {
+    btn.addEventListener('click', async function () {
+      const batch = btn.closest('.pgrid-batch');
+      const ids = Array.prototype.map.call(batch.querySelectorAll('.pg-cell[aria-pressed="true"]'), function (c) { return c.dataset.mid; });
+      if (!ids.length) return;
+      const decision = btn.hasAttribute('data-batch-approve') ? 'approved' : 'rejected';
+      Array.prototype.forEach.call(batch.querySelectorAll('button'), function (b) { b.disabled = true; });
+      btn.textContent = decision === 'approved' ? 'Approving…' : 'Declining…';
+      try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/memories?id=in.(' + ids.map(encodeURIComponent).join(',') + ')', {
+          method: 'PATCH',
+          headers: Object.assign({}, authHeaders(), { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+          body: JSON.stringify({ status: decision })
+        });
+        if (!res.ok) throw new Error('batch');
+        start(code);
+      } catch (e) {
+        Array.prototype.forEach.call(batch.querySelectorAll('button'), function (b) { b.disabled = false; });
+        btn.textContent = decision === 'approved' ? 'Approve selected (' + ids.length + ')' : 'Decline selected';
+      }
+    });
+  });
 
   // Approve / decline pending memories (owner only — the buttons only render
   // for the owner, and RLS enforces it server-side regardless).

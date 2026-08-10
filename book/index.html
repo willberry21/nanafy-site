@@ -131,6 +131,32 @@
     border: 1px solid var(--line);
   }
 
+  /* Photo collage blocks (photo-lane batches, up to four per page) */
+  .collage { display: grid; gap: 8px; margin: 6px 0 0; }
+  .collage img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); display: block; }
+  .collage.n1 { grid-template-columns: 1fr; }
+  .collage.n1 img { max-height: 560px; }
+  .collage.n2 { grid-template-columns: 1fr 1fr; }
+  .collage.n2 img { aspect-ratio: 3/4; }
+  .collage.n3 { grid-template-columns: 1fr 1fr; }
+  .collage.n3 img:first-child { grid-column: 1 / -1; aspect-ratio: 16/9; }
+  .collage.n3 img { aspect-ratio: 4/3; }
+  .collage.n4 { grid-template-columns: 1fr 1fr; }
+  .collage.n4 img { aspect-ratio: 1; }
+
+  /* Arrange mode: owner-only controls to reorder the book's blocks */
+  .arr-tools { display: none; }
+  body.arranging .arr-tools { display: flex; gap: 6px; justify-content: flex-end; margin: 0 0 8px; }
+  .arr-btn { border: 1.5px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink);
+    font: inherit; font-size: 15px; font-weight: 800; width: 40px; height: 34px; cursor: pointer; }
+  .arr-btn:hover { border-color: var(--turq); color: var(--turq-deep); }
+  body.arranging .mem.block { outline: 1.5px dashed var(--turq-soft); outline-offset: 10px; border-radius: 4px; }
+  .arr-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .arr-bar button { border: 1.5px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink);
+    font: inherit; font-size: .85rem; font-weight: 800; padding: 8px 12px; cursor: pointer; }
+  .arr-bar #arrSave { background: var(--turq); border-color: var(--turq); color: #fff; }
+  .arr-msg { font-size: .8rem; color: var(--ink-soft); }
+
   /* Closing */
   .closing { text-align: center; }
   .closing .flower { width: 46px; height: 46px; margin: 0 auto 20px; display: block; }
@@ -297,28 +323,69 @@
       '</section>';
   }
 
-  function memoriesSheet(mems) {
-    var cards = mems.map(function (m) {
-      return '' +
-        '<article class="mem">' +
-          (m.prompt_text ? '<p class="q">' + esc(m.prompt_text) + '</p>' : '') +
-          '<p class="body">' + esc(m.body) + '</p>' +
-          '<p class="who">' +
-            (m.contributor_name ? '— ' + esc(m.contributor_name) : '— A friend') +
-            (m.created_at ? ' <span class="when">' + esc(niceDate(m.created_at)) + '</span>' : '') +
-          '</p>' +
-          (m.photo_url
-            ? '<figure><img src="' + esc(m.photo_url) + '" alt=""></figure>' : '') +
-        '</article>';
-    }).join('');
+  // A memory is a "photo-only" when it carries a picture and no words — the
+  // photo lane produces these. Consecutive photo-only memories gather into
+  // collage blocks of up to four, so a batch of forty becomes ten clean
+  // pages instead of forty sparse ones.
+  function isPhotoOnly(m) { return m.photo_url && !(m.body || '').trim() && !m.prompt_text; }
 
+  // The ordered list of memories becomes the ordered list of BLOCKS the book
+  // renders and the host arranges: one block per written memory, one block
+  // per group of up to four consecutive photo-only memories.
+  function toBlocks(mems) {
+    var blocks = [];
+    var run = [];
+    function flushRun() {
+      while (run.length) { blocks.push({ kind: 'photos', mems: run.splice(0, 4) }); }
+    }
+    mems.forEach(function (m) {
+      if (isPhotoOnly(m)) { run.push(m); }
+      else { flushRun(); blocks.push({ kind: 'words', mems: [m] }); }
+    });
+    flushRun();
+    return blocks;
+  }
+
+  function blockHtml(b, i) {
+    var head = '<article class="mem block" data-bi="' + i + '">';
+    var tools =
+      '<div class="arr-tools">' +
+        '<button type="button" class="arr-btn" data-move="-1" aria-label="Move earlier">↑</button>' +
+        '<button type="button" class="arr-btn" data-move="1" aria-label="Move later">↓</button>' +
+      '</div>';
+    if (b.kind === 'words') {
+      var m = b.mems[0];
+      return head + tools +
+        (m.prompt_text ? '<p class="q">' + esc(m.prompt_text) + '</p>' : '') +
+        ((m.body || '').trim() ? '<p class="body">' + esc(m.body) + '</p>' : '') +
+        '<p class="who">' +
+          (m.contributor_name ? '— ' + esc(m.contributor_name) : '— A friend') +
+          (m.created_at ? ' <span class="when">' + esc(niceDate(m.created_at)) + '</span>' : '') +
+        '</p>' +
+        (m.photo_url ? '<figure><img src="' + esc(m.photo_url) + '" alt=""></figure>' : '') +
+      '</article>';
+    }
+    var names = [];
+    b.mems.forEach(function (m2) {
+      var n = (m2.contributor_name || '').trim();
+      if (n && names.indexOf(n) === -1) names.push(n);
+    });
+    return head + tools +
+      '<div class="collage n' + b.mems.length + '">' +
+        b.mems.map(function (m2) { return '<img src="' + esc(m2.photo_url) + '" alt="">'; }).join('') +
+      '</div>' +
+      '<p class="who">' + (names.length ? '— Photos from ' + esc(names.join(' & ')) : '— Photos from the gathering') + '</p>' +
+    '</article>';
+  }
+
+  function memoriesSheet(blocks, arranged) {
     return '' +
       '<section class="sheet memories">' +
         '<div class="section-head">' +
           '<h2>The memories</h2>' +
-          '<p>In the order they were shared.</p>' +
+          '<p>' + (arranged ? 'Arranged by the host.' : 'In the order they were shared.') + '</p>' +
         '</div>' +
-        cards +
+        blocks.map(blockHtml).join('') +
       '</section>';
   }
 
@@ -355,8 +422,8 @@
     try {
       // Membership-scoped read: the join RPC is the way in with a share code.
       ev = await Nanafy.join(code,
-        'id,title,honoree,event_type,event_date,description,photo_url,' +
-        'prompts(text,position),memories(status,contributor_name,prompt_text,body,photo_url,created_at)');
+        'id,title,honoree,event_type,event_date,description,photo_url,owner_id,' +
+        'prompts(text,position),memories(id,status,position,contributor_name,prompt_text,body,photo_url,created_at)');
       // Owners can read every status; the book prints only approved memories.
       if (ev && Array.isArray(ev.memories)) {
         ev.memories = ev.memories.filter(function (m) { return m.status === 'approved'; });
@@ -375,9 +442,14 @@
     var prompts = (ev.prompts || []).slice().sort(function (a, b) {
       return (a.position || 0) - (b.position || 0);
     });
+    // The host's arrangement wins; unplaced memories follow, oldest first.
     var mems = (ev.memories || []).slice().sort(function (a, b) {
+      var pa = a.position == null ? Infinity : a.position;
+      var pb = b.position == null ? Infinity : b.position;
+      if (pa !== pb) return pa - pb;
       return new Date(a.created_at || 0) - new Date(b.created_at || 0);
     });
+    var arranged = mems.some(function (m) { return m.position != null; });
 
     document.title = (ev.honoree || ev.title || 'Keepsake') + ' · The book · Nanafy';
     backLink.href = '/keepsake/?c=' + encodeURIComponent(code);
@@ -390,11 +462,12 @@
       return;
     }
 
+    var blocks = toBlocks(mems);
     root.innerHTML =
       '<div class="book">' +
         coverSheet(ev, mems.length) +
         questionsSheet(prompts) +
-        memoriesSheet(mems) +
+        memoriesSheet(blocks, arranged) +
         closingSheet(ev, mems) +
       '</div>';
 
@@ -402,22 +475,142 @@
     hint.hidden = false;
     barMeta.textContent = mems.length + (mems.length === 1 ? ' memory' : ' memories');
     hint.innerHTML = 'You’re previewing the real book — the printed copy contains every page below, ' +
-      'as a ' + bookPageCount(prompts.length, mems.length) + '-page softcover (A4).';
+      'as a ' + bookPageCount(prompts.length, blocks.length) + '-page softcover (A4).';
 
-    mountOrderButton(ev, prompts, mems);
+    mountOrderButton(ev, prompts, blocks);
+    mountArrange(ev, prompts, mems);
   }
 
   // MUST mirror the sheet math in nanify/tools/book-pdf/generate-book-pdf.mjs:
-  // cover + questions page (if any prompts) + one page per memory + closing,
+  // cover + questions page (if any prompts) + one page per BLOCK (a written
+  // memory, or a collage of up to four photo-only memories) + closing,
   // padded to min 24 pages / even count (24 qualifies for both softcover
   // and hardcover), + back cover.
-  function bookPageCount(promptCount, memCount) {
-    var sheets = 1 + (promptCount ? 1 : 0) + memCount + 1;
+  function bookPageCount(promptCount, blockCount) {
+    var sheets = 1 + (promptCount ? 1 : 0) + blockCount + 1;
     while (sheets + 1 < 24 || (sheets + 1) % 2 !== 0) sheets++;
     return sheets + 1;
   }
 
-  function mountOrderButton(ev, prompts, mems) {
+  // ---- Arrange mode: the host moves blocks until the book reads right ----
+  // The saved order is memory-level `position` values, which is also exactly
+  // what the print generator applies — what the host sees here is what the
+  // printed book does.
+  function mountArrange(ev, prompts, mems) {
+    var s = null;
+    try {
+      var raw = localStorage.getItem('sb-vigenqlwwoknxjzahvtv-auth-token');
+      if (raw) { var j = JSON.parse(raw); var sess = j.currentSession || j;
+        if (sess.access_token && sess.user) s = { token: sess.access_token, userId: sess.user.id }; }
+    } catch (e) {}
+    if (!s || !ev.owner_id || ev.owner_id !== s.userId) return; // owner only
+
+    var wrap = document.createElement('div');
+    wrap.className = 'arr-bar';
+    wrap.innerHTML =
+      '<button type="button" id="arrToggle">Arrange the book</button>' +
+      '<button type="button" id="arrNana" hidden>✨ Let Nana arrange it</button>' +
+      '<button type="button" id="arrSave" hidden>Save arrangement</button>' +
+      '<span id="arrMsg" class="arr-msg"></span>';
+    bar.appendChild(wrap);
+
+    var order = mems.slice(); // working copy, memory-level
+    var dirty = false;
+
+    function rerender() {
+      var blocks = toBlocks(order);
+      document.querySelector('.sheet.memories').outerHTML = memoriesSheet(blocks, true);
+      document.body.classList.add('arranging');
+      wireMoves(blocks);
+      document.getElementById('arrSave').hidden = !dirty;
+    }
+
+    function wireMoves(blocks) {
+      Array.prototype.forEach.call(document.querySelectorAll('.arr-btn'), function (btn) {
+        btn.addEventListener('click', function () {
+          var bi = +btn.closest('.block').dataset.bi;
+          var dir = +btn.dataset.move;
+          var ti = bi + dir;
+          if (ti < 0 || ti >= blocks.length) return;
+          // Swap the two blocks, then flatten back to a memory list.
+          var next = blocks.slice();
+          var tmp = next[bi]; next[bi] = next[ti]; next[ti] = tmp;
+          order = [];
+          next.forEach(function (b) { b.mems.forEach(function (m) { order.push(m); }); });
+          dirty = true;
+          rerender();
+        });
+      });
+    }
+
+    document.getElementById('arrToggle').addEventListener('click', function () {
+      var on = document.body.classList.toggle('arranging');
+      this.textContent = on ? 'Done arranging' : 'Arrange the book';
+      document.getElementById('arrNana').hidden = !on;
+      document.getElementById('arrSave').hidden = !on || !dirty;
+      if (on) rerender();
+    });
+
+    document.getElementById('arrSave').addEventListener('click', async function () {
+      var btn = this;
+      btn.disabled = true; btn.textContent = 'Saving…';
+      var msg = document.getElementById('arrMsg');
+      try {
+        var h = { apikey: ANON_KEY, Authorization: 'Bearer ' + s.token, 'Content-Type': 'application/json', Prefer: 'return=minimal' };
+        for (var i = 0; i < order.length; i++) {
+          if (order[i].position === i) continue; // unchanged rows skip the write
+          var r = await fetch(SUPABASE_URL + '/rest/v1/memories?id=eq.' + encodeURIComponent(order[i].id), {
+            method: 'PATCH', headers: h, body: JSON.stringify({ position: i })
+          });
+          if (!r.ok) throw new Error('save');
+          order[i].position = i;
+        }
+        dirty = false;
+        btn.textContent = 'Saved ✓';
+        setTimeout(function () { btn.textContent = 'Save arrangement'; btn.hidden = true; btn.disabled = false; }, 1500);
+        msg.textContent = 'This order is what the printed book uses.';
+      } catch (e) {
+        btn.disabled = false; btn.textContent = 'Save arrangement';
+        msg.textContent = 'Couldn’t save — check your connection and try again.';
+      }
+    });
+
+    // Nana proposes an arrangement; the host still reviews and saves it.
+    document.getElementById('arrNana').addEventListener('click', async function () {
+      var btn = this;
+      btn.disabled = true; btn.textContent = 'Nana is thinking…';
+      var msg = document.getElementById('arrMsg');
+      try {
+        var res = await fetch(SUPABASE_URL + '/functions/v1/nana-curate', {
+          method: 'POST',
+          headers: { apikey: ANON_KEY, Authorization: 'Bearer ' + s.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: ev.event_type,
+            honoree: ev.honoree || ev.title,
+            memories: order.map(function (m) {
+              return { id: m.id, who: m.contributor_name || null, hasPhoto: !!m.photo_url,
+                words: (m.body || '').slice(0, 240), question: m.prompt_text || null, at: m.created_at };
+            })
+          })
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok || !Array.isArray(data.order)) throw new Error('nana');
+        var byId = {};
+        order.forEach(function (m) { byId[m.id] = m; });
+        var proposed = data.order.map(function (id) { return byId[id]; }).filter(Boolean);
+        order.forEach(function (m) { if (proposed.indexOf(m) === -1) proposed.push(m); }); // never lose one
+        order = proposed;
+        dirty = true;
+        rerender();
+        msg.textContent = data.note ? 'Nana: ' + data.note + ' — review it, then save.' : 'Review Nana’s arrangement, then save.';
+      } catch (e) {
+        msg.textContent = 'Nana couldn’t arrange it right now — you can still move things yourself.';
+      }
+      btn.disabled = false; btn.textContent = '✨ Let Nana arrange it';
+    });
+  }
+
+  function mountOrderButton(ev, prompts, blocks) {
     var ref = getCode() + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     var a = document.createElement('a');
     a.className = 'peecho-print-button';
@@ -426,7 +619,7 @@
     a.setAttribute('data-filetype', 'pdf');
     a.setAttribute('data-width', '210');
     a.setAttribute('data-height', '297');
-    a.setAttribute('data-pages', String(bookPageCount(prompts.length, mems.length)));
+    a.setAttribute('data-pages', String(bookPageCount(prompts.length, blocks.length)));
     a.setAttribute('data-noprice', 'true');
     a.setAttribute('data-currency', 'USD');
     a.setAttribute('data-reference', ref);

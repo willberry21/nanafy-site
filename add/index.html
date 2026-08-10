@@ -113,6 +113,20 @@
   .tn-links a:hover{ background:none !important; color:var(--turq-deep) !important; box-shadow:inset 0 -2px 0 var(--turq); }
 
 
+  /* --- photo lane: batch upload for the Elizabeths of the family --- */
+  .lane-tabs{ display:flex; gap:8px; margin:0 0 4px; }
+  .lane-tab{ flex:1; border:1.5px solid var(--line); border-radius:8px; background:none; color:var(--ink-soft);
+    font:inherit; font-size:.95rem; font-weight:800; padding:12px 8px; cursor:pointer; }
+  .lane-tab[aria-pressed="true"]{ border-color:var(--turq); color:var(--turq-deep); background:#e7f7f5; }
+  .pick-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:4px; }
+  .pick-grid .cell{ position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; background:var(--surface-2); }
+  .pick-grid img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .cell-x{ position:absolute; top:6px; right:6px; border:0; border-radius:999px; width:26px; height:26px;
+    background:rgba(0,0,0,.65); color:#fff; font-size:13px; font-weight:700; cursor:pointer; line-height:1; }
+  .cell-add{ display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line);
+    border-radius:8px; aspect-ratio:1; background:none; color:var(--ink-soft); font-size:26px; cursor:pointer; }
+  .upl-progress{ font-size:14px; color:var(--ink-soft); margin-top:10px; }
+
   /* --- growth loop: create-your-own promo on the thank-you screen --- */
   .promo{ margin-top:34px; border:1.5px solid var(--turq-soft); background:#f3fbfa; border-radius:12px; padding:22px 20px; text-align:center; }
   .promo-kicker{ font-size:.72rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--turq-deep); }
@@ -148,6 +162,139 @@ let savedName = '';
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
+// The two ways in: written memories, or a batch of photos (for the family
+// member who takes a million of them and will not be writing paragraphs).
+function laneTabs(active) {
+  return '<div class="lane-tabs" role="tablist">' +
+    '<button type="button" class="lane-tab" id="laneWords" aria-pressed="' + (active === 'words') + '">✍️&nbsp; Answer a question</button>' +
+    '<button type="button" class="lane-tab" id="lanePhotos" aria-pressed="' + (active === 'photos') + '">📷&nbsp; Just add photos</button>' +
+    '</div>';
+}
+function wireLaneTabs(active) {
+  document.getElementById('laneWords').addEventListener('click', () => { if (active !== 'words') renderForm(); });
+  document.getElementById('lanePhotos').addEventListener('click', () => { if (active !== 'photos') renderPhotoForm(); });
+}
+
+// Shrink a photo in the browser before upload: phones produce 5-12MB
+// originals, and a venue's wifi should not have to carry them. Returns a
+// JPEG blob, or the original file when the browser can't decode it.
+async function shrink(file, maxDim) {
+  maxDim = maxDim || 2000;
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, maxDim / Math.max(bmp.width, bmp.height));
+    const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+    bmp.close && bmp.close();
+    const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.85));
+    return blob || file;
+  } catch (e) { return file; }
+}
+
+async function uploadPhoto(file) {
+  const blob = await shrink(file);
+  const path = event.id + '/' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8) + '.jpg';
+  const up = await fetch(SUPABASE_URL + '/storage/v1/object/memory-photos/' + path, {
+    method: 'POST',
+    headers: { ...HEADERS, 'Content-Type': 'image/jpeg' },
+    body: blob,
+  });
+  if (!up.ok) throw new Error('photo');
+  return SUPABASE_URL + '/storage/v1/object/public/memory-photos/' + path;
+}
+
+let batchFiles = [];
+
+function renderPhotoForm() {
+  const prep = PREPOSITIONS[event.event_type] || 'For';
+  const title = event.honoree || event.title;
+  app.innerHTML =
+    '<div class="center"><p class="prep">' + esc(prep) + '</p>' +
+    '<h1>' + esc(title) + '</h1>' +
+    '<p class="sub">Add your photos — pick as many as you like, straight from your camera roll.</p></div>' +
+    laneTabs('photos') +
+    '<span class="label">Your photos</span>' +
+    '<div class="pick-grid" id="pickGrid"></div>' +
+    '<input type="file" id="batchInput" accept="image/*" multiple hidden>' +
+    '<span class="label">Say something about them (optional)</span>' +
+    '<input type="text" id="batchNote" placeholder="From the ferry ride over…" maxlength="200">' +
+    '<span class="label">Your name</span>' +
+    '<input type="text" id="name" placeholder="Anonymous" autocomplete="name" value="' + esc(savedName) + '">' +
+    '<button class="submit" id="batchSubmit" disabled>Send photos</button>' +
+    '<div class="upl-progress" id="uplProgress" hidden></div>' +
+    '<p class="error" id="err" hidden></p>';
+  wireLaneTabs('photos');
+
+  const input = document.getElementById('batchInput');
+  const grid = document.getElementById('pickGrid');
+  const submit = document.getElementById('batchSubmit');
+
+  function renderGrid() {
+    grid.innerHTML = batchFiles.map((f, i) =>
+      '<div class="cell"><img src="' + URL.createObjectURL(f) + '" alt="">' +
+      '<button type="button" class="cell-x" data-i="' + i + '" aria-label="Remove photo">✕</button></div>'
+    ).join('') + '<button type="button" class="cell-add" id="cellAdd" aria-label="Add photos">＋</button>';
+    submit.disabled = batchFiles.length === 0;
+    submit.textContent = batchFiles.length
+      ? 'Send ' + batchFiles.length + ' photo' + (batchFiles.length > 1 ? 's' : '')
+      : 'Send photos';
+  }
+  renderGrid();
+
+  grid.addEventListener('click', (e) => {
+    if (e.target.id === 'cellAdd') input.click();
+    const x = e.target.closest('.cell-x');
+    if (x) { batchFiles.splice(+x.dataset.i, 1); renderGrid(); }
+  });
+  input.addEventListener('change', () => {
+    batchFiles = batchFiles.concat(Array.from(input.files || []));
+    input.value = '';
+    renderGrid();
+  });
+
+  submit.addEventListener('click', async () => {
+    submit.disabled = true;
+    const err = document.getElementById('err');
+    const prog = document.getElementById('uplProgress');
+    err.hidden = true; prog.hidden = false;
+    const name = document.getElementById('name').value.trim() || null;
+    const note = document.getElementById('batchNote').value.trim() || null;
+    const total = batchFiles.length;
+    let sent = 0;
+    try {
+      const h = await Nanafy.headers();
+      for (let i = 0; i < batchFiles.length; i++) {
+        prog.textContent = 'Sending photo ' + (i + 1) + ' of ' + total + '…';
+        const photoUrl = await uploadPhoto(batchFiles[i]);
+        const ins = await fetch(SUPABASE_URL + '/rest/v1/memories', {
+          method: 'POST',
+          headers: { ...h, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            event_id: event.id,
+            contributor_name: name,
+            body: i === 0 ? note : null, // the batch note rides on the first photo
+            photo_url: photoUrl,
+          }),
+        });
+        if (!ins.ok) throw new Error('insert');
+        sent++;
+      }
+      savedName = name || '';
+      batchFiles = [];
+      renderSuccess(total);
+    } catch (e) {
+      prog.hidden = true;
+      err.textContent = sent > 0
+        ? sent + ' of ' + total + ' photos made it — the rest didn’t send. Remove the first ' + sent + ' and try the rest again.'
+        : 'The photos couldn’t be sent. Check your connection and try again.';
+      err.hidden = false;
+      submit.disabled = false;
+    }
+  });
+}
+
 async function fetchEvent(code) {
   // The share code is exchanged for membership through the join RPC — the
   // database no longer answers direct reads without it.
@@ -178,6 +325,8 @@ function renderForm() {
     '<h1>' + esc(title) + '</h1>' +
     '<p class="sub">Share a memory — it takes a couple of minutes and means more than you know.</p></div>' +
 
+    laneTabs('words') +
+
     '<span class="label">Choose a question</span>' +
     '<div class="prompts" id="promptNums">' +
     prompts.map((_, i) => '<button type="button" class="prompt-num' + (i === 0 ? ' sel' : '') + '" data-i="' + i + '">' + (i + 1) + '</button>').join('') +
@@ -198,6 +347,7 @@ function renderForm() {
     '<button class="submit" id="submit" disabled>Share memory</button>' +
     '<p class="error" id="err" hidden></p>';
 
+  wireLaneTabs('words');
   const bodyEl = document.getElementById('body');
   const submitEl = document.getElementById('submit');
 
@@ -249,17 +399,7 @@ function renderForm() {
     err.hidden = true;
     try {
       let photoUrl = null;
-      if (photoFile) {
-        const ext = (photoFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
-        const path = event.id + '/' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
-        const up = await fetch(SUPABASE_URL + '/storage/v1/object/memory-photos/' + path, {
-          method: 'POST',
-          headers: { ...HEADERS, 'Content-Type': photoFile.type || 'image/jpeg' },
-          body: photoFile,
-        });
-        if (!up.ok) throw new Error('photo');
-        photoUrl = SUPABASE_URL + '/storage/v1/object/public/memory-photos/' + path;
-      }
+      if (photoFile) photoUrl = await uploadPhoto(photoFile);
       const ins = await fetch(SUPABASE_URL + '/rest/v1/memories', {
         method: 'POST',
         headers: { ...(await Nanafy.headers()), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
@@ -286,16 +426,19 @@ function renderForm() {
   });
 }
 
-function renderSuccess() {
+function renderSuccess(photoCount) {
   const title = event.honoree || event.title;
   const gentle = event.event_type === 'memorial' || event.event_type === 'tribute';
   const promoLine = gentle
     ? 'If you ever want to gather memories for someone you love, you can make a keepsake of your own.'
     : 'Want one of these for your own gathering? It takes about a minute.';
-  // Owned keepsakes are moderated: the memory waits for the host's approval.
+  const what = photoCount
+    ? 'Your ' + (photoCount > 1 ? photoCount + ' photos have' : 'photo has')
+    : 'Your memory has';
+  // Owned keepsakes are moderated: the contribution waits for the host's approval.
   const sub = event.owner_id
-    ? 'Your memory has been sent to the host to review. Once they approve it, it will be part of the keepsake for ' + esc(title) + '.'
-    : 'Your memory has been added to ' + esc(title) + '. It will be part of a keepsake the family holds onto.';
+    ? what + ' been sent to the host to review. Once they approve, it will be part of the keepsake for ' + esc(title) + '.'
+    : what + ' been added to ' + esc(title) + '. It will be part of a keepsake the family holds onto.';
   app.innerHTML =
     '<div class="center"><div class="success-glyph"></div>' +
     '<h1>Thank you</h1>' +
