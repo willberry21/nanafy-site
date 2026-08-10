@@ -103,17 +103,28 @@ window.Nanafy = (function () {
   // (Embedded filters like memories.status=eq… are not accepted on RPC calls —
   // select the column and filter in the page instead.)
   // Returns the event row, or null when the code matches nothing.
+  //
+  // Two requests on purpose. Asking the RPC for embeds directly computes them
+  // in the same statement that inserts the membership row, and row security
+  // on the embedded tables cannot see that row yet — a first-time visitor
+  // would get the event with every relation empty (a guest's first QR scan
+  // showed an empty keepsake). Join first, read through membership second.
   async function join(code, select) {
     var h = await headers();
-    var url = SUPABASE_URL + '/rest/v1/rpc/join_event_by_code' + (select ? '?select=' + select : '');
-    var r = await fetch(url, {
+    var r = await fetch(SUPABASE_URL + '/rest/v1/rpc/join_event_by_code?select=id', {
       method: 'POST',
       headers: Object.assign({}, h, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({ p_code: (code || '').toUpperCase() }),
     });
     if (!r.ok) throw new Error('server');
     var rows = await r.json();
-    return (rows && rows[0]) || null;
+    var ev = (rows && rows[0]) || null;
+    if (!ev) return null;
+    if (!select) return ev;
+    var r2 = await fetch(SUPABASE_URL + '/rest/v1/events?id=eq.' + ev.id + '&select=' + select, { headers: h });
+    if (!r2.ok) throw new Error('server');
+    var full = await r2.json();
+    return (full && full[0]) || null;
   }
 
   return { SUPABASE_URL: SUPABASE_URL, ANON_KEY: ANON_KEY, session: session, headers: headers, join: join };
