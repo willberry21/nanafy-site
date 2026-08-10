@@ -498,9 +498,11 @@
     honoree.placeholder = NAME_HINTS[selectedType];
     titleInput.placeholder = TITLE_HINTS[selectedType];
     // "Other" keepsakes are named once — no separate title field.
+    // (style.display, not the hidden attribute: the .label CSS declares
+    // display:block, which outranks [hidden].)
     var isOther = selectedType === 'other';
-    document.getElementById('titleLabel').hidden = isOther;
-    titleInput.hidden = isOther;
+    document.getElementById('titleLabel').style.display = isOther ? 'none' : '';
+    titleInput.style.display = isOther ? 'none' : '';
     if (isOther) titleInput.value = '';
   });
 
