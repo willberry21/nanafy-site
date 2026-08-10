@@ -252,12 +252,23 @@ let code = '';
 function session() {
   try {
     const raw = localStorage.getItem('sb-vigenqlwwoknxjzahvtv-auth-token');
-    if (!raw) return null;
-    const s = JSON.parse(raw);
-    const token = s.access_token || (s.currentSession && s.currentSession.access_token);
-    const user = s.user || (s.currentSession && s.currentSession.user);
-    return token && user ? { token: token, userId: user.id } : null;
-  } catch (e) { return null; }
+    if (raw) {
+      const s = JSON.parse(raw);
+      const token = s.access_token || (s.currentSession && s.currentSession.access_token);
+      const user = s.user || (s.currentSession && s.currentSession.user);
+      if (token && user) return { token: token, userId: user.id };
+    }
+  } catch (e) {}
+  // Anonymous hosts: a keepsake created signed-out is owned by this device's
+  // anonymous session — same owner powers, from the same browser. Without
+  // this, their guests' memories would wait in a queue nobody can see.
+  try {
+    const a = JSON.parse(localStorage.getItem('nanafy_anon_session') || 'null');
+    if (a && a.access_token && a.userId && (a.expires_at || 0) - 60 > Date.now() / 1000) {
+      return { token: a.access_token, userId: a.userId };
+    }
+  } catch (e) {}
+  return null;
 }
 function authHeaders() {
   const s = session();

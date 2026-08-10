@@ -503,6 +503,15 @@
       if (raw) { var j = JSON.parse(raw); var sess = j.currentSession || j;
         if (sess.access_token && sess.user) s = { token: sess.access_token, userId: sess.user.id }; }
     } catch (e) {}
+    if (!s) {
+      // Anonymous hosts arrange from the device that created the keepsake.
+      try {
+        var a = JSON.parse(localStorage.getItem('nanafy_anon_session') || 'null');
+        if (a && a.access_token && a.userId && (a.expires_at || 0) - 60 > Date.now() / 1000) {
+          s = { token: a.access_token, userId: a.userId };
+        }
+      } catch (e) {}
+    }
     if (!s || !ev.owner_id || ev.owner_id !== s.userId) return; // owner only
 
     var wrap = document.createElement('div');
