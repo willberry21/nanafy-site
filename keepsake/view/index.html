@@ -93,6 +93,7 @@
   .state { text-align:center; padding:80px 24px; color:var(--ink-soft); }
 </style>
 <script src="/js/session.js?v=20260810b"></script>
+<script src="/js/keep.js?v=20260814a"></script>
 </head>
 <body>
 
@@ -102,6 +103,7 @@
     <span class="mark"><b>Nana</b>fy</span>
   </a>
   <span class="spacer"></span>
+  <a class="addcta" id="keepTop" href="#" hidden style="background:none;border:1px solid var(--line);color:var(--ink)">Keep</a>
   <a class="addcta" id="addTop" href="/add/">Add your memory</a>
 </div>
 
@@ -191,6 +193,53 @@
 
     app.innerHTML = html;
     document.getElementById('addTop').href = '/add/' + q;
+    wireKeep(q);
+  }
+
+  // "Keep this keepsake" — shown only to people WITHOUT an account. Signed-in
+  // keepers see a quiet "My keepsakes" pill instead (their membership already
+  // holds this keepsake).
+  async function wireKeep(q) {
+    var keepTop = document.getElementById('keepTop');
+    var hasAccount = await NanafyKeep.hasAccount();
+
+    if (hasAccount) {
+      NanafyKeep.attach(code); // freshly-landed magic links attach here
+      keepTop.hidden = false;
+      keepTop.textContent = 'My keepsakes';
+      keepTop.href = '/keepsake/mine/';
+      return;
+    }
+
+    function openSheet(e) {
+      e.preventDefault();
+      NanafyKeep.openSheet(code, function () { location.href = '/keepsake/mine/'; });
+    }
+
+    keepTop.hidden = false;
+    keepTop.textContent = 'Keep';
+    keepTop.addEventListener('click', openSheet);
+
+    var exp = document.querySelector('.experiences') || document.querySelector('.hero');
+    if (exp) {
+      var card = document.createElement('div');
+      card.innerHTML =
+        '<a class="exp" href="#" id="keepCard" style="margin:0 0 40px">' +
+        '<span class="glyph">&#10047;</span><span><div class="x-title">Keep this keepsake</div>' +
+        '<div class="x-line">Free account &mdash; it stays in your list forever</div></span><span class="arrow">&#8250;</span></a>';
+      exp.insertAdjacentElement('afterend', card.firstChild);
+      document.getElementById('keepCard').addEventListener('click', openSheet);
+    }
+
+    var closing = document.querySelector('.closing');
+    if (closing) {
+      var line = document.createElement('p');
+      line.className = 'closing';
+      line.style.marginTop = '10px';
+      line.innerHTML = 'Want to find this again? <a class="add" href="#" id="keepClose">Keep it in your list</a>.';
+      closing.insertAdjacentElement('afterend', line);
+      document.getElementById('keepClose').addEventListener('click', openSheet);
+    }
   }
 
   function memoryCard(m) {

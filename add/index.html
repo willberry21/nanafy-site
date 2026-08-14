@@ -152,6 +152,7 @@
 </div>
 
 <script src="/js/session.js?v=20260810b"></script>
+<script src="/js/keep.js?v=20260814a"></script>
 <script>
 const SUPABASE_URL = Nanafy.SUPABASE_URL;
 const ANON_KEY = Nanafy.ANON_KEY;
@@ -613,6 +614,19 @@ function renderSuccess(photoCount, answerCount) {
   document.getElementById('again').addEventListener('click', () => {
     drafts = {}; questionPhotos = {}; sentAnswers = {}; promptIndex = 0;
     renderForm();
+  });
+  // The moment of highest attachment: offer to keep it — but never to
+  // someone who already has an account.
+  NanafyKeep.hasAccount().then((has) => {
+    if (has || isHost) return;
+    const btn = document.createElement('button');
+    btn.className = 'again';
+    btn.textContent = 'Keep this keepsake — free account';
+    btn.addEventListener('click', () => {
+      NanafyKeep.openSheet(event.share_code, () => { location.href = '/keepsake/mine/'; });
+    });
+    const again = document.getElementById('again');
+    again.parentNode.insertBefore(btn, again.nextSibling);
   });
   window.scrollTo(0, 0);
 }

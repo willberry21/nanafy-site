@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My keepsakes · Nanafy</title>
+<meta name="description" content="Every keepsake you're part of.">
+<meta name="theme-color" content="#115E67">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Lato:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground:#115E67; --surface:#14676F; --surface-2:#0E5259;
+    --ink:#FFFFFF; --ink-soft:rgba(255,255,255,.72); --ink-faint:rgba(255,255,255,.45);
+    --line:rgba(255,255,255,.18);
+    --turq:#5FE0D2; --turq-ink:#04302C; --pink:#EFA8BE; --verm:#FF7A63;
+    --display:"Josefin Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --serif:"Lora",Georgia,serif;
+    --sans:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body { background:var(--ground); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+  .bar {
+    position:sticky; top:0; z-index:20;
+    background:rgba(17,94,103,.92); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding:12px 18px; display:flex; align-items:center; gap:12px;
+  }
+  .bar .brand { display:flex; align-items:center; gap:9px; text-decoration:none; }
+  .bar .mark { font-family:var(--display); font-weight:600; letter-spacing:.18em; text-transform:uppercase; font-size:1.02rem; color:var(--pink); }
+  .bar .mark b { color:#fff; font-weight:600; }
+  .bar .spacer { flex:1 1 auto; }
+  .bar button.out { border:1px solid var(--line); border-radius:999px; background:none; color:var(--ink-soft); font:inherit; font-size:.8rem; font-weight:700; padding:8px 14px; cursor:pointer; }
+
+  .wrap { max-width:560px; margin:0 auto; padding:34px 20px 70px; }
+  h1 { font-family:var(--display); font-weight:300; font-size:clamp(1.9rem,6vw,2.5rem); letter-spacing:.01em; margin:0 0 6px; }
+  .sub { color:var(--ink-soft); font-size:.95rem; margin:0 0 28px; }
+
+  .kcard {
+    display:flex; align-items:center; gap:14px; text-decoration:none; color:var(--ink);
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px; margin-bottom:12px;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), border-color .15s ease;
+  }
+  .kcard:active { transform:scale(.98); }
+  .kcard:hover { border-color:var(--turq); }
+  .kcard .thumb {
+    width:56px; height:56px; border-radius:14px; object-fit:cover; flex:none;
+    background:var(--surface-2); border:1px solid var(--line);
+  }
+  .kcard .thumb.ph { display:flex; align-items:center; justify-content:center; font-size:1.3rem; }
+  .kcard .k-prep { font-family:var(--display); font-weight:600; font-size:.62rem; letter-spacing:.18em; text-transform:uppercase; color:var(--turq); }
+  .kcard .k-title { font-family:var(--display); font-weight:600; font-size:1.05rem; margin-top:2px; }
+  .kcard .k-line { font-size:.8rem; color:var(--ink-soft); margin-top:2px; }
+  .kcard .badge {
+    margin-left:auto; flex:none; background:var(--verm); color:#fff;
+    font-size:.72rem; font-weight:800; border-radius:999px; padding:4px 10px;
+  }
+  .kcard .arrow { margin-left:auto; color:var(--ink-faint); }
+  .kcard .badge + .arrow { margin-left:10px; }
+
+  .upsell {
+    margin-top:28px; border:1px dashed rgba(255,255,255,.34); border-radius:14px;
+    padding:22px 20px; text-align:center;
+  }
+  .upsell .u-kicker { font-family:var(--display); font-weight:600; font-size:.68rem; letter-spacing:.2em; text-transform:uppercase; color:var(--verm); }
+  .upsell p { color:var(--ink-soft); font-size:.92rem; margin:10px 0 16px; }
+  .upsell a { display:inline-block; background:var(--turq); color:var(--turq-ink); text-decoration:none; font-weight:800; font-size:.95rem; padding:12px 24px; border-radius:12px; }
+
+  /* sign-in state */
+  .auth input { width:100%; border:1px solid rgba(255,255,255,.34); border-radius:12px; background:var(--surface-2); color:#fff; font:inherit; font-size:16px; padding:12px 14px; margin:0 0 10px; outline:none; }
+  .auth input:focus { border-color:var(--turq); }
+  .auth button.go { width:100%; border:0; border-radius:12px; background:var(--turq); color:var(--turq-ink); font:inherit; font-weight:800; font-size:1rem; padding:14px; cursor:pointer; margin-top:4px; }
+  .auth button.alt { width:100%; border:1px solid rgba(255,255,255,.34); border-radius:12px; background:none; color:#fff; font:inherit; font-weight:700; font-size:.9rem; padding:12px; cursor:pointer; margin-top:10px; }
+  .auth .err { color:#FFB4A6; font-size:.85rem; margin-top:10px; }
+  .auth .ok { color:var(--turq); font-size:.9rem; margin-top:10px; }
+  .state { text-align:center; padding:60px 16px; color:var(--ink-soft); }
+  .code-row { display:flex; gap:8px; margin-top:26px; }
+  .code-row input { flex:1; margin:0; text-align:center; letter-spacing:4px; text-transform:uppercase; font-family:var(--display); font-weight:600; }
+  .code-row button { flex:none; border:1px solid rgba(255,255,255,.34); border-radius:12px; background:none; color:#fff; font:inherit; font-weight:700; padding:0 18px; cursor:pointer; }
+</style>
+<script src="/js/session.js?v=20260810b"></script>
+<script src="/js/keep.js?v=20260814a"></script>
+</head>
+<body>
+
+<div class="bar">
+  <a class="brand" href="https://nanafy.ai/">
+    <svg viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><g fill="#FFFFFF"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)"/><circle cx="50" cy="50" r="18.5"/></g><circle cx="50" cy="50" r="15" fill="#115E67"/></svg>
+    <span class="mark"><b>Nana</b>fy</span>
+  </a>
+  <span class="spacer"></span>
+  <button class="out" id="signOut" hidden>Sign out</button>
+</div>
+
+<div class="wrap">
+  <div id="app"><div class="state">One moment&hellip;</div></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var PREPOSITIONS = { memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating', graduation: 'Congratulating', tribute: 'A tribute to', other: 'Remembering' };
+  var app = document.getElementById('app');
+  var SEEN_KEY = 'nanafy_keepsake_seen'; // { CODE: iso-of-last-visit }
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+  function seen() { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch (e) { return {}; } }
+
+  function renderSignIn() {
+    app.innerHTML =
+      '<h1>My keepsakes</h1>' +
+      '<p class="sub">Sign in and every keepsake you’ve kept is right here.</p>' +
+      '<div class="auth">' +
+      '<input type="email" id="email" placeholder="Your email" autocomplete="email">' +
+      '<input type="password" id="pw" placeholder="Your password" autocomplete="current-password">' +
+      '<button class="go" id="go">Sign in</button>' +
+      '<button class="alt" id="magic">Email me a sign-in link instead</button>' +
+      '<p class="err" id="err" hidden></p><p class="ok" id="ok" hidden></p>' +
+      '</div>';
+    document.getElementById('go').addEventListener('click', doSignIn);
+    document.getElementById('magic').addEventListener('click', doMagic);
+  }
+
+  async function doSignIn() {
+    var err = document.getElementById('err'); err.hidden = true;
+    var email = document.getElementById('email').value.trim();
+    var pw = document.getElementById('pw').value;
+    if (!email || !pw) { err.textContent = 'Enter your email and password.'; err.hidden = false; return; }
+    try {
+      var r = await fetch(Nanafy.SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+        method: 'POST',
+        headers: { apikey: Nanafy.ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: pw }),
+      });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error_description || 'no');
+      localStorage.setItem('sb-vigenqlwwoknxjzahvtv-auth-token', JSON.stringify({
+        access_token: d.access_token, refresh_token: d.refresh_token,
+        expires_at: Math.floor(Date.now() / 1000) + (d.expires_in || 3600),
+        token_type: 'bearer', user: d.user,
+      }));
+      init();
+    } catch (e) {
+      err.textContent = 'Wrong email or password.'; err.hidden = false;
+    }
+  }
+
+  async function doMagic() {
+    var err = document.getElementById('err'), ok = document.getElementById('ok');
+    err.hidden = true; ok.hidden = true;
+    var email = document.getElementById('email').value.trim();
+    if (!email || email.indexOf('@') === -1) { err.textContent = 'Enter your email first.'; err.hidden = false; return; }
+    try {
+      var r = await fetch(Nanafy.SUPABASE_URL + '/auth/v1/otp', {
+        method: 'POST',
+        headers: { apikey: Nanafy.ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, create_user: true, options: { email_redirect_to: location.origin + '/keepsake/mine/' } }),
+      });
+      if (!r.ok) throw new Error('no');
+      ok.textContent = 'Sent — check your email and tap the link.'; ok.hidden = false;
+    } catch (e) {
+      err.textContent = 'Couldn’t send the link — try again in a minute.'; err.hidden = false;
+    }
+  }
+
+  async function renderList() {
+    var h = await Nanafy.headers();
+    // RLS scopes reads to membership — this returns exactly the keepsakes
+    // this account has joined or kept, nobody else's.
+    var r = await fetch(Nanafy.SUPABASE_URL + '/rest/v1/events?select=id,title,honoree,event_type,share_code,photo_url,memories(status,created_at)&order=created_at.desc', {
+      headers: h,
+    });
+    if (!r.ok) { app.innerHTML = '<div class="state">Couldn’t load your keepsakes — try again.</div>'; return; }
+    var events = await r.json();
+    var lastSeen = seen();
+
+    var html = '<h1>My keepsakes</h1>' +
+      '<p class="sub">Every keepsake you’re part of, kept.</p>';
+
+    if (!events.length) {
+      html += '<div class="state">Nothing kept yet.<br><br>Open a keepsake link you’ve been sent and tap<br><b>Keep this keepsake</b> — it’ll live here.</div>';
+    } else {
+      html += events.map(function (ev) {
+        var prep = PREPOSITIONS[ev.event_type] || 'For';
+        var title = ev.honoree || ev.title || 'A keepsake';
+        var approved = (ev.memories || []).filter(function (m) { return m.status === 'approved'; });
+        var since = lastSeen[ev.share_code];
+        var fresh = since ? approved.filter(function (m) { return new Date(m.created_at) > new Date(since); }).length : 0;
+        return '<a class="kcard" href="/keepsake/view/?c=' + encodeURIComponent(ev.share_code) + '">' +
+          (ev.photo_url
+            ? '<img class="thumb" src="' + esc(ev.photo_url) + '" alt="">'
+            : '<div class="thumb ph">&#10047;</div>') +
+          '<div><div class="k-prep">' + esc(prep) + '</div>' +
+          '<div class="k-title">' + esc(title) + '</div>' +
+          '<div class="k-line">' + approved.length + ' ' + (approved.length === 1 ? 'memory' : 'memories') + '</div></div>' +
+          (fresh > 0 ? '<span class="badge">' + fresh + ' new</span>' : '') +
+          '<span class="arrow">&#8250;</span></a>';
+      }).join('');
+
+      // Visiting the list marks everything seen — next visit counts from here.
+      var stamp = {};
+      events.forEach(function (ev) { stamp[ev.share_code] = new Date().toISOString(); });
+      try { localStorage.setItem(SEEN_KEY, JSON.stringify(Object.assign(seen(), stamp))); } catch (e) {}
+    }
+
+    html += '<div class="code-row">' +
+      '<input id="codeIn" maxlength="6" placeholder="ABC123" aria-label="Keepsake code">' +
+      '<button id="codeGo">Open</button></div>' +
+      '<p class="sub" style="margin-top:8px;font-size:.8rem;color:var(--ink-faint)">Have a code from an invite? Open it here.</p>';
+
+    html += '<div class="upsell">' +
+      '<div class="u-kicker">Nanafy is free for everyone</div>' +
+      '<p>Gathering memories for your own moment — a memorial, a wedding, a trip worth keeping — takes about a minute to set up.</p>' +
+      '<a href="/create/?ref=keeper">Create your own keepsake</a>' +
+      '</div>';
+
+    app.innerHTML = html;
+    document.getElementById('signOut').hidden = false;
+    document.getElementById('codeGo').addEventListener('click', function () {
+      var c = document.getElementById('codeIn').value.trim().toUpperCase();
+      if (c.length === 6) location.href = '/keepsake/view/?c=' + encodeURIComponent(c);
+    });
+  }
+
+  document.getElementById('signOut').addEventListener('click', function () {
+    localStorage.removeItem('sb-vigenqlwwoknxjzahvtv-auth-token');
+    location.reload();
+  });
+
+  async function init() {
+    if (await NanafyKeep.hasAccount()) renderList();
+    else renderSignIn();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
