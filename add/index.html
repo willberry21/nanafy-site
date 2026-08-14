@@ -376,6 +376,7 @@ function renderForm() {
 
     '<div class="gate-hint" id="gateHint"></div>' +
     '<button class="submit" id="submit">Next question</button>' +
+    '<p style="text-align:center;margin:18px 0 0;font-size:.85rem"><a style="color:var(--accent);font-weight:700;text-decoration:none" href="/keepsake/view/?c=' + encodeURIComponent(event.share_code || '') + '">Just here to look? See the keepsake &rarr;</a></p>' +
     '<div class="upl-progress" id="sendProgress" hidden></div>' +
     '<p class="error" id="err" hidden></p>';
 
@@ -592,6 +593,7 @@ function renderSuccess(photoCount, answerCount) {
     '<div class="center"><div class="success-glyph"></div>' +
     '<h1>Thank you</h1>' +
     '<p class="sub">' + sub + '</p>' +
+    '<a class="submit" style="display:block;text-decoration:none;text-align:center" href="/keepsake/view/?c=' + encodeURIComponent(event.share_code || '') + '">See the keepsake so far</a>' +
     '<button class="again" id="again">Share another memory</button>' +
     '<div class="promo">' +
     '<div class="promo-kicker">Nanafy is free for everyone</div>' +

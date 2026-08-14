@@ -345,7 +345,7 @@
 
   async function init() {
     if (!code) { el('loading').textContent = 'No keepsake code in the link.'; return; }
-    el('backLink').href = '/keepsake/?c=' + encodeURIComponent(code);
+    el('backLink').href = '/keepsake/view/?c=' + encodeURIComponent(code);
     try {
       var ev = await Nanafy.join(code,
         'id,title,honoree,event_type,photo_url,memories(id,status,photo_url)');

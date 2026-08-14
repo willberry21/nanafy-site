@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The keepsake · Nanafy</title>
+<meta name="description" content="Every memory, gathered in one place.">
+<meta name="theme-color" content="#115E67">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Lato:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  /* The guest's keepsake — read-only, warm, zero chrome. No edit pills, no
+     review queues, no share keys: those live on the host page. */
+  :root {
+    --ground:#115E67; --surface:#14676F; --surface-2:#0E5259;
+    --ink:#FFFFFF; --ink-soft:rgba(255,255,255,.72); --ink-faint:rgba(255,255,255,.45);
+    --line:rgba(255,255,255,.18);
+    --turq:#5FE0D2; --turq-ink:#04302C; --pink:#EFA8BE; --verm:#FF7A63;
+    --display:"Josefin Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --serif:"Lora",Georgia,serif;
+    --sans:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body { background:var(--ground); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+
+  .bar {
+    position:sticky; top:0; z-index:20;
+    background:rgba(17,94,103,.92); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding:12px 18px; display:flex; align-items:center; gap:12px;
+  }
+  .bar .brand { display:flex; align-items:center; gap:9px; text-decoration:none; }
+  .bar .mark { font-family:var(--display); font-weight:600; letter-spacing:.18em; text-transform:uppercase; font-size:1.02rem; color:var(--pink); }
+  .bar .mark b { color:#fff; font-weight:600; }
+  .bar .spacer { flex:1 1 auto; }
+  .bar a.addcta {
+    font-size:.85rem; font-weight:700; color:var(--turq-ink); background:var(--turq);
+    text-decoration:none; padding:9px 16px; border-radius:999px;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1);
+  }
+  .bar a.addcta:active { transform:scale(.95); }
+
+  .wrap { max-width:640px; margin:0 auto; padding:36px 20px 70px; }
+  .hero { text-align:center; margin-bottom:30px; }
+  .hero .portrait {
+    width:110px; height:110px; border-radius:28px; object-fit:cover;
+    margin:0 auto 20px; display:block; border:1px solid var(--line);
+  }
+  .hero .prep { font-family:var(--display); font-weight:600; font-size:.74rem; letter-spacing:.24em; color:var(--turq); text-transform:uppercase; margin:0 0 12px; }
+  .hero h1 { font-family:var(--display); font-weight:300; font-size:clamp(2rem,7vw,2.9rem); letter-spacing:.01em; line-height:1.12; margin:0; text-wrap:balance; }
+  .hero .sub { margin:14px 0 0; color:var(--ink-soft); font-family:var(--serif); font-style:italic; font-size:1rem; }
+
+  /* The three ways to experience it — slideshow leads. */
+  .experiences { display:flex; flex-direction:column; gap:10px; margin:0 0 40px; }
+  .exp {
+    display:flex; align-items:center; gap:16px; text-decoration:none; color:var(--ink);
+    background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), border-color .15s ease;
+  }
+  .exp:active { transform:scale(.98); }
+  .exp:hover { border-color:var(--turq); }
+  .exp.lead { background:var(--turq); border-color:var(--turq); color:var(--turq-ink); }
+  .exp .glyph { font-size:1.5rem; line-height:1; width:40px; text-align:center; flex:none; }
+  .exp .x-title { font-family:var(--display); font-weight:600; font-size:1.02rem; letter-spacing:.02em; }
+  .exp .x-line { font-size:.84rem; opacity:.75; margin-top:2px; }
+  .exp .arrow { margin-left:auto; font-size:1.2rem; opacity:.6; }
+
+  .wall-label {
+    font-family:var(--display); font-weight:600; font-size:.74rem; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--turq); margin:0 0 16px; text-align:center;
+  }
+  .mem {
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:20px; margin-bottom:14px; overflow:hidden;
+  }
+  .mem .q { font-family:var(--display); font-weight:600; font-size:.68rem; letter-spacing:.16em; text-transform:uppercase; color:var(--turq); margin:0 0 10px; }
+  .mem .body { font-family:var(--serif); font-size:1.04rem; line-height:1.65; margin:0; white-space:pre-wrap; }
+  .mem .who { margin:14px 0 0; font-family:var(--display); font-weight:600; font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; color:var(--pink); }
+  .mem img { width:calc(100% + 40px); margin:14px -20px -20px; display:block; }
+  .mem.photo-only { padding:0; }
+  .mem.photo-only img { width:100%; margin:0; }
+  .mem.photo-only .meta { padding:14px 20px; }
+  .mem.photo-only .meta .body { font-size:.95rem; font-style:italic; }
+  .photo-pair { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+  .photo-pair .mem { margin:0; }
+  .photo-pair img { aspect-ratio:1; object-fit:cover; }
+
+  .closing { text-align:center; margin-top:44px; color:var(--ink-faint); font-size:.85rem; }
+  .closing .add { color:var(--turq); text-decoration:none; font-weight:700; }
+  .state { text-align:center; padding:80px 24px; color:var(--ink-soft); }
+</style>
+<script src="/js/session.js?v=20260810b"></script>
+</head>
+<body>
+
+<div class="bar">
+  <a class="brand" href="https://nanafy.ai/">
+    <svg viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><g fill="#FFFFFF"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)"/><circle cx="50" cy="50" r="18.5"/></g><circle cx="50" cy="50" r="15" fill="#115E67"/></svg>
+    <span class="mark"><b>Nana</b>fy</span>
+  </a>
+  <span class="spacer"></span>
+  <a class="addcta" id="addTop" href="/add/">Add your memory</a>
+</div>
+
+<div class="wrap">
+  <div id="app"><div class="state">Opening the keepsake&hellip;</div></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var PREPOSITIONS = { memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating', graduation: 'Congratulating', tribute: 'A tribute to', other: 'Remembering' };
+  var params = new URLSearchParams(location.search);
+  var code = (params.get('c') || '').trim().toUpperCase();
+  var app = document.getElementById('app');
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+  function render(ev) {
+    var prep = PREPOSITIONS[ev.event_type] || 'For';
+    var title = ev.honoree || ev.title;
+    var mems = (ev.memories || [])
+      .filter(function (m) { return m.status === 'approved'; })
+      .sort(function (a, b) {
+        var pa = a.position == null ? Infinity : a.position;
+        var pb = b.position == null ? Infinity : b.position;
+        if (pa !== pb) return pa - pb;
+        return new Date(a.created_at) - new Date(b.created_at);
+      });
+    var n = mems.length;
+    var photoCount = mems.filter(function (m) { return m.photo_url; }).length;
+    var q = '?c=' + encodeURIComponent(code);
+
+    var html =
+      '<div class="hero">' +
+      (ev.photo_url ? '<img class="portrait" src="' + esc(ev.photo_url) + '" alt="">' : '') +
+      '<p class="prep">' + esc(prep) + '</p>' +
+      '<h1>' + esc(title) + '</h1>' +
+      '<p class="sub">' + n + ' ' + (n === 1 ? 'memory' : 'memories') + ', from the people who were there.</p>' +
+      '</div>';
+
+    if (n > 0) {
+      html += '<div class="experiences">' +
+        '<a class="exp lead" href="/keepsake/slideshow/' + q + '">' +
+        '<span class="glyph">▶</span><span><div class="x-title">Play the slideshow</div>' +
+        '<div class="x-line">Every memory and photo, set to music</div></span><span class="arrow">›</span></a>' +
+        (photoCount > 0
+          ? '<a class="exp" href="/keepsake/collage/' + q + '">' +
+            '<span class="glyph">▦</span><span><div class="x-title">The photo mosaic</div>' +
+            '<div class="x-line">One big picture made of every photo</div></span><span class="arrow">›</span></a>'
+          : '') +
+        '<a class="exp" href="/book/' + q + '">' +
+        '<span class="glyph">❧</span><span><div class="x-title">The keepsake book</div>' +
+        '<div class="x-line">Every memory as a printed book you can order</div></span><span class="arrow">›</span></a>' +
+        '</div>';
+    }
+
+    if (n === 0) {
+      html += '<div class="state"><b>The first memory hasn’t arrived yet.</b><br><br>' +
+        'Be the one who starts it — <a class="add" style="color:var(--turq)" href="/add/' + q + '">add yours</a>.</div>';
+    } else {
+      html += '<p class="wall-label">The memories</p>';
+
+      // Consecutive photo-only memories pair up into a grid; everything else
+      // is a card. Same grouping instinct as the book's collages.
+      var i = 0;
+      while (i < mems.length) {
+        var m = mems[i];
+        var isPhotoOnly = m.photo_url && !(m.body || '').trim();
+        if (isPhotoOnly && i + 1 < mems.length) {
+          var m2 = mems[i + 1];
+          if (m2.photo_url && !(m2.body || '').trim()) {
+            html += '<div class="photo-pair">' + photoCard(m) + photoCard(m2) + '</div>';
+            i += 2;
+            continue;
+          }
+        }
+        html += isPhotoOnly ? photoCard(m) : memoryCard(m);
+        i++;
+      }
+
+      html += '<p class="closing">Were you there too? <a class="add" href="/add/' + q + '">Add your memory</a> — it takes a few minutes.<br><br>Gathered with Nanafy.</p>';
+    }
+
+    app.innerHTML = html;
+    document.getElementById('addTop').href = '/add/' + q;
+  }
+
+  function memoryCard(m) {
+    return '<div class="mem">' +
+      (m.prompt_text ? '<p class="q">' + esc(m.prompt_text) + '</p>' : '') +
+      ((m.body || '').trim() ? '<p class="body">' + esc(m.body.trim()) + '</p>' : '') +
+      (m.contributor_name ? '<p class="who">— ' + esc(m.contributor_name) + '</p>' : '') +
+      (m.photo_url ? '<img src="' + esc(m.photo_url) + '" alt="" loading="lazy">' : '') +
+      '</div>';
+  }
+
+  function photoCard(m) {
+    return '<div class="mem photo-only">' +
+      '<img src="' + esc(m.photo_url) + '" alt="" loading="lazy">' +
+      (m.contributor_name
+        ? '<div class="meta"><p class="who" style="margin:0">— ' + esc(m.contributor_name) + '</p></div>'
+        : '') +
+      '</div>';
+  }
+
+  async function init() {
+    if (!code) { app.innerHTML = '<div class="state">No keepsake code in the link.</div>'; return; }
+    try {
+      var ev = await Nanafy.join(code,
+        'id,title,honoree,event_type,photo_url,memories(id,status,position,created_at,contributor_name,prompt_text,body,photo_url)');
+      render(ev);
+    } catch (e) {
+      app.innerHTML = '<div class="state">Couldn’t open this keepsake.<br>Check the link and try again.</div>';
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
