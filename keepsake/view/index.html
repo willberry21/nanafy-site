@@ -141,6 +141,9 @@
       '<p class="prep">' + esc(prep) + '</p>' +
       '<h1>' + esc(title) + '</h1>' +
       '<p class="sub">' + n + ' ' + (n === 1 ? 'memory' : 'memories') + ', from the people who were there.</p>' +
+      (params.get('sent')
+        ? '<p style="margin:16px auto 0;max-width:34em;font-size:.88rem;color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;">Yours are with the host — they\u2019ll appear here once approved.</p>'
+        : '') +
       '</div>';
 
     if (n > 0) {

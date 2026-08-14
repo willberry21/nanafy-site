@@ -543,6 +543,14 @@
   function renderTicks() {
     var ticks = document.getElementById('ticks');
     if (!ticks) return;
+    // Past ~36 slides the per-slide ticks become unreadable slivers — a big
+    // deck gets one overall bar instead.
+    if (slides.length > 36) {
+      var pct = Math.round((current / (slides.length - 1)) * 100);
+      ticks.innerHTML = '<div class="tick donefull" style="flex:none;width:' + pct + '%"><i></i></div>' +
+        '<div class="tick" data-i="' + current + '"><i></i></div>';
+      return;
+    }
     ticks.innerHTML = slides.map(function (_, i) {
       return '<div class="tick' + (i < current ? ' donefull' : '') + '" data-i="' + i + '"><i></i></div>';
     }).join('');
@@ -647,6 +655,7 @@
       '<div class="tapzones"><div class="zprev"></div><div class="znext"></div></div>' +
       '<div class="ticks" id="ticks"></div>' +
       '<div class="controls">' +
+      '<button class="ctl" id="closeBtn" aria-label="Leave the slideshow">✕</button>' +
       '<button class="ctl" id="prevBtn" aria-label="Previous">&#8249;</button>' +
       '<button class="ctl primary" id="playpause" aria-label="Play or pause">▶</button>' +
       '<button class="ctl" id="nextBtn" aria-label="Next">&#8250;</button>' +
@@ -658,6 +667,11 @@
 
     layers = [document.getElementById('layerA'), document.getElementById('layerB')];
 
+    document.getElementById('closeBtn').addEventListener('click', function () {
+      music.stop();
+      if (history.length > 1) history.back();
+      else location.href = '/keepsake/view/?c=' + encodeURIComponent(code);
+    });
     document.getElementById('playpause').addEventListener('click', function () { playing ? pause() : play(); });
     document.getElementById('nextBtn').addEventListener('click', next);
     document.getElementById('prevBtn').addEventListener('click', prev);
