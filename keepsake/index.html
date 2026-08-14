@@ -576,7 +576,7 @@ function render(ev, pending) {
   }
 
   if (n > 0) {
-    html += '<a class="bookcta" href="/slideshow/?c=' + encodeURIComponent(code) + '">' +
+    html += '<a class="bookcta" href="/keepsake/slideshow/?c=' + encodeURIComponent(code) + '">' +
       '<span class="bc-kicker">The slideshow</span>' +
       '<span class="bc-line">Every memory and photo, played as a slideshow — for the gathering, or for everyone after.</span>' +
       '<span class="bc-btn">Play the slideshow</span></a>';
@@ -585,7 +585,7 @@ function render(ev, pending) {
   // The mosaic needs photos, not written memories — only offer it when some exist.
   var photoCount = memories.filter(function (m) { return m.photo_url; }).length;
   if (photoCount > 0) {
-    html += '<a class="bookcta" href="/collage/?c=' + encodeURIComponent(code) + '">' +
+    html += '<a class="bookcta" href="/keepsake/collage/?c=' + encodeURIComponent(code) + '">' +
       '<span class="bc-kicker">The photo mosaic</span>' +
       '<span class="bc-line">' + photoCount + ' photo' + (photoCount === 1 ? '' : 's') +
       ', arranged into one big picture.</span>' +

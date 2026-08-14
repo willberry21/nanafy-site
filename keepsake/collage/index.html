@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The photo mosaic · Nanafy</title>
+<meta name="description" content="Every photo, gathered into one picture.">
+<meta name="theme-color" content="#115E67">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Lato:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground:#115E67; --ground-deep:#0C464D; --surface:#14676F; --surface-2:#0E5259;
+    --ink:#FFFFFF; --ink-soft:rgba(255,255,255,.70); --ink-faint:rgba(255,255,255,.45);
+    --line:rgba(255,255,255,.18);
+    --turq:#5FE0D2; --turq-ink:#04302C; --pink:#EFA8BE; --vermilion:#FF7A63;
+    --display:"Josefin Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --serif:"Lora",Georgia,serif;
+    --sans:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body { background:var(--ground); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+  a { color:var(--turq); }
+
+  .bar {
+    position:sticky; top:0; z-index:20;
+    background:rgba(17,94,103,.92); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding:12px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .bar .brand { display:flex; align-items:center; gap:9px; text-decoration:none; }
+  .bar .mark { font-family:var(--display); font-weight:600; letter-spacing:.18em; text-transform:uppercase; font-size:1.05rem; color:var(--pink); }
+  .bar .mark b { color:#fff; font-weight:600; }
+  .bar .spacer { flex:1 1 auto; }
+  .bar a.back {
+    font-size:.84rem; font-weight:700; color:var(--turq); text-decoration:none;
+    padding:7px 13px; border:1px solid var(--line); border-radius:10px;
+  }
+  .bar a.back:hover { border-color:var(--turq); }
+
+  .wrap { max-width:880px; margin:0 auto; padding:34px 20px 80px; }
+  .head { text-align:center; margin-bottom:30px; }
+  .head .prep { font-family:var(--display); font-weight:600; font-size:.72rem; letter-spacing:.24em; color:var(--turq); text-transform:uppercase; }
+  .head h1 { font-family:var(--display); font-weight:300; font-size:clamp(1.9rem,5vw,2.7rem); letter-spacing:.01em; margin:10px 0 8px; }
+  .head p { color:var(--ink-soft); font-family:var(--serif); font-style:italic; font-size:1.02rem; margin:0; }
+
+  .panel {
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:22px; margin-bottom:20px;
+  }
+  .panel .label {
+    font-family:var(--display); font-weight:600; font-size:.72rem; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--turq); margin:0 0 6px;
+  }
+  .panel .sub { font-size:.88rem; color:var(--ink-soft); margin:0 0 16px; }
+
+  .picks { display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px; }
+  .pick {
+    position:relative; padding:0; border:2px solid transparent; border-radius:10px; overflow:hidden;
+    cursor:pointer; background:var(--surface-2); aspect-ratio:1; width:100%;
+  }
+  .pick img { width:100%; height:100%; object-fit:cover; display:block; }
+  .pick.sel { border-color:var(--turq); box-shadow:0 0 0 3px rgba(95,224,210,.25); }
+  .pick .tag {
+    position:absolute; left:6px; bottom:6px; font-size:.62rem; font-weight:700; letter-spacing:.08em;
+    background:rgba(4,48,44,.82); color:var(--turq); padding:2px 7px; border-radius:999px; text-transform:uppercase;
+  }
+
+  .controls { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:18px; }
+  button.go {
+    border:0; border-radius:12px; background:var(--turq); color:var(--turq-ink);
+    font:inherit; font-weight:800; font-size:.95rem; padding:13px 26px; cursor:pointer;
+  }
+  button.go[disabled] { opacity:.45; cursor:default; }
+  button.ghost {
+    border:1px solid var(--line); border-radius:12px; background:transparent; color:var(--ink);
+    font:inherit; font-weight:700; font-size:.9rem; padding:12px 20px; cursor:pointer;
+  }
+  button.ghost:hover { border-color:var(--turq); }
+  .detail { display:flex; align-items:center; gap:9px; font-size:.85rem; color:var(--ink-soft); }
+  .detail input { accent-color:var(--turq); }
+
+  .stage { text-align:center; }
+  #mosaic { width:100%; max-width:820px; border-radius:12px; border:1px solid var(--line); display:none; }
+  .progress { font-size:.9rem; color:var(--ink-soft); padding:26px 0; display:none; }
+  .note { font-size:.82rem; color:var(--ink-faint); margin-top:12px; }
+
+  .state { text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:.95rem; }
+  .state b { color:var(--ink); }
+</style>
+<script src="/js/session.js?v=20260810b"></script>
+</head>
+<body>
+
+<div class="bar">
+  <a class="brand" href="/">
+    <svg viewBox="0 0 100 100" width="26" height="26" aria-hidden="true"><g fill="#FFFFFF"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)"/><circle cx="50" cy="50" r="18.5"/></g><circle cx="50" cy="50" r="15" fill="#115E67"/></svg>
+    <span class="mark"><b>Nana</b>fy</span>
+  </a>
+  <span class="spacer"></span>
+  <a class="back" id="backLink" href="/keepsake/">Back to the keepsake</a>
+</div>
+
+<div class="wrap">
+  <div id="loading" class="state">Gathering the photos&hellip;</div>
+
+  <div id="main" style="display:none">
+    <div class="head">
+      <div class="prep" id="prep">FOR</div>
+      <h1 id="title"></h1>
+      <p id="blurb"></p>
+    </div>
+
+    <div class="panel">
+      <p class="label">Step 1 &middot; Choose the big picture</p>
+      <p class="sub">This is the image the mosaic will form. Every guest photo becomes one of its tiles &mdash; faces and simple shapes work best.</p>
+      <div class="picks" id="picks"></div>
+    </div>
+
+    <div class="panel">
+      <p class="label">Step 2 &middot; Make the mosaic</p>
+      <p class="sub" id="tileCount"></p>
+      <div class="controls">
+        <button class="go" id="makeBtn" disabled>Make the mosaic</button>
+        <label class="detail">Tile size
+          <input type="range" id="detail" min="28" max="72" step="4" value="48">
+        </label>
+        <button class="ghost" id="saveBtn" style="display:none">Save as image</button>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="progress" id="progress"></div>
+      <canvas id="mosaic"></canvas>
+      <p class="note" id="note" style="display:none">Look close: every tile is a real photo from this keepsake. Save it, print it, frame it.</p>
+    </div>
+  </div>
+
+  <div id="empty" class="state" style="display:none">
+    <b>No photos yet.</b><br><br>
+    The mosaic is built from the keepsake&rsquo;s photos &mdash; once guests add some,
+    come back and every one of them becomes a tile in the big picture.
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var params = new URLSearchParams(location.search);
+  var code = (params.get('c') || '').trim().toUpperCase();
+
+  var state = {
+    ev: null,
+    photos: [],      // candidate/tile photo urls
+    tiles: [],       // { thumb: canvas, colors: [[r,g,b] x4] }
+    targetUrl: null,
+    building: false
+  };
+
+  function el(id) { return document.getElementById(id); }
+
+  function loadImage(url) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function () { resolve(img); };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  /* Average colour of a quadrant of a small canvas region. */
+  function quadColors(ctx, w, h) {
+    var out = [];
+    [[0, 0], [1, 0], [0, 1], [1, 1]].forEach(function (q) {
+      var data = ctx.getImageData(q[0] * w / 2, q[1] * h / 2, w / 2, h / 2).data;
+      var r = 0, g = 0, b = 0, n = data.length / 4;
+      for (var i = 0; i < data.length; i += 4) { r += data[i]; g += data[i + 1]; b += data[i + 2]; }
+      out.push([r / n, g / n, b / n]);
+    });
+    return out;
+  }
+
+  /* Squared distance across the four quadrants — cheap likeness measure. */
+  function dist(a, b) {
+    var d = 0;
+    for (var q = 0; q < 4; q++) {
+      var dr = a[q][0] - b[q][0], dg = a[q][1] - b[q][1], db = a[q][2] - b[q][2];
+      d += dr * dr + dg * dg + db * db;
+    }
+    return d;
+  }
+
+  async function prepareTiles(urls, onProgress) {
+    var tiles = [];
+    var THUMB = 48;
+    for (var i = 0; i < urls.length; i++) {
+      try {
+        var img = await loadImage(urls[i]);
+        var c = document.createElement('canvas');
+        c.width = THUMB; c.height = THUMB;
+        var ctx = c.getContext('2d', { willReadFrequently: true });
+        // Cover-crop into the square thumb.
+        var s = Math.min(img.naturalWidth, img.naturalHeight);
+        ctx.drawImage(img,
+          (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s,
+          0, 0, THUMB, THUMB);
+        tiles.push({ thumb: c, colors: quadColors(ctx, THUMB, THUMB) });
+      } catch (e) { /* a broken photo just sits this one out */ }
+      onProgress(i + 1, urls.length);
+    }
+    return tiles;
+  }
+
+  async function build() {
+    if (state.building || !state.targetUrl) return;
+    state.building = true;
+    var makeBtn = el('makeBtn'), progress = el('progress'), canvas = el('mosaic');
+    makeBtn.disabled = true;
+    canvas.style.display = 'none';
+    el('note').style.display = 'none';
+    el('saveBtn').style.display = 'none';
+    progress.style.display = 'block';
+
+    try {
+      // 1. Tiles (prepared once, reused across rebuilds).
+      if (!state.tiles.length) {
+        progress.textContent = 'Reading the photos…';
+        state.tiles = await prepareTiles(state.photos, function (done, total) {
+          progress.textContent = 'Reading the photos… ' + done + ' of ' + total;
+        });
+      }
+      if (!state.tiles.length) { progress.textContent = 'None of the photos could be read.'; return; }
+
+      // 2. The big picture, downsampled to the grid.
+      progress.textContent = 'Laying the tiles…';
+      var target = await loadImage(state.targetUrl);
+      var CELL = 174 - parseInt(el('detail').value, 10) * 2;  // slider: bigger value = smaller tiles = more detail
+      var OUT_W = 1920;
+      var cols = Math.round(OUT_W / CELL);
+      var rows = Math.round(cols * (target.naturalHeight / target.naturalWidth));
+      rows = Math.max(8, Math.min(rows, 220));
+
+      // Grid-resolution copy of the target for cell colours (2x2 per cell).
+      var small = document.createElement('canvas');
+      small.width = cols * 2; small.height = rows * 2;
+      var sctx = small.getContext('2d', { willReadFrequently: true });
+      sctx.drawImage(target, 0, 0, small.width, small.height);
+      var sdata = sctx.getImageData(0, 0, small.width, small.height).data;
+
+      function cellColors(cx, cy) {
+        var out = [];
+        [[0, 0], [1, 0], [0, 1], [1, 1]].forEach(function (q) {
+          var idx = ((cy * 2 + q[1]) * small.width + (cx * 2 + q[0])) * 4;
+          out.push([sdata[idx], sdata[idx + 1], sdata[idx + 2]]);
+        });
+        return out;
+      }
+
+      canvas.width = cols * CELL;
+      canvas.height = rows * CELL;
+      var ctx = canvas.getContext('2d');
+      var lastUsed = new Array(state.tiles.length).fill(-1e9);
+      var cellIndex = 0;
+
+      for (var y = 0; y < rows; y++) {
+        for (var x = 0; x < cols; x++) {
+          var want = cellColors(x, y);
+          var best = 0, bestScore = Infinity;
+          for (var t = 0; t < state.tiles.length; t++) {
+            // A reuse penalty that fades: the same photo should not tile a
+            // whole region, but with few photos reuse must stay cheap.
+            var since = cellIndex - lastUsed[t];
+            var penalty = Math.max(0, 18 - since) * 2600;
+            var score = dist(want, state.tiles[t].colors) + penalty;
+            if (score < bestScore) { bestScore = score; best = t; }
+          }
+          lastUsed[best] = cellIndex++;
+          ctx.drawImage(state.tiles[best].thumb, x * CELL, y * CELL, CELL, CELL);
+        }
+        if (y % 8 === 0) {
+          progress.textContent = 'Laying the tiles… row ' + (y + 1) + ' of ' + rows;
+          // setTimeout, not requestAnimationFrame: rAF never fires in hidden
+          // or throttled tabs, and the build would silently hang there.
+          await new Promise(function (r) { setTimeout(r, 0); });
+        }
+      }
+
+      // 3. The likeness pass: the big picture, breathed over the tiles.
+      ctx.globalAlpha = 0.42;
+      ctx.drawImage(target, 0, 0, canvas.width, canvas.height);
+      ctx.globalAlpha = 1;
+
+      progress.style.display = 'none';
+      canvas.style.display = 'block';
+      el('note').style.display = 'block';
+      el('saveBtn').style.display = 'inline-block';
+    } catch (e) {
+      progress.textContent = 'Something went wrong making the mosaic. Try a different big picture.';
+    } finally {
+      state.building = false;
+      makeBtn.disabled = !state.targetUrl;
+    }
+  }
+
+  function save() {
+    try {
+      var a = document.createElement('a');
+      var name = ((state.ev.title || state.ev.honoree || 'keepsake') + ' mosaic')
+        .toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      a.download = name + '.jpg';
+      a.href = el('mosaic').toDataURL('image/jpeg', 0.92);
+      a.click();
+    } catch (e) {
+      alert('The browser blocked saving — take a screenshot instead.');
+    }
+  }
+
+  function renderPicks() {
+    var picks = el('picks');
+    var candidates = [];
+    if (state.ev.photo_url) candidates.push({ url: state.ev.photo_url, tag: 'Cover' });
+    state.photos.forEach(function (u) { candidates.push({ url: u }); });
+    picks.innerHTML = '';
+    candidates.forEach(function (cand, i) {
+      var b = document.createElement('button');
+      b.className = 'pick';
+      b.type = 'button';
+      b.innerHTML = '<img src="' + cand.url.replace(/"/g, '&quot;') + '" alt="" loading="lazy">' +
+        (cand.tag ? '<span class="tag">' + cand.tag + '</span>' : '');
+      b.addEventListener('click', function () {
+        picks.querySelectorAll('.pick').forEach(function (p) { p.classList.remove('sel'); });
+        b.classList.add('sel');
+        state.targetUrl = cand.url;
+        el('makeBtn').disabled = false;
+      });
+      picks.appendChild(b);
+      if (i === 0) b.click();  // sensible default: the cover, else the first photo
+    });
+  }
+
+  async function init() {
+    if (!code) { el('loading').textContent = 'No keepsake code in the link.'; return; }
+    el('backLink').href = '/keepsake/?c=' + encodeURIComponent(code);
+    try {
+      var ev = await Nanafy.join(code,
+        'id,title,honoree,event_type,photo_url,memories(id,status,photo_url)');
+      state.ev = ev;
+      // Embedded filters 400 on the join RPC — select status, filter here.
+      state.photos = (ev.memories || [])
+        .filter(function (m) { return m.status === 'approved' && m.photo_url; })
+        .map(function (m) { return m.photo_url; });
+
+      el('loading').style.display = 'none';
+      var name = ev.title || ev.honoree || 'this keepsake';
+      if (!state.photos.length && !ev.photo_url) {
+        el('empty').style.display = 'block';
+        return;
+      }
+      el('main').style.display = 'block';
+      el('title').textContent = name;
+      el('blurb').textContent = 'One picture, made of every picture.';
+      var n = state.photos.length;
+      el('tileCount').textContent = n < 12
+        ? n + ' photo' + (n === 1 ? '' : 's') + ' to tile with — it works, but the more photos guests add, the richer the mosaic gets.'
+        : n + ' photos become the tiles.';
+      renderPicks();
+    } catch (e) {
+      el('loading').textContent = 'Could not open this keepsake. Check the link and try again.';
+    }
+  }
+
+  el('makeBtn').addEventListener('click', function () { state.tilesDirty = false; build(); });
+  el('saveBtn').addEventListener('click', save);
+  el('detail').addEventListener('change', function () { if (state.targetUrl && !state.building) build(); });
+
+  init();
+})();
+</script>
+</body>
+</html>
