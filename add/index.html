@@ -58,6 +58,8 @@
     transition: border-color .15s ease, background .15s ease;
   }
   .prompt-num.sel { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .prompt-num.done:not(.sel) { background: var(--accent-wash); border-color: var(--accent); color: var(--accent); }
+  .gate-hint { text-align: center; font-size: 13.5px; color: var(--ink-soft); margin: 26px 0 -18px; }
   .prompt-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; font-size: 1.12rem; line-height: 1.5; font-family: var(--serif); font-style: italic; color: var(--ink); }
   textarea, input[type="text"] {
     width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--field);
@@ -139,8 +141,9 @@ const TARGET_WORDS = 250;
 const app = document.getElementById('app');
 let event = null;
 let promptIndex = 0;
-let photoFile = null;
 let drafts = {};
+let questionPhotos = {}; // File[] per question — photos stay with their question
+let sentAnswers = {};    // answers that already landed, so a retry never duplicates
 let savedName = '';
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
@@ -303,121 +306,196 @@ function renderForm() {
   const prep = PREPOSITIONS[event.event_type] || 'For';
   const prompts = (event.prompts || []).sort((a, b) => a.position - b.position).map((p) => p.text);
   const title = event.honoree || event.title;
+  const n = prompts.length;
   app.innerHTML =
     '<div class="center"><p class="prep">' + esc(prep) + '</p>' +
     '<h1 class="honoree">' + esc(title) + '</h1>' +
-    '<p class="sub">Share a memory — it takes a couple of minutes and means more than you know.</p></div>' +
+    '<p class="sub">Answer all ' + n + ' questions — it takes a few minutes and means more than you know.</p></div>' +
 
     laneTabs('words') +
 
-    '<span class="label">Choose a question</span>' +
+    '<span class="label" id="progressLabel">Answer all ' + n + ' questions · 0 done</span>' +
     '<div class="prompts" id="promptNums">' +
     prompts.map((_, i) => '<button type="button" class="prompt-num' + (i === 0 ? ' sel' : '') + '" data-i="' + i + '">' + (i + 1) + '</button>').join('') +
     '</div>' +
     '<div class="prompt-card" id="promptText">' + esc(prompts[0] || '') + '</div>' +
 
-    '<span class="label">Your memory</span>' +
+    '<span class="label">Your answer</span>' +
     '<textarea id="body" placeholder="Share your memory…"></textarea>' +
     '<div class="count" id="count">0 words · aim for around ' + TARGET_WORDS + '</div>' +
 
-    '<span class="label">Add a photo (optional)</span>' +
-    '<div id="photoArea"><button type="button" class="photo-btn" id="photoBtn">Choose a photo</button>' +
-    '<input type="file" id="photoInput" accept="image/*" hidden></div>' +
+    '<span class="label">Add photos (optional)</span>' +
+    '<div class="count" style="margin:-4px 0 8px">Photos stay with this question — add as many as you like.</div>' +
+    '<div class="pick-grid" id="qPhotoGrid"></div>' +
+    '<input type="file" id="qPhotoInput" accept="image/*" multiple hidden>' +
 
     '<span class="label">Your name</span>' +
     '<input type="text" id="name" placeholder="Anonymous" autocomplete="name" value="' + esc(savedName) + '">' +
 
-    '<button class="submit" id="submit" disabled>Share memory</button>' +
+    '<div class="gate-hint" id="gateHint"></div>' +
+    '<button class="submit" id="submit">Next question</button>' +
+    '<div class="upl-progress" id="sendProgress" hidden></div>' +
     '<p class="error" id="err" hidden></p>';
 
   wireLaneTabs('words');
   const bodyEl = document.getElementById('body');
   const submitEl = document.getElementById('submit');
+  const photoInput = document.getElementById('qPhotoInput');
+  const photoGrid = document.getElementById('qPhotoGrid');
 
-  bodyEl.value = drafts[promptIndex] || '';
-  refreshCount();
+  function answeredList() { return prompts.map((_, i) => !!(drafts[i] || '').trim()); }
+  function answeredCount() { return answeredList().filter(Boolean).length; }
+  function allAnswered() { return n > 0 && answeredCount() === n; }
+  function nextUnanswered() {
+    const a = answeredList();
+    for (let step = 1; step <= n; step++) { const i = (promptIndex + step) % n; if (!a[i]) return i; }
+    return promptIndex;
+  }
+
+  function refreshProgress() {
+    const done = answeredCount();
+    const a = answeredList();
+    document.getElementById('progressLabel').textContent =
+      'Answer all ' + n + ' questions · ' + done + ' done';
+    document.querySelectorAll('.prompt-num').forEach((el) => {
+      const i = +el.dataset.i;
+      el.classList.toggle('sel', i === promptIndex);
+      el.classList.toggle('done', a[i]);
+      el.textContent = a[i] && i !== promptIndex ? '✓' : String(i + 1);
+    });
+    const hint = document.getElementById('gateHint');
+    if (allAnswered()) {
+      hint.textContent = '';
+      submitEl.textContent = 'Share your memories';
+    } else {
+      hint.textContent = done + ' of ' + n + ' answered — answer them all to share';
+      submitEl.textContent = 'Next question';
+    }
+  }
 
   function refreshCount() {
     const words = bodyEl.value.trim() ? bodyEl.value.trim().split(/\s+/).length : 0;
     document.getElementById('count').textContent = words + ' words · aim for around ' + TARGET_WORDS;
-    submitEl.disabled = bodyEl.value.trim().length === 0;
   }
+
+  function renderQuestionPhotos() {
+    const files = questionPhotos[promptIndex] || [];
+    photoGrid.innerHTML = files.map((f, i) =>
+      '<div class="cell"><img src="' + URL.createObjectURL(f) + '" alt="">' +
+      '<button type="button" class="cell-x" data-i="' + i + '" aria-label="Remove photo">✕</button></div>'
+    ).join('') + '<button type="button" class="cell-add" id="qCellAdd" aria-label="Add photos">＋</button>';
+  }
+
+  function goToQuestion(i) {
+    drafts[promptIndex] = bodyEl.value;
+    promptIndex = i;
+    document.getElementById('promptText').textContent = prompts[promptIndex];
+    bodyEl.value = drafts[promptIndex] || '';
+    renderQuestionPhotos();
+    refreshCount();
+    refreshProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  bodyEl.value = drafts[promptIndex] || '';
+  renderQuestionPhotos();
+  refreshCount();
+  refreshProgress();
 
   document.getElementById('promptNums').addEventListener('click', (e) => {
     const b = e.target.closest('.prompt-num'); if (!b) return;
-    drafts[promptIndex] = bodyEl.value;
-    promptIndex = +b.dataset.i;
-    document.querySelectorAll('.prompt-num').forEach((el) => el.classList.toggle('sel', el === b));
-    document.getElementById('promptText').textContent = prompts[promptIndex];
-    bodyEl.value = drafts[promptIndex] || '';
-    refreshCount();
+    goToQuestion(+b.dataset.i);
   });
 
-  bodyEl.addEventListener('input', () => { drafts[promptIndex] = bodyEl.value; refreshCount(); });
+  bodyEl.addEventListener('input', () => { drafts[promptIndex] = bodyEl.value; refreshCount(); refreshProgress(); });
 
-  const photoInput = document.getElementById('photoInput');
-  document.getElementById('photoArea').addEventListener('click', (e) => {
-    if (e.target.id === 'photoBtn') photoInput.click();
-    if (e.target.id === 'photoRemove') { photoFile = null; resetPhotoArea(); }
+  photoGrid.addEventListener('click', (e) => {
+    if (e.target.id === 'qCellAdd') photoInput.click();
+    const x = e.target.closest('.cell-x');
+    if (x) {
+      (questionPhotos[promptIndex] || []).splice(+x.dataset.i, 1);
+      renderQuestionPhotos();
+    }
   });
   photoInput.addEventListener('change', () => {
-    const f = photoInput.files[0];
-    if (!f) return;
-    photoFile = f;
-    const url = URL.createObjectURL(f);
-    document.getElementById('photoArea').innerHTML =
-      '<div class="photo-wrap"><img src="' + url + '" alt="Your photo">' +
-      '<button type="button" class="photo-remove" id="photoRemove">Remove</button></div>';
+    questionPhotos[promptIndex] = (questionPhotos[promptIndex] || []).concat(Array.from(photoInput.files || []));
+    photoInput.value = '';
+    renderQuestionPhotos();
   });
-  function resetPhotoArea() {
-    document.getElementById('photoArea').innerHTML =
-      '<button type="button" class="photo-btn" id="photoBtn">Choose a photo</button>';
-    document.getElementById('photoArea').appendChild(photoInput);
-  }
 
   submitEl.addEventListener('click', async () => {
+    drafts[promptIndex] = bodyEl.value;
+    if (!allAnswered()) { goToQuestion(nextUnanswered()); return; }
+
     submitEl.disabled = true;
     submitEl.textContent = 'Sharing…';
     const err = document.getElementById('err');
-    err.hidden = true;
+    const prog = document.getElementById('sendProgress');
+    err.hidden = true; prog.hidden = false;
+    const name = document.getElementById('name').value.trim() || null;
     try {
-      let photoUrl = null;
-      if (photoFile) photoUrl = await uploadPhoto(photoFile);
-      const ins = await fetch(SUPABASE_URL + '/rest/v1/memories', {
-        method: 'POST',
-        headers: { ...(await Nanafy.headers()), 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify({
-          event_id: event.id,
-          prompt_text: prompts[promptIndex],
-          contributor_name: document.getElementById('name').value.trim() || null,
-          body: bodyEl.value.trim(),
-          photo_url: photoUrl,
-        }),
-      });
-      if (!ins.ok) throw new Error('insert');
-      savedName = document.getElementById('name').value.trim();
-      delete drafts[promptIndex];
-      renderSuccess();
+      const h = await Nanafy.headers();
+      for (let i = 0; i < n; i++) {
+        if (sentAnswers[i]) continue; // landed on an earlier try — never duplicate
+        prog.textContent = 'Sending answer ' + (i + 1) + ' of ' + n + '…';
+        const files = questionPhotos[i] || [];
+        const photoUrl = files[0] ? await uploadPhoto(files[0]) : null;
+        const ins = await fetch(SUPABASE_URL + '/rest/v1/memories', {
+          method: 'POST',
+          headers: { ...h, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            event_id: event.id,
+            prompt_text: prompts[i],
+            contributor_name: name,
+            body: (drafts[i] || '').trim(),
+            photo_url: photoUrl,
+          }),
+        });
+        if (!ins.ok) throw new Error('insert');
+        // The first photo rides on the answer; the rest follow as photo
+        // memories, the same shape the photo lane produces.
+        for (let p = 1; p < files.length; p++) {
+          prog.textContent = 'Sending photo ' + p + ' of ' + (files.length - 1) + ' for answer ' + (i + 1) + '…';
+          const extraUrl = await uploadPhoto(files[p]);
+          const insP = await fetch(SUPABASE_URL + '/rest/v1/memories', {
+            method: 'POST',
+            headers: { ...h, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+            body: JSON.stringify({ event_id: event.id, contributor_name: name, body: null, photo_url: extraUrl }),
+          });
+          if (!insP.ok) throw new Error('insert');
+        }
+        sentAnswers[i] = true;
+      }
+      savedName = name || '';
+      const answers = n;
+      drafts = {}; questionPhotos = {}; sentAnswers = {}; promptIndex = 0;
+      renderSuccess(0, answers);
     } catch (e) {
-      err.textContent = e.message === 'photo'
-        ? "The photo couldn't be uploaded. Try a smaller photo, or share without one."
-        : "Something went wrong sending your memory. Check your connection and try again.";
+      prog.hidden = true;
+      const landed = Object.keys(sentAnswers).length;
+      err.textContent = landed > 0
+        ? landed + ' of ' + n + ' answers made it — the rest didn’t send. Tap again to send just the rest.'
+        : (e.message === 'photo'
+          ? 'A photo couldn’t be uploaded. Remove it or try a smaller one, then share again.'
+          : 'Something went wrong sending your answers. Check your connection and try again.');
       err.hidden = false;
       submitEl.disabled = false;
-      submitEl.textContent = 'Share memory';
+      submitEl.textContent = 'Share your memories';
     }
   });
 }
 
-function renderSuccess(photoCount) {
+function renderSuccess(photoCount, answerCount) {
   const title = event.honoree || event.title;
   const gentle = event.event_type === 'memorial' || event.event_type === 'tribute';
   const promoLine = gentle
     ? 'If you ever want to gather memories for someone you love, you can make a keepsake of your own.'
     : 'Want one of these for your own gathering? It takes about a minute.';
-  const what = photoCount
-    ? 'Your ' + (photoCount > 1 ? photoCount + ' photos have' : 'photo has')
-    : 'Your memory has';
+  const what = answerCount
+    ? 'All ' + answerCount + ' of your answers have'
+    : photoCount
+      ? 'Your ' + (photoCount > 1 ? photoCount + ' photos have' : 'photo has')
+      : 'Your memory has';
   // Owned keepsakes are moderated: the contribution waits for the host's approval.
   const sub = event.owner_id
     ? what + ' been sent to the host to review. Once they approve, it will be part of the keepsake for ' + esc(title) + '.'
@@ -433,7 +511,10 @@ function renderSuccess(photoCount) {
     '<a class="promo-btn" href="/create/?ref=guest">Create your own keepsake</a>' +
     '<p class="promo-fine">Free &#183; No app &#183; No sign-up for your guests</p>' +
     '</div></div>';
-  document.getElementById('again').addEventListener('click', () => { photoFile = null; promptIndex = 0; renderForm(); });
+  document.getElementById('again').addEventListener('click', () => {
+    drafts = {}; questionPhotos = {}; sentAnswers = {}; promptIndex = 0;
+    renderForm();
+  });
   window.scrollTo(0, 0);
 }
 
