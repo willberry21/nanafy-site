@@ -179,6 +179,7 @@ let drafts = {};
 let questionPhotos = {}; // File[] per question — photos stay with their question
 let sentAnswers = {};    // answers that already landed, so a retry never duplicates
 let savedName = '';
+let isHost = false; // the host's own memories skip the review queue by design
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
@@ -289,6 +290,8 @@ function renderPhotoForm() {
     let sent = 0;
     try {
       const h = await Nanafy.headers();
+      const sess = await Nanafy.session();
+      isHost = !!(sess && event.owner_id && sess.userId === event.owner_id);
       for (let i = 0; i < batchFiles.length; i++) {
         prog.textContent = 'Sending photo ' + (i + 1) + ' of ' + total + '…';
         const photoUrl = await uploadPhoto(batchFiles[i]);
@@ -524,6 +527,8 @@ function renderForm() {
     const name = nameEl.value.trim();
     try {
       const h = await Nanafy.headers();
+      const sess = await Nanafy.session();
+      isHost = !!(sess && event.owner_id && sess.userId === event.owner_id);
       for (let i = 0; i < n; i++) {
         if (sentAnswers[i]) continue; // landed on an earlier try — never duplicate
         prog.textContent = 'Sending answer ' + (i + 1) + ' of ' + n + '…';
@@ -586,9 +591,11 @@ function renderSuccess(photoCount, answerCount) {
       ? 'Your ' + (photoCount > 1 ? photoCount + ' photos have' : 'photo has')
       : 'Your memory has';
   // Owned keepsakes are moderated: the contribution waits for the host's approval.
-  const sub = event.owner_id
-    ? what + ' been sent to the host to review. Once they approve, it will be part of the keepsake for ' + esc(title) + '.'
-    : what + ' been added to ' + esc(title) + '. It will be part of a keepsake worth holding onto.';
+  const sub = event.owner_id && isHost
+    ? what + ' gone straight into the keepsake — you\u2019re the host, so nothing of yours waits for review.'
+    : event.owner_id
+      ? what + ' been sent to the host to review. Once they approve, it will be part of the keepsake for ' + esc(title) + '.'
+      : what + ' been added to ' + esc(title) + '. It will be part of a keepsake worth holding onto.';
   app.innerHTML =
     '<div class="center"><div class="success-glyph"></div>' +
     '<h1>Thank you</h1>' +
