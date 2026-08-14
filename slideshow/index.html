@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The slideshow · Nanafy</title>
+<meta name="description" content="Every memory, played as a slideshow.">
+<meta name="theme-color" content="#0A3A40">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Lato:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground:#0A3A40; --deep:#072B30;
+    --ink:#FFFFFF; --ink-soft:rgba(255,255,255,.72); --ink-faint:rgba(255,255,255,.45);
+    --line:rgba(255,255,255,.18);
+    --turq:#5FE0D2; --turq-ink:#04302C; --pink:#EFA8BE;
+    --display:"Josefin Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --serif:"Lora",Georgia,serif;
+    --sans:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; height:100%; }
+  body { background:var(--deep); color:var(--ink); font-family:var(--sans); overflow:hidden; }
+
+  #player { position:fixed; inset:0; background:var(--deep); }
+
+  /* Two stacked layers cross-fade between slides. */
+  .layer { position:absolute; inset:0; opacity:0; transition:opacity .8s ease; }
+  .layer.show { opacity:1; }
+  .layer .photo {
+    position:absolute; inset:0; background-size:cover; background-position:center;
+  }
+  @keyframes kbA { from { transform:scale(1.02) translate(0,0); } to { transform:scale(1.1) translate(-1.2%,1%); } }
+  @keyframes kbB { from { transform:scale(1.1) translate(1%,-1%); } to { transform:scale(1.02) translate(0,0); } }
+  .photo.kb-a { animation:kbA 9s ease-out both; }
+  .photo.kb-b { animation:kbB 9s ease-out both; }
+  @media (prefers-reduced-motion: reduce) { .photo.kb-a, .photo.kb-b { animation:none; } }
+  .photo-shade {
+    position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(4,26,29,.72) 0%, transparent 34%),
+               linear-gradient(to bottom, rgba(4,26,29,.35) 0%, transparent 18%);
+  }
+  .caption {
+    position:absolute; left:0; right:0; bottom:0; padding:26px clamp(20px,5vw,54px) calc(30px + env(safe-area-inset-bottom));
+  }
+  .caption .note {
+    font-family:var(--serif); font-style:italic; font-size:clamp(1.02rem,2.6vw,1.35rem); line-height:1.5;
+    max-width:34em; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    text-shadow:0 1px 12px rgba(0,0,0,.5);
+  }
+  .caption .who {
+    margin-top:10px; font-family:var(--display); font-weight:600; font-size:.78rem;
+    letter-spacing:.18em; text-transform:uppercase; color:var(--turq); text-shadow:0 1px 8px rgba(0,0,0,.6);
+  }
+
+  .quote-slide, .title-slide, .end-slide {
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:40px clamp(22px,7vw,80px); background:
+      radial-gradient(65% 85% at 78% 20%, rgba(95,224,210,.13), transparent 65%),
+      radial-gradient(45% 60% at 12% 90%, rgba(239,168,190,.08), transparent 70%),
+      var(--ground);
+  }
+  .q-prompt {
+    font-family:var(--display); font-weight:600; font-size:.78rem; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--turq); margin:0 0 26px; max-width:36em;
+  }
+  .q-body {
+    font-family:var(--serif); font-style:italic; font-weight:400; line-height:1.55; margin:0;
+    max-width:30ch; font-size:clamp(1.35rem,4.2vw,2.2rem); text-wrap:balance;
+  }
+  .q-body.long { font-size:clamp(1.05rem,3vw,1.5rem); max-width:44ch; }
+  .q-who {
+    margin-top:34px; font-family:var(--display); font-weight:600; font-size:.8rem;
+    letter-spacing:.18em; text-transform:uppercase; color:var(--pink);
+  }
+
+  .t-prep { font-family:var(--display); font-weight:600; font-size:.8rem; letter-spacing:.26em; text-transform:uppercase; color:var(--turq); margin:0 0 18px; }
+  .t-title { font-family:var(--display); font-weight:300; font-size:clamp(2.2rem,7vw,4rem); letter-spacing:.01em; line-height:1.1; margin:0; text-wrap:balance; }
+  .t-sub { margin:22px 0 0; color:var(--ink-soft); font-family:var(--serif); font-style:italic; font-size:1.05rem; }
+  .t-hint { margin-top:46px; color:var(--ink-faint); font-size:.85rem; }
+  .end-mark { font-family:var(--display); font-weight:600; letter-spacing:.2em; text-transform:uppercase; font-size:1rem; color:var(--pink); }
+  .end-mark b { color:var(--ink); font-weight:600; }
+  .end-line { margin:16px 0 34px; color:var(--ink-soft); font-family:var(--serif); font-style:italic; }
+
+  .bigplay {
+    margin-top:40px; border:0; border-radius:999px; background:var(--turq); color:var(--turq-ink);
+    font-family:var(--sans); font-weight:800; font-size:1.05rem; padding:16px 42px; cursor:pointer;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1);
+  }
+  .bigplay:active { transform:scale(.96); }
+
+  /* Progress ticks along the top, one per slide. */
+  .ticks {
+    position:absolute; top:0; left:0; right:0; z-index:6; display:flex; gap:4px;
+    padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
+    opacity:1; transition:opacity .4s ease;
+  }
+  .tick { flex:1; height:3px; border-radius:2px; background:rgba(255,255,255,.22); overflow:hidden; }
+  .tick i { display:block; height:100%; width:0%; background:var(--turq); }
+  .tick.donefull i { width:100%; }
+  .tick.filling i { transition-property:width; transition-timing-function:linear; }
+
+  /* Controls: fade away while playing, return on any touch/move. */
+  .controls {
+    position:absolute; left:0; right:0; bottom:0; z-index:7;
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    padding:14px 16px calc(16px + env(safe-area-inset-bottom));
+    opacity:1; transition:opacity .4s ease;
+  }
+  #player.quiet .controls, #player.quiet .ticks { opacity:0; pointer-events:none; }
+  .ctl {
+    border:1px solid var(--line); border-radius:999px; background:rgba(7,43,48,.72);
+    backdrop-filter:blur(8px); color:var(--ink); font-family:var(--sans); font-weight:700;
+    font-size:.88rem; padding:11px 18px; cursor:pointer; min-width:46px;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), border-color .15s ease;
+  }
+  .ctl:active { transform:scale(.93); }
+  .ctl:hover { border-color:var(--turq); }
+  .ctl.primary { background:var(--turq); color:var(--turq-ink); border-color:var(--turq); }
+
+  .tapzones { position:absolute; inset:0; z-index:5; display:flex; }
+  .tapzones .zprev { width:30%; }
+  .tapzones .znext { flex:1; }
+
+  .spinner, .state { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); text-align:center; padding:30px; }
+  button:focus-visible { outline:2px solid var(--turq); outline-offset:2px; }
+</style>
+<script src="/js/session.js?v=20260810b"></script>
+</head>
+<body>
+<div id="player">
+  <div class="spinner" id="loading">Gathering the memories&hellip;</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var PREPOSITIONS = { memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating', graduation: 'Congratulating', tribute: 'A tribute to', other: 'Remembering' };
+  var params = new URLSearchParams(location.search);
+  var code = (params.get('c') || '').trim().toUpperCase();
+  var player = document.getElementById('player');
+
+  var ev = null;
+  var slides = [];
+  var current = -1;
+  var playing = false;
+  var timer = null;
+  var layers = [];
+  var front = 0;
+  var kbFlip = false;
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+  /* ---------- building the deck ---------- */
+
+  function buildSlides() {
+    var mems = (ev.memories || [])
+      .filter(function (m) { return m.status === 'approved'; })
+      .sort(function (a, b) {
+        var pa = a.position == null ? Infinity : a.position;
+        var pb = b.position == null ? Infinity : b.position;
+        if (pa !== pb) return pa - pb;
+        return new Date(a.created_at) - new Date(b.created_at);
+      });
+
+    var title = ev.title || ev.honoree || 'A keepsake';
+    slides.push({ kind: 'title', title: title, count: mems.length });
+
+    mems.forEach(function (m) {
+      var body = (m.body || '').trim();
+      if (m.photo_url) {
+        slides.push({ kind: 'photo', url: m.photo_url, note: body, who: m.contributor_name });
+      } else if (body) {
+        slides.push({ kind: 'quote', prompt: m.prompt_text, body: body, who: m.contributor_name });
+      }
+    });
+
+    slides.push({ kind: 'end' });
+  }
+
+  /* How long a slide holds: photos breathe, words get read. */
+  function slideMs(s) {
+    if (s.kind === 'photo') return 5200;
+    if (s.kind === 'quote') {
+      var words = s.body.split(/\s+/).length;
+      return Math.min(15000, Math.max(6000, 2500 + words * 260));
+    }
+    return 6000;
+  }
+
+  /* ---------- rendering ---------- */
+
+  function slideHtml(s) {
+    if (s.kind === 'photo') {
+      return '<div class="photo ' + (reduced ? '' : (kbFlip ? 'kb-b' : 'kb-a')) + '" style="background-image:url(&quot;' + s.url.replace(/"/g, '') + '&quot;)"></div>' +
+        '<div class="photo-shade"></div>' +
+        (s.note || s.who
+          ? '<div class="caption">' +
+            (s.note ? '<div class="note">' + esc(s.note) + '</div>' : '') +
+            (s.who ? '<div class="who">' + esc(s.who) + '</div>' : '') +
+            '</div>'
+          : '');
+    }
+    if (s.kind === 'quote') {
+      var long = s.body.split(/\s+/).length > 46;
+      return '<div class="quote-slide">' +
+        (s.prompt ? '<p class="q-prompt">' + esc(s.prompt) + '</p>' : '') +
+        '<p class="q-body' + (long ? ' long' : '') + '">&ldquo;' + esc(s.body) + '&rdquo;</p>' +
+        (s.who ? '<p class="q-who">&mdash; ' + esc(s.who) + '</p>' : '') +
+        '</div>';
+    }
+    if (s.kind === 'title') {
+      var prep = PREPOSITIONS[ev.event_type] || 'For';
+      return '<div class="title-slide">' +
+        '<p class="t-prep">' + esc(prep) + '</p>' +
+        '<h1 class="t-title">' + esc(s.title) + '</h1>' +
+        '<p class="t-sub">' + s.count + ' ' + (s.count === 1 ? 'memory' : 'memories') + ', from the people who were there.</p>' +
+        '<button class="bigplay" id="bigplay">Play the slideshow</button>' +
+        '</div>';
+    }
+    return '<div class="end-slide">' +
+      '<p class="end-line">Every voice, kept forever.</p>' +
+      '<div class="end-mark"><b>Nana</b>fy</div>' +
+      '<button class="bigplay" id="replay">Play it again</button>' +
+      '</div>';
+  }
+
+  function show(i, instant) {
+    if (i < 0 || i >= slides.length) return;
+    current = i;
+    kbFlip = !kbFlip;
+    var back = 1 - front;
+    layers[back].innerHTML = slideHtml(slides[i]);
+    layers[back].classList.add('show');
+    layers[front].classList.remove('show');
+    front = back;
+    if (instant) { layers[front].style.transition = 'none'; void layers[front].offsetWidth; layers[front].style.transition = ''; }
+
+    var big = document.getElementById('bigplay');
+    if (big) big.addEventListener('click', function (e) { e.stopPropagation(); play(); });
+    var replay = document.getElementById('replay');
+    if (replay) replay.addEventListener('click', function (e) { e.stopPropagation(); show(0); pause(); });
+
+    // Preload the next photo so the cross-fade never lands on a blank.
+    var nxt = slides[i + 1];
+    if (nxt && nxt.kind === 'photo') { var im = new Image(); im.src = nxt.url; }
+
+    renderTicks();
+    if (playing) arm();
+    updateCtl();
+  }
+
+  function renderTicks() {
+    var ticks = document.getElementById('ticks');
+    ticks.innerHTML = slides.map(function (_, i) {
+      return '<div class="tick' + (i < current ? ' donefull' : '') + '" data-i="' + i + '"><i></i></div>';
+    }).join('');
+    if (playing) fillTick();
+  }
+
+  function fillTick() {
+    var t = document.querySelector('.tick[data-i="' + current + '"]');
+    if (!t) return;
+    var bar = t.querySelector('i');
+    t.classList.add('filling');
+    bar.style.transitionDuration = '0ms';
+    bar.style.width = '0%';
+    void bar.offsetWidth;
+    bar.style.transitionDuration = slideMs(slides[current]) + 'ms';
+    bar.style.width = '100%';
+  }
+
+  /* ---------- playback ---------- */
+
+  function arm() {
+    clearTimeout(timer);
+    fillTick();
+    timer = setTimeout(function () {
+      if (current < slides.length - 1) show(current + 1);
+      else pause();
+    }, slideMs(slides[current]));
+  }
+
+  function play() {
+    playing = true;
+    if (current === 0 && slides.length > 1) show(1); else arm();
+    quietSoon();
+    updateCtl();
+  }
+  function pause() {
+    playing = false;
+    clearTimeout(timer);
+    var t = document.querySelector('.tick[data-i="' + current + '"] i');
+    if (t) { t.style.transitionDuration = '0ms'; }
+    wake();
+    updateCtl();
+  }
+
+  function next() { if (current < slides.length - 1) { show(current + 1); if (!playing) wake(); } }
+  function prev() { if (current > 0) { show(current - 1); if (!playing) wake(); } }
+
+  function updateCtl() {
+    var b = document.getElementById('playpause');
+    if (b) b.textContent = playing ? '❚❚' : '▶';
+    var counter = document.getElementById('counter');
+    if (counter) counter.textContent = (current + 1) + ' / ' + slides.length;
+  }
+
+  /* Controls melt away while it plays; any touch brings them back. */
+  var quietTimer = null;
+  function quietSoon() {
+    clearTimeout(quietTimer);
+    quietTimer = setTimeout(function () { if (playing) player.classList.add('quiet'); }, 2200);
+  }
+  function wake() {
+    player.classList.remove('quiet');
+    if (playing) quietSoon();
+  }
+
+  /* ---------- boot ---------- */
+
+  async function init() {
+    if (!code) { player.innerHTML = '<div class="state">No keepsake code in the link.</div>'; return; }
+    try {
+      ev = await Nanafy.join(code,
+        'id,title,honoree,event_type,photo_url,memories(id,status,position,created_at,contributor_name,prompt_text,body,photo_url)');
+    } catch (e) {
+      player.innerHTML = '<div class="state">Could not open this keepsake.<br>Check the link and try again.</div>';
+      return;
+    }
+    buildSlides();
+    if (slides.length <= 2) {
+      player.innerHTML = '<div class="state"><div><b>Nothing to play yet.</b><br><br>Once memories and photos arrive, this becomes a slideshow<br>you can play at the gathering or send to everyone after.</div></div>';
+      return;
+    }
+
+    player.innerHTML =
+      '<div class="layer" id="layerA"></div>' +
+      '<div class="layer" id="layerB"></div>' +
+      '<div class="tapzones"><div class="zprev"></div><div class="znext"></div></div>' +
+      '<div class="ticks" id="ticks"></div>' +
+      '<div class="controls">' +
+      '<button class="ctl" id="prevBtn" aria-label="Previous">&#8249;</button>' +
+      '<button class="ctl primary" id="playpause" aria-label="Play or pause">▶</button>' +
+      '<button class="ctl" id="nextBtn" aria-label="Next">&#8250;</button>' +
+      '<span class="ctl" id="counter" style="cursor:default"></span>' +
+      '<button class="ctl" id="fsBtn" aria-label="Fullscreen">⛶</button>' +
+      '</div>';
+
+    layers = [document.getElementById('layerA'), document.getElementById('layerB')];
+
+    document.getElementById('playpause').addEventListener('click', function () { playing ? pause() : play(); });
+    document.getElementById('nextBtn').addEventListener('click', next);
+    document.getElementById('prevBtn').addEventListener('click', prev);
+    var fs = document.getElementById('fsBtn');
+    if (player.requestFullscreen) {
+      fs.addEventListener('click', function () {
+        document.fullscreenElement ? document.exitFullscreen() : player.requestFullscreen();
+      });
+    } else { fs.style.display = 'none'; }
+
+    document.querySelector('.zprev').addEventListener('click', function () { wake(); prev(); });
+    document.querySelector('.znext').addEventListener('click', function () {
+      if (current === 0 || (slides[current] && slides[current].kind === 'end')) { wake(); return; }
+      wake(); next();
+    });
+    ['pointermove', 'touchstart'].forEach(function (evt) {
+      player.addEventListener(evt, wake, { passive: true });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === ' ') { e.preventDefault(); playing ? pause() : play(); }
+      if (e.key === 'ArrowRight') next();
+      if (e.key === 'ArrowLeft') prev();
+    });
+
+    show(0, true);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
