@@ -340,6 +340,10 @@ function renderForm() {
 
     laneTabs('words') +
 
+    '<span class="label">First, your name</span>' +
+    '<input type="text" id="name" placeholder="So the family knows who this is from" autocomplete="name" value="' + esc(savedName) + '">' +
+    '<p class="error" id="nameErr" hidden>Add your name before answering — the family will want to know who this is from.</p>' +
+
     '<span class="label" id="progressLabel">Answer all ' + n + ' questions · 0 done</span>' +
     '<div class="prompts" id="promptNums">' +
     prompts.map((_, i) => '<button type="button" class="prompt-num' + (i === 0 ? ' sel' : '') + '" data-i="' + i + '">' + (i + 1) + '</button>').join('') +
@@ -356,9 +360,6 @@ function renderForm() {
     '<div class="pick-grid" id="qPhotoGrid"></div>' +
     '</div>' +
     '<input type="file" id="qPhotoInput" accept="image/*" multiple hidden>' +
-
-    '<span class="label">Your name</span>' +
-    '<input type="text" id="name" placeholder="Anonymous" autocomplete="name" value="' + esc(savedName) + '">' +
 
     '<div class="gate-hint" id="gateHint"></div>' +
     '<button class="submit" id="submit">Next question</button>' +
@@ -462,6 +463,7 @@ function renderForm() {
 
   document.getElementById('promptNums').addEventListener('click', (e) => {
     const b = e.target.closest('.prompt-num'); if (!b) return;
+    if (!requireName()) return; // no wandering the questions nameless either
     goToQuestion(+b.dataset.i);
   });
 
@@ -481,8 +483,23 @@ function renderForm() {
     renderQuestionPhotos();
   });
 
+  const nameEl = document.getElementById('name');
+  const nameErr = document.getElementById('nameErr');
+  nameEl.addEventListener('input', () => { nameErr.hidden = true; nameEl.style.borderColor = ''; });
+  function requireName() {
+    if (nameEl.value.trim()) return true;
+    nameErr.hidden = false;
+    nameEl.style.borderColor = 'var(--danger)';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    nameEl.focus({ preventScroll: true });
+    return false;
+  }
+
   submitEl.addEventListener('click', async () => {
     drafts[promptIndex] = bodyEl.value;
+    // The name is asked once, up front, and it is not optional — nobody
+    // should reach question two anonymous by accident.
+    if (!requireName()) return;
     if (!allAnswered()) { goToQuestion(nextUnanswered()); return; }
 
     submitEl.disabled = true;
@@ -490,7 +507,7 @@ function renderForm() {
     const err = document.getElementById('err');
     const prog = document.getElementById('sendProgress');
     err.hidden = true; prog.hidden = false;
-    const name = document.getElementById('name').value.trim() || null;
+    const name = nameEl.value.trim();
     try {
       const h = await Nanafy.headers();
       for (let i = 0; i < n; i++) {
