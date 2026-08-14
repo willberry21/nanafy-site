@@ -59,7 +59,28 @@
   }
   .prompt-num.sel { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .prompt-num.done:not(.sel) { background: var(--accent-wash); border-color: var(--accent); color: var(--accent); }
-  .gate-hint { text-align: center; font-size: 13.5px; color: var(--ink-soft); margin: 26px 0 -18px; }
+  .gate-hint { text-align: center; font-size: 13.5px; color: var(--ink-soft); margin: 26px 0 -18px; transition: opacity .25s ease; }
+
+  /* --- motion: the app's press-spring and screen-transition feel --- */
+  button { -webkit-tap-highlight-color: transparent; }
+  .prompt-num, .submit, .again, .lane-tab, .photo-btn, .cell-add, .cell-x, .promo-btn {
+    transition: transform .15s cubic-bezier(.34,1.56,.64,1), border-color .15s ease, background .15s ease, color .15s ease, opacity .15s ease;
+  }
+  .prompt-num:active, .lane-tab:active, .cell-add:active, .cell-x:active { transform: scale(.9); }
+  .submit:active:not(:disabled), .again:active, .photo-btn:active, .promo-btn:active { transform: scale(.975); }
+  @keyframes pillPop { 0% { transform: scale(1); } 45% { transform: scale(1.22); } 100% { transform: scale(1); } }
+  .prompt-num.pop { animation: pillPop .35s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes btnReady { 0% { transform: scale(1); } 40% { transform: scale(1.035); } 100% { transform: scale(1); } }
+  .submit.ready { animation: btnReady .45s cubic-bezier(.34,1.56,.64,1); }
+  .qpane { transition: opacity .16s ease, transform .16s ease; }
+  .qpane.swap { opacity: 0; transform: translateY(10px); }
+  @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .rise { animation: riseIn .42s cubic-bezier(.22,.9,.36,1) both; }
+  .pick-grid .cell, .pick-grid .cell-add { animation: riseIn .3s cubic-bezier(.22,.9,.36,1) both; }
+  @media (prefers-reduced-motion: reduce) {
+    .prompt-num, .submit, .again, .lane-tab, .photo-btn, .cell-add, .cell-x, .promo-btn, .qpane { transition: none; }
+    .prompt-num.pop, .submit.ready, .rise, .pick-grid .cell, .pick-grid .cell-add { animation: none; }
+  }
   .prompt-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; font-size: 1.12rem; line-height: 1.5; font-family: var(--serif); font-style: italic; color: var(--ink); }
   textarea, input[type="text"] {
     width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--field);
@@ -148,6 +169,9 @@ let savedName = '';
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
+// Every screen rises in, the way the app's screens do.
+function enter() { app.classList.remove('rise'); void app.offsetWidth; app.classList.add('rise'); }
+
 // The two ways in: written memories, or a batch of photos (for the family
 // member who takes a million of them and will not be writing paragraphs).
 function laneTabs(active) {
@@ -212,6 +236,7 @@ function renderPhotoForm() {
     '<div class="upl-progress" id="uplProgress" hidden></div>' +
     '<p class="error" id="err" hidden></p>';
   wireLaneTabs('photos');
+  enter();
 
   const input = document.getElementById('batchInput');
   const grid = document.getElementById('pickGrid');
@@ -295,6 +320,7 @@ function renderCodeEntry(message) {
     '<input type="text" id="codeInput" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="ABC123" aria-label="Event code">' +
     (message ? '<p class="error">' + esc(message) + '</p>' : '') +
     '<button class="submit" type="submit">Find it</button></form>';
+  enter();
   document.getElementById('codeForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const code = document.getElementById('codeInput').value.trim();
@@ -318,6 +344,7 @@ function renderForm() {
     '<div class="prompts" id="promptNums">' +
     prompts.map((_, i) => '<button type="button" class="prompt-num' + (i === 0 ? ' sel' : '') + '" data-i="' + i + '">' + (i + 1) + '</button>').join('') +
     '</div>' +
+    '<div class="qpane" id="qpane">' +
     '<div class="prompt-card" id="promptText">' + esc(prompts[0] || '') + '</div>' +
 
     '<span class="label">Your answer</span>' +
@@ -327,6 +354,7 @@ function renderForm() {
     '<span class="label">Add photos (optional)</span>' +
     '<div class="count" style="margin:-4px 0 8px">Photos stay with this question — add as many as you like.</div>' +
     '<div class="pick-grid" id="qPhotoGrid"></div>' +
+    '</div>' +
     '<input type="file" id="qPhotoInput" accept="image/*" multiple hidden>' +
 
     '<span class="label">Your name</span>' +
@@ -338,6 +366,7 @@ function renderForm() {
     '<p class="error" id="err" hidden></p>';
 
   wireLaneTabs('words');
+  enter();
   const bodyEl = document.getElementById('body');
   const submitEl = document.getElementById('submit');
   const photoInput = document.getElementById('qPhotoInput');
@@ -352,6 +381,7 @@ function renderForm() {
     return promptIndex;
   }
 
+  let wasAllAnswered = false;
   function refreshProgress() {
     const done = answeredCount();
     const a = answeredList();
@@ -359,17 +389,29 @@ function renderForm() {
       'Answer all ' + n + ' questions · ' + done + ' done';
     document.querySelectorAll('.prompt-num').forEach((el) => {
       const i = +el.dataset.i;
+      const wasDone = el.classList.contains('done');
       el.classList.toggle('sel', i === promptIndex);
       el.classList.toggle('done', a[i]);
       el.textContent = a[i] && i !== promptIndex ? '✓' : String(i + 1);
+      // The little spring the app's haptic tick stands in for.
+      if (a[i] && !wasDone) {
+        el.classList.add('pop');
+        el.addEventListener('animationend', () => el.classList.remove('pop'), { once: true });
+      }
     });
     const hint = document.getElementById('gateHint');
     if (allAnswered()) {
       hint.textContent = '';
       submitEl.textContent = 'Share your memories';
+      if (!wasAllAnswered) {
+        submitEl.classList.add('ready');
+        submitEl.addEventListener('animationend', () => submitEl.classList.remove('ready'), { once: true });
+      }
+      wasAllAnswered = true;
     } else {
       hint.textContent = done + ' of ' + n + ' answered — answer them all to share';
       submitEl.textContent = 'Next question';
+      wasAllAnswered = false;
     }
   }
 
@@ -386,15 +428,31 @@ function renderForm() {
     ).join('') + '<button type="button" class="cell-add" id="qCellAdd" aria-label="Add photos">＋</button>';
   }
 
+  let swapping = false;
   function goToQuestion(i) {
+    if (swapping || i === promptIndex) return;
     drafts[promptIndex] = bodyEl.value;
     promptIndex = i;
-    document.getElementById('promptText').textContent = prompts[promptIndex];
-    bodyEl.value = drafts[promptIndex] || '';
-    renderQuestionPhotos();
-    refreshCount();
+    // Fade the question pane down and back — the web stand-in for the app's
+    // screen transition. Progress updates immediately; content swaps mid-fade.
+    const pane = document.getElementById('qpane');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     refreshProgress();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+    function apply() {
+      document.getElementById('promptText').textContent = prompts[promptIndex];
+      bodyEl.value = drafts[promptIndex] || '';
+      renderQuestionPhotos();
+      refreshCount();
+    }
+    if (reduced) { apply(); return; }
+    swapping = true;
+    pane.classList.add('swap');
+    setTimeout(() => {
+      apply();
+      pane.classList.remove('swap');
+      swapping = false;
+    }, 170);
   }
 
   bodyEl.value = drafts[promptIndex] || '';
@@ -511,6 +569,7 @@ function renderSuccess(photoCount, answerCount) {
     '<a class="promo-btn" href="/create/?ref=guest">Create your own keepsake</a>' +
     '<p class="promo-fine">Free &#183; No app &#183; No sign-up for your guests</p>' +
     '</div></div>';
+  enter();
   document.getElementById('again').addEventListener('click', () => {
     drafts = {}; questionPhotos = {}; sentAnswers = {}; promptIndex = 0;
     renderForm();
