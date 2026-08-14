@@ -575,6 +575,16 @@ function render(ev, pending) {
       '<span class="bc-btn">See the book</span></a>';
   }
 
+  // The mosaic needs photos, not written memories — only offer it when some exist.
+  var photoCount = memories.filter(function (m) { return m.photo_url; }).length;
+  if (photoCount > 0) {
+    html += '<a class="bookcta" href="/collage/?c=' + encodeURIComponent(code) + '">' +
+      '<span class="bc-kicker">The photo mosaic</span>' +
+      '<span class="bc-line">' + photoCount + ' photo' + (photoCount === 1 ? '' : 's') +
+      ', arranged into one big picture.</span>' +
+      '<span class="bc-btn">Make the mosaic</span></a>';
+  }
+
   html += '<button class="refresh" id="refresh">↻ Check for new memories</button>';
 
   app.innerHTML = html;
