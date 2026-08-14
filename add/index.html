@@ -157,6 +157,19 @@ const SUPABASE_URL = Nanafy.SUPABASE_URL;
 const ANON_KEY = Nanafy.ANON_KEY;
 const HEADERS = { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY };
 const PREPOSITIONS = { memorial: 'In memory of', wedding: 'Celebrating', birthday: 'Celebrating', graduation: 'Congratulating', tribute: 'A tribute to', other: 'For' };
+
+// Who the guest's name is for — the copy names the keepsake's reader, so a
+// coach's tribute never says "so the family knows". Living celebrations read
+// their own keepsake, so the honoree's name is the most specific answer;
+// memorials name the family; 'other' keepsakes are occasions, not people.
+function nameAudience() {
+  switch (event.event_type) {
+    case 'memorial': return 'the family';
+    case 'wedding': return 'the couple';
+    case 'other': return 'everyone';
+    default: return (event.honoree || '').trim() || 'everyone';
+  }
+}
 const TARGET_WORDS = 250;
 
 const app = document.getElementById('app');
@@ -341,8 +354,8 @@ function renderForm() {
     laneTabs('words') +
 
     '<span class="label">First, your name</span>' +
-    '<input type="text" id="name" placeholder="So the family knows who this is from" autocomplete="name" value="' + esc(savedName) + '">' +
-    '<p class="error" id="nameErr" hidden>Add your name before answering — the family will want to know who this is from.</p>' +
+    '<input type="text" id="name" placeholder="So ' + esc(nameAudience()) + ' will know who this is from" autocomplete="name" value="' + esc(savedName) + '">' +
+    '<p class="error" id="nameErr" hidden>Add your name before answering — ' + esc(nameAudience()) + ' will want to know who this is from.</p>' +
 
     '<span class="label" id="progressLabel">Answer all ' + n + ' questions · 0 done</span>' +
     '<div class="prompts" id="promptNums">' +
@@ -574,7 +587,7 @@ function renderSuccess(photoCount, answerCount) {
   // Owned keepsakes are moderated: the contribution waits for the host's approval.
   const sub = event.owner_id
     ? what + ' been sent to the host to review. Once they approve, it will be part of the keepsake for ' + esc(title) + '.'
-    : what + ' been added to ' + esc(title) + '. It will be part of a keepsake the family holds onto.';
+    : what + ' been added to ' + esc(title) + '. It will be part of a keepsake worth holding onto.';
   app.innerHTML =
     '<div class="center"><div class="success-glyph"></div>' +
     '<h1>Thank you</h1>' +
