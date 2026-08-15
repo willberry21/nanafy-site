@@ -173,44 +173,101 @@
     });
   }
 
-  /* Average colour of a quadrant of a small canvas region. */
-  function quadColors(ctx, w, h) {
-    var out = [];
-    [[0, 0], [1, 0], [0, 1], [1, 1]].forEach(function (q) {
-      var data = ctx.getImageData(q[0] * w / 2, q[1] * h / 2, w / 2, h / 2).data;
-      var r = 0, g = 0, b = 0, n = data.length / 4;
-      for (var i = 0; i < data.length; i += 4) { r += data[i]; g += data[i + 1]; b += data[i + 2]; }
-      out.push([r / n, g / n, b / n]);
-    });
+  /* ---------- colour science --------------------------------------------
+   * Everything averages in LINEAR light (sRGB decoded) — the way light
+   * actually mixes. Averaging gamma-encoded bytes reads dark and muddy,
+   * which was half of what made v1 feel off.
+   * --------------------------------------------------------------------- */
+  var LIN = new Float32Array(256);
+  (function () {
+    for (var i = 0; i < 256; i++) {
+      var c = i / 255;
+      LIN[i] = c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    }
+  })();
+  function toByte(lin) {
+    var v = lin <= 0.0031308 ? lin * 12.92 : 1.055 * Math.pow(lin, 1 / 2.4) - 0.055;
+    return Math.max(0, Math.min(255, Math.round(v * 255)));
+  }
+
+  /* Tiles and cells are compared as a 4x4 grid of region means — tone and
+   * rough texture, not just one average (the block-matching idea from the
+   * photomosaic literature). */
+  var REGIONS = 4;
+  var NREG = REGIONS * REGIONS;
+
+  function regionColors(data, w, x0, y0, size) {
+    var step = size / REGIONS;
+    var out = new Float32Array(NREG * 3);
+    for (var ry = 0; ry < REGIONS; ry++) {
+      for (var rx = 0; rx < REGIONS; rx++) {
+        var r = 0, g = 0, b = 0, n = 0;
+        var ys = Math.floor(y0 + ry * step), ye = Math.max(ys + 1, Math.floor(y0 + (ry + 1) * step));
+        var xs = Math.floor(x0 + rx * step), xe = Math.max(xs + 1, Math.floor(x0 + (rx + 1) * step));
+        for (var y = ys; y < ye; y++) {
+          var row = y * w;
+          for (var x = xs; x < xe; x++) {
+            var idx = (row + x) * 4;
+            r += LIN[data[idx]]; g += LIN[data[idx + 1]]; b += LIN[data[idx + 2]]; n++;
+          }
+        }
+        var o = (ry * REGIONS + rx) * 3;
+        out[o] = r / n; out[o + 1] = g / n; out[o + 2] = b / n;
+      }
+    }
     return out;
   }
 
-  /* Squared distance across the four quadrants — cheap likeness measure. */
+  function meanOf(regions) {
+    var r = 0, g = 0, b = 0;
+    for (var i = 0; i < NREG * 3; i += 3) { r += regions[i]; g += regions[i + 1]; b += regions[i + 2]; }
+    return [r / NREG, g / NREG, b / NREG];
+  }
+
+  /* Perceptual-ish distance: green carries most of human luminance
+   * sensitivity, so it counts hardest. */
   function dist(a, b) {
     var d = 0;
-    for (var q = 0; q < 4; q++) {
-      var dr = a[q][0] - b[q][0], dg = a[q][1] - b[q][1], db = a[q][2] - b[q][2];
-      d += dr * dr + dg * dg + db * db;
+    for (var i = 0; i < NREG * 3; i += 3) {
+      var dr = a[i] - b[i], dg = a[i + 1] - b[i + 1], db = a[i + 2] - b[i + 2];
+      d += dr * dr + 2.4 * dg * dg + 0.8 * db * db;
     }
     return d;
   }
+  function meanDist(a, b) {
+    var dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2];
+    return dr * dr + 2.4 * dg * dg + 0.8 * db * db;
+  }
 
+  /* A family library is dozens of photos; the literature wants hundreds.
+   * The fix: every photo becomes many tiles — five crops along its long
+   * side, each also mirrored. 30 photos ≈ 300 tiles. */
   async function prepareTiles(urls, onProgress) {
     var tiles = [];
-    var THUMB = 48;
+    var THUMB = 72;
     for (var i = 0; i < urls.length; i++) {
       try {
         var img = await loadImage(urls[i]);
-        var c = document.createElement('canvas');
-        c.width = THUMB; c.height = THUMB;
-        var ctx = c.getContext('2d', { willReadFrequently: true });
-        // Cover-crop into the square thumb.
-        var s = Math.min(img.naturalWidth, img.naturalHeight);
-        ctx.drawImage(img,
-          (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s,
-          0, 0, THUMB, THUMB);
-        tiles.push({ thumb: c, colors: quadColors(ctx, THUMB, THUMB) });
-      } catch (e) { /* a broken photo just sits this one out */ }
+        var w = img.naturalWidth, h = img.naturalHeight;
+        var s = Math.min(w, h);
+        var span = Math.max(w, h) - s;
+        var offs = span < s * 0.15 ? [0.5] : [0, 0.25, 0.5, 0.75, 1];
+        for (var oI = 0; oI < offs.length; oI++) {
+          var off = Math.round(span * offs[oI]);
+          var sx = w > h ? off : 0, sy = w > h ? 0 : off;
+          for (var flip = 0; flip < 2; flip++) {
+            var c = document.createElement('canvas');
+            c.width = THUMB; c.height = THUMB;
+            var cctx = c.getContext('2d', { willReadFrequently: true });
+            if (flip) { cctx.translate(THUMB, 0); cctx.scale(-1, 1); }
+            cctx.drawImage(img, sx, sy, s, s, 0, 0, THUMB, THUMB);
+            cctx.setTransform(1, 0, 0, 1, 0, 0);
+            var data = cctx.getImageData(0, 0, THUMB, THUMB).data;
+            var colors = regionColors(data, THUMB, 0, 0, THUMB);
+            tiles.push({ thumb: c, colors: colors, mean: meanOf(colors), src: i });
+          }
+        }
+      } catch (e) { /* a broken photo sits this one out */ }
       onProgress(i + 1, urls.length);
     }
     return tiles;
@@ -236,53 +293,116 @@
       }
       if (!state.tiles.length) { progress.textContent = 'None of the photos could be read.'; return; }
 
-      // 2. The big picture, downsampled to the grid.
-      progress.textContent = 'Laying the tiles…';
+      // 2. The big picture, analysed at grid resolution. A touch of extra
+      //    contrast and saturation before analysis — mosaics read soft, so
+      //    the pros push the source first.
+      progress.textContent = 'Reading the big picture…';
       var target = await loadImage(state.targetUrl);
       var CELL = 174 - parseInt(el('detail').value, 10) * 2;  // slider: bigger value = smaller tiles = more detail
-      var OUT_W = 1920;
+      var OUT_W = 2400;
       var cols = Math.round(OUT_W / CELL);
       var rows = Math.round(cols * (target.naturalHeight / target.naturalWidth));
-      rows = Math.max(8, Math.min(rows, 220));
+      rows = Math.max(8, Math.min(rows, 260));
 
-      // Grid-resolution copy of the target for cell colours (2x2 per cell).
       var small = document.createElement('canvas');
-      small.width = cols * 2; small.height = rows * 2;
+      small.width = cols * REGIONS; small.height = rows * REGIONS;
       var sctx = small.getContext('2d', { willReadFrequently: true });
+      try { sctx.filter = 'contrast(1.06) saturate(1.15)'; } catch (e) {}
       sctx.drawImage(target, 0, 0, small.width, small.height);
+      sctx.filter = 'none';
       var sdata = sctx.getImageData(0, 0, small.width, small.height).data;
-
-      function cellColors(cx, cy) {
-        var out = [];
-        [[0, 0], [1, 0], [0, 1], [1, 1]].forEach(function (q) {
-          var idx = ((cy * 2 + q[1]) * small.width + (cx * 2 + q[0])) * 4;
-          out.push([sdata[idx], sdata[idx + 1], sdata[idx + 2]]);
-        });
-        return out;
-      }
 
       canvas.width = cols * CELL;
       canvas.height = rows * CELL;
       var ctx = canvas.getContext('2d');
-      var lastUsed = new Array(state.tiles.length).fill(-1e9);
-      var cellIndex = 0;
+      ctx.imageSmoothingQuality = 'high';
+
+      var tiles = state.tiles;
+      var nSrc = state.photos.length;
+      // Duplicate spacing: the same PHOTO may not sit near itself. With a
+      // tiny library the rule must relax or quality collapses.
+      var DUP_RADIUS = 2;
+      var DUP_PENALTY = nSrc >= 16 ? 2.4 : nSrc >= 6 ? 0.9 : 0.25;
+      var BALANCE = 0.012; // gentle pull toward least-used photos
+      var K = Math.min(28, tiles.length); // stage-2 shortlist size
+
+      var srcGrid = new Int32Array(cols * rows).fill(-1);
+      var usage = new Float64Array(nSrc);
+      // Floyd–Steinberg-ish error diffusion, so flat skies and water breathe
+      // instead of banding.
+      var errCur = new Float32Array((cols + 2) * 3);
+      var errNext = new Float32Array((cols + 2) * 3);
+
+      var candIdx = new Int32Array(K);
+      var candScore = new Float64Array(K);
 
       for (var y = 0; y < rows; y++) {
         for (var x = 0; x < cols; x++) {
-          var want = cellColors(x, y);
-          var best = 0, bestScore = Infinity;
-          for (var t = 0; t < state.tiles.length; t++) {
-            // A reuse penalty that fades: the same photo should not tile a
-            // whole region, but with few photos reuse must stay cheap.
-            var since = cellIndex - lastUsed[t];
-            var penalty = Math.max(0, 18 - since) * 2600;
-            var score = dist(want, state.tiles[t].colors) + penalty;
-            if (score < bestScore) { bestScore = score; best = t; }
+          var want = regionColors(sdata, small.width, x * REGIONS, y * REGIONS, REGIONS);
+          var wantMean = meanOf(want);
+          var eo = (x + 1) * 3;
+          wantMean[0] += errCur[eo]; wantMean[1] += errCur[eo + 1]; wantMean[2] += errCur[eo + 2];
+
+          // Stage 1: shortlist by overall tone (cheap), keep the best K.
+          var worst = Infinity, worstAt = 0, filled = 0;
+          for (var t = 0; t < tiles.length; t++) {
+            var md = meanDist(wantMean, tiles[t].mean);
+            if (filled < K) {
+              candIdx[filled] = t; candScore[filled] = md; filled++;
+              if (filled === K) {
+                worst = -Infinity;
+                for (var q = 0; q < K; q++) if (candScore[q] > worst) { worst = candScore[q]; worstAt = q; }
+              }
+            } else if (md < worst) {
+              candIdx[worstAt] = t; candScore[worstAt] = md;
+              worst = -Infinity;
+              for (var q2 = 0; q2 < K; q2++) if (candScore[q2] > worst) { worst = candScore[q2]; worstAt = q2; }
+            }
           }
-          lastUsed[best] = cellIndex++;
-          ctx.drawImage(state.tiles[best].thumb, x * CELL, y * CELL, CELL, CELL);
+
+          // Stage 2: full 16-region tone+texture match on the shortlist,
+          // with duplicate spacing and usage balance.
+          var best = candIdx[0], bestScore = Infinity;
+          for (var k = 0; k < filled; k++) {
+            var tile = tiles[candIdx[k]];
+            var score = dist(want, tile.colors) + usage[tile.src] * BALANCE;
+            for (var ny = Math.max(0, y - DUP_RADIUS); ny <= y; ny++) {
+              for (var nx = Math.max(0, x - DUP_RADIUS); nx <= Math.min(cols - 1, x + DUP_RADIUS); nx++) {
+                if (ny === y && nx >= x) break;
+                if (srcGrid[ny * cols + nx] === tile.src) {
+                  var cheb = Math.max(Math.abs(nx - x), Math.abs(ny - y));
+                  score += DUP_PENALTY / cheb;
+                }
+              }
+            }
+            if (score < bestScore) { bestScore = score; best = candIdx[k]; }
+          }
+
+          var chosen = tiles[best];
+          srcGrid[y * cols + x] = chosen.src;
+          usage[chosen.src]++;
+
+          // Diffuse what this tile missed to the neighbours.
+          for (var ch = 0; ch < 3; ch++) {
+            var resid = Math.max(-0.14, Math.min(0.14, (wantMean[ch] - chosen.mean[ch]) * 0.7));
+            errCur[eo + 3 + ch] += resid * 0.45;
+            errNext[eo + ch] += resid * 0.3;
+            errNext[eo + 3 + ch] += resid * 0.15;
+          }
+
+          // Lay the tile, then tune it toward its cell — hard only where the
+          // match is weak, barely at all where it is strong. This replaces
+          // v1's flat 42% wash that fogged everything equally.
+          ctx.drawImage(chosen.thumb, x * CELL, y * CELL, CELL, CELL);
+          var e = Math.sqrt(meanDist(wantMean, chosen.mean));
+          var alpha = Math.min(0.5, 0.14 + e * 1.35);
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = 'rgb(' + toByte(wantMean[0]) + ',' + toByte(wantMean[1]) + ',' + toByte(wantMean[2]) + ')';
+          ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+          ctx.globalAlpha = 1;
         }
-        if (y % 8 === 0) {
+        var swap = errCur; errCur = errNext; errNext = swap; errNext.fill(0);
+        if (y % 6 === 0) {
           progress.textContent = 'Laying the tiles… row ' + (y + 1) + ' of ' + rows;
           // setTimeout, not requestAnimationFrame: rAF never fires in hidden
           // or throttled tabs, and the build would silently hang there.
@@ -290,8 +410,14 @@
         }
       }
 
-      // 3. The likeness pass: the big picture, breathed over the tiles.
-      ctx.globalAlpha = 0.42;
+      // 3. The finish: soft-light keeps tile detail while pulling the whole
+      //    field toward the big picture's tones, then the faintest normal
+      //    pass for likeness. Nothing like v1's fog.
+      ctx.globalCompositeOperation = 'soft-light';
+      ctx.globalAlpha = 0.4;
+      ctx.drawImage(target, 0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 0.08;
       ctx.drawImage(target, 0, 0, canvas.width, canvas.height);
       ctx.globalAlpha = 1;
 
