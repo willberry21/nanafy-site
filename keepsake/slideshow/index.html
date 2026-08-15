@@ -26,8 +26,8 @@
 
   #player { position:fixed; inset:0; background:var(--deep); }
 
-  .layer { position:absolute; inset:0; opacity:0; transition:opacity .9s ease; overflow:hidden; }
-  .layer.show { opacity:1; }
+  .layer { position:absolute; inset:0; opacity:0; transition:opacity .9s ease; overflow:hidden; pointer-events:none; }
+  .layer.show { opacity:1; pointer-events:auto; }
 
   /* ---- photo slides: blurred self-fill behind, contained photo in front ---- */
   .photo-bg {
@@ -525,6 +525,11 @@
     layers[front].classList.remove('show');
     front = back;
     if (instant) { layers[front].style.transition = 'none'; void layers[front].offsetWidth; layers[front].style.transition = ''; }
+    // Title and end slides carry real buttons — the full-screen tap zones
+    // must not sit over them, or fingers can never reach Play or the mixes.
+    var tz = document.querySelector('.tapzones');
+    if (tz) tz.style.pointerEvents =
+      (slides[i].kind === 'title' || slides[i].kind === 'end') ? 'none' : 'auto';
     wireSlideButtons();
 
     var nxt = slides[i + 1];
