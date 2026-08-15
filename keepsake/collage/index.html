@@ -163,6 +163,16 @@
 
   function el(id) { return document.getElementById(id); }
 
+  // Yield to the event loop WITHOUT setTimeout: hidden tabs clamp timers to
+  // as little as once a minute, which froze renders when the tab was
+  // backgrounded. MessageChannel posts are not throttled.
+  var yieldChannel = new MessageChannel();
+  var yieldResolve = null;
+  yieldChannel.port1.onmessage = function () { if (yieldResolve) { var r = yieldResolve; yieldResolve = null; r(); } };
+  function breathe() {
+    return new Promise(function (resolve) { yieldResolve = resolve; yieldChannel.port2.postMessage(0); });
+  }
+
   function loadImage(url) {
     return new Promise(function (resolve, reject) {
       var img = new Image();
@@ -317,6 +327,49 @@
       var ctx = canvas.getContext('2d');
       ctx.imageSmoothingQuality = 'high';
 
+      // Pre-read every cell once: its 16 region tones, its mean, and how much
+      // DETAIL lives there (internal contrast + difference from neighbours).
+      // The detail map is the pro secret William spotted in reference work:
+      // eyes and teeth get the real picture bled through hard; flat cheeks and
+      // skies stay honest photo tiles.
+      var nCells = cols * rows;
+      var cellRegs = new Array(nCells);
+      var cellMean = new Array(nCells);
+      var cellLum = new Float32Array(nCells);
+      var detail = new Float32Array(nCells);
+      for (var cy = 0; cy < rows; cy++) {
+        for (var cx = 0; cx < cols; cx++) {
+          var ci = cy * cols + cx;
+          var regs = regionColors(sdata, small.width, cx * REGIONS, cy * REGIONS, REGIONS);
+          cellRegs[ci] = regs;
+          cellMean[ci] = meanOf(regs);
+          var mLum = 0.2126 * cellMean[ci][0] + 0.7152 * cellMean[ci][1] + 0.0722 * cellMean[ci][2];
+          cellLum[ci] = mLum;
+          var varSum = 0;
+          for (var ri = 0; ri < NREG * 3; ri += 3) {
+            var rl = 0.2126 * regs[ri] + 0.7152 * regs[ri + 1] + 0.0722 * regs[ri + 2];
+            varSum += (rl - mLum) * (rl - mLum);
+          }
+          detail[ci] = Math.sqrt(varSum / NREG);
+        }
+        if (cy % 20 === 0) await breathe();
+      }
+      // Add cross-cell gradients (an eye edge spans cells), then normalise so
+      // any photo — bold or soft — uses the full range.
+      var dMax = 0.0001;
+      for (var gy = 0; gy < rows; gy++) {
+        for (var gx = 0; gx < cols; gx++) {
+          var gi = gy * cols + gx;
+          if (gx + 1 < cols) detail[gi] += Math.abs(cellLum[gi] - cellLum[gi + 1]) * 0.9;
+          if (gy + 1 < rows) detail[gi] += Math.abs(cellLum[gi] - cellLum[gi + cols]) * 0.9;
+          if (detail[gi] > dMax) dMax = detail[gi];
+        }
+      }
+      // Normalise against a high percentile, not the max, so one extreme cell
+      // can't flatten everything else.
+      var sortedD = Array.prototype.slice.call(detail).sort(function (a, b) { return a - b; });
+      var dRef = Math.max(0.0001, sortedD[Math.floor(sortedD.length * 0.92)]);
+
       var tiles = state.tiles;
       var nSrc = state.photos.length;
       // Duplicate spacing: the same PHOTO may not sit near itself. With a
@@ -336,10 +389,19 @@
       var candIdx = new Int32Array(K);
       var candScore = new Float64Array(K);
 
+      // The detail bleed blits from a pre-scaled copy of the target — reading
+      // the multi-megapixel original per cell made renders minutes long.
+      var scaled = document.createElement('canvas');
+      scaled.width = canvas.width; scaled.height = canvas.height;
+      var scCtx = scaled.getContext('2d');
+      scCtx.imageSmoothingQuality = 'high';
+      scCtx.drawImage(target, 0, 0, scaled.width, scaled.height);
+
       for (var y = 0; y < rows; y++) {
         for (var x = 0; x < cols; x++) {
-          var want = regionColors(sdata, small.width, x * REGIONS, y * REGIONS, REGIONS);
-          var wantMean = meanOf(want);
+          var ci2 = y * cols + x;
+          var want = cellRegs[ci2];
+          var wantMean = [cellMean[ci2][0], cellMean[ci2][1], cellMean[ci2][2]];
           var eo = (x + 1) * 3;
           wantMean[0] += errCur[eo]; wantMean[1] += errCur[eo + 1]; wantMean[2] += errCur[eo + 2];
 
@@ -391,14 +453,23 @@
           }
 
           // Lay the tile, then tune it toward its cell — hard only where the
-          // match is weak, barely at all where it is strong. This replaces
-          // v1's flat 42% wash that fogged everything equally.
+          // match is weak, barely at all where it is strong.
           ctx.drawImage(chosen.thumb, x * CELL, y * CELL, CELL, CELL);
           var e = Math.sqrt(meanDist(wantMean, chosen.mean));
-          var alpha = Math.min(0.5, 0.14 + e * 1.35);
+          var alpha = Math.min(0.34, 0.1 + e * 1.1);
           ctx.globalAlpha = alpha;
           ctx.fillStyle = 'rgb(' + toByte(wantMean[0]) + ',' + toByte(wantMean[1]) + ',' + toByte(wantMean[2]) + ')';
           ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+
+          // The detail bleed: where the big picture has structure — an eye,
+          // a smile, an edge — the picture itself presses through the tile.
+          // Flat regions keep their photos honest.
+          var dNorm = Math.min(1, detail[ci2] / dRef);
+          var bleed = 0.08 + 0.6 * dNorm * dNorm * (3 - 2 * dNorm); // smoothstep
+          ctx.globalAlpha = Math.min(0.68, bleed);
+          ctx.drawImage(scaled,
+            x * CELL, y * CELL, CELL, CELL,
+            x * CELL, y * CELL, CELL, CELL);
           ctx.globalAlpha = 1;
         }
         var swap = errCur; errCur = errNext; errNext = swap; errNext.fill(0);
@@ -406,19 +477,17 @@
           progress.textContent = 'Laying the tiles… row ' + (y + 1) + ' of ' + rows;
           // setTimeout, not requestAnimationFrame: rAF never fires in hidden
           // or throttled tabs, and the build would silently hang there.
-          await new Promise(function (r) { setTimeout(r, 0); });
+          await breathe();
         }
       }
 
-      // 3. The finish: soft-light keeps tile detail while pulling the whole
-      //    field toward the big picture's tones, then the faintest normal
-      //    pass for likeness. Nothing like v1's fog.
+      // 3. The finish: one soft-light pass pulls the whole field toward the
+      //    big picture's light without fogging the tiles — the per-cell
+      //    detail bleed above already carries the likeness.
       ctx.globalCompositeOperation = 'soft-light';
-      ctx.globalAlpha = 0.4;
-      ctx.drawImage(target, 0, 0, canvas.width, canvas.height);
+      ctx.globalAlpha = 0.32;
+      ctx.drawImage(scaled, 0, 0);
       ctx.globalCompositeOperation = 'source-over';
-      ctx.globalAlpha = 0.08;
-      ctx.drawImage(target, 0, 0, canvas.width, canvas.height);
       ctx.globalAlpha = 1;
 
       progress.style.display = 'none';
