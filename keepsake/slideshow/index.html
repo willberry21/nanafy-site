@@ -9,6 +9,7 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Lato:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap">
 <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Lato:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -106,6 +107,25 @@
     letter-spacing:.18em; text-transform:uppercase; color:var(--pink);
   }
 
+  /* ---- voice slides: a recording playing, with nothing to look at but sound ---- */
+  .vs-wave { display:flex; align-items:center; justify-content:center; gap:5px; height:74px; margin:8px 0 30px; }
+  .vs-wave i {
+    display:block; width:5px; border-radius:99px; background:var(--turq); opacity:.85;
+    height:16%; animation:vsBar 1.15s ease-in-out infinite;
+  }
+  @keyframes vsBar { 0%,100% { height:14%; } 50% { height:100%; } }
+  .vs-label {
+    margin:0; font-family:var(--display); font-weight:600; font-size:.8rem;
+    letter-spacing:.18em; text-transform:uppercase; color:var(--pink);
+  }
+  .vs-quiet { margin:16px 0 0; font-family:var(--serif); font-style:italic; color:rgba(255,255,255,.55); font-size:.95rem; }
+  .caption .cap-voice {
+    display:flex; align-items:center; gap:7px; margin-top:10px;
+    font-family:var(--display); font-weight:600; font-size:.74rem; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--turq); text-shadow:0 1px 8px rgba(0,0,0,.6);
+  }
+  @media (prefers-reduced-motion: reduce) { .vs-wave i { animation:none; height:52%; } }
+
   .title-slide { z-index:1; }
   .heroimg { position:absolute; inset:-8%; background-size:cover; background-position:center; }
   .heroimg.blurred { filter:blur(38px) brightness(.5); transform:scale(1.1); }
@@ -170,13 +190,21 @@
   .tapzones .znext { flex:1; }
 
   .spinner, .state { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); text-align:center; padding:30px; }
+  /* Loading a slideshow: nothing to lay out yet, so the brand mark breathes
+     while the memories arrive rather than a word sitting on an empty screen. */
+  .spinner { flex-direction:column; gap:18px; }
+  .sk-bloom { width:54px; height:54px; animation:bloomBreathe 1.9s ease-in-out infinite; }
+  .sk-bloom path, .sk-bloom circle { fill:var(--turq); }
+  @keyframes bloomBreathe { 0%,100%{ opacity:.35; transform:scale(.94) } 50%{ opacity:.9; transform:scale(1) } }
+  .spinner .sk-say { font-family:var(--display,inherit); font-size:.74rem; font-weight:600; letter-spacing:.22em; text-transform:uppercase; }
+  @media (prefers-reduced-motion: reduce) { .sk-bloom { animation:none; opacity:.7; } }
   button:focus-visible { outline:2px solid var(--turq); outline-offset:2px; }
 </style>
 <script src="/js/session.js?v=20260810b"></script>
 </head>
 <body>
 <div id="player">
-  <div class="spinner" id="loading">Gathering the memories&hellip;</div>
+  <div class="spinner" id="loading" role="status" aria-label="Gathering the memories"><svg class="sk-bloom" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)"/><circle cx="50" cy="50" r="18.5"/></svg><span class="sk-say">Gathering the memories</span></div>
 </div>
 
 <script>
@@ -246,7 +274,7 @@
   function midiHz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
 
   function MusicEngine() {
-    var ctx = null, master = null, bus = null;
+    var ctx = null, master = null, bus = null, ducked = false;
     var mixKey = 'golden';
     var barIndex = 0, nextBarTime = 0, tickTimer = null;
     var onBar = null; // fires (via setTimeout) when a scheduled bar becomes audible
@@ -373,8 +401,17 @@
         muted = m;
         if (ctx && master) {
           master.gain.cancelScheduledValues(ctx.currentTime);
-          master.gain.setValueAtTime(m ? 0.0001 : 0.5, ctx.currentTime);
+          master.gain.setValueAtTime(m ? 0.0001 : (ducked ? 0.09 : 0.5), ctx.currentTime);
         }
+      },
+      // A recorded voice is the memory; the score steps back under it.
+      duck: function (on) {
+        ducked = !!on;
+        if (!ctx || !master) return;
+        var target = muted ? 0.0001 : (ducked ? 0.09 : 0.5);
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+        master.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.55);
       },
       barMs: function () { return barSeconds() * 1000; },
       isRunning: function () { return !!tickTimer; },
@@ -416,14 +453,23 @@
     slides.push({ kind: 'title', title: title, count: mems.length, hero: heroUrl });
     mems.forEach(function (m) {
       var body = (m.body || '').trim();
-      if (m.photo_url) slides.push({ kind: 'photo', url: m.photo_url, note: body, who: m.contributor_name });
-      else if (body) slides.push({ kind: 'quote', prompt: m.prompt_text, body: body, who: m.contributor_name });
+      var au = m.audio_url || null, asec = m.audio_seconds || 0;
+      if (m.photo_url) slides.push({ kind: 'photo', url: m.photo_url, note: body, who: m.contributor_name, audio: au, audioSeconds: asec });
+      else if (body) slides.push({ kind: 'quote', prompt: m.prompt_text, body: body, who: m.contributor_name, audio: au, audioSeconds: asec });
+      // Spoken and nothing else — the slide IS the recording.
+      else if (au) slides.push({ kind: 'voice', prompt: m.prompt_text, who: m.contributor_name, audio: au, audioSeconds: asec });
     });
     slides.push({ kind: 'end' });
   }
 
-  /* Pacing: photos hold one bar, words get bars enough to read them. */
+  /* Pacing: photos hold one bar, words get bars enough to read them, and a
+     recording holds its own length — the clock below is the safety net, the
+     audio's own 'ended' advances it on time. */
+  function voiceMs(s) { return s.audio ? Math.round((s.audioSeconds || 30) * 1000) + 1400 : 0; }
+  function mmss(n) { n = Math.max(0, Math.round(n || 0)); return Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0'); }
+
   function slideBars(s) {
+    if (s.audio) return Math.max(1, Math.ceil(voiceMs(s) / music.barMs()));
     if (s.kind === 'photo') return 1;
     if (s.kind === 'quote') {
       var readMs = 2600 + s.body.split(/\s+/).length * 265;
@@ -432,6 +478,7 @@
     return 2;
   }
   function slideMs(s) {
+    if (s.audio) return voiceMs(s);
     if (s.kind === 'photo') return 5200;
     if (s.kind === 'quote') {
       var words = s.body.split(/\s+/).length;
@@ -453,10 +500,12 @@
       return '<div class="photo-bg" style="background-image:url(&quot;' + s.url.replace(/"/g, '') + '&quot;)"></div>' +
         '<img class="photo-fg ' + kb + '" src="' + s.url.replace(/"/g, '&quot;') + '" alt="">' +
         '<div class="photo-shade"></div>' +
-        (s.note || s.who
+        (s.note || s.who || s.audio
           ? '<div class="caption">' +
             (s.note ? '<div class="note">' + esc(s.note) + '</div>' : '') +
-            (s.who ? '<div class="who">' + esc(s.who) + '</div>' : '') + '</div>'
+            (s.who ? '<div class="who">' + esc(s.who) + '</div>' : '') +
+            (s.audio ? '<div class="cap-voice">' + VOICE_GLYPH + '<span>In their own voice</span></div>' : '') +
+            '</div>'
           : '');
     }
     if (s.kind === 'quote') {
@@ -465,6 +514,16 @@
         (s.prompt ? '<p class="q-prompt">' + esc(s.prompt) + '</p>' : '') +
         '<p class="q-body' + (long ? ' long' : '') + '">&ldquo;' + esc(s.body) + '&rdquo;</p>' +
         (s.who ? '<p class="q-who">&mdash; ' + esc(s.who) + '</p>' : '') +
+        '</div>';
+    }
+    if (s.kind === 'voice') {
+      var bars = '';
+      for (var b = 0; b < 26; b++) bars += '<i style="animation-delay:' + (b * 0.07).toFixed(2) + 's"></i>';
+      return '<div class="quote-slide voice-slide">' +
+        (s.prompt ? '<p class="q-prompt">' + esc(s.prompt) + '</p>' : '') +
+        '<div class="vs-wave" aria-hidden="true">' + bars + '</div>' +
+        '<p class="vs-label">' + esc(s.who || 'Anonymous') + '\u2019s voice' +
+        (s.audioSeconds ? ' \u00b7 ' + mmss(s.audioSeconds) : '') + '</p>' +
         '</div>';
     }
     if (s.kind === 'title') {
@@ -484,6 +543,48 @@
       '<div class="end-mark"><b>Nana</b>fy</div>' +
       '<button class="bigplay" id="replay">Play it again</button>' +
       '</div>';
+  }
+
+  /* ---- recorded voices ------------------------------------------------
+   * One at a time, tied to the slide showing it. The score ducks while a
+   * voice plays and comes back up after. If the browser refuses to autoplay
+   * it, the slide simply holds for the recording's length and moves on —
+   * the show never stalls waiting for permission that isn't coming. */
+  var VOICE_GLYPH = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true">' +
+    '<path d="M4 10v4M9 6v12M14 3v18M19 9v6"/></svg>';
+  var voiceEl = null;
+
+  function stopVoice() {
+    if (voiceEl) {
+      voiceEl.pause();
+      voiceEl.removeAttribute('src');
+      voiceEl = null;
+    }
+    music.duck(false);
+  }
+
+  function startVoice(s) {
+    stopVoice();
+    if (!s || !s.audio) return;
+    var mine = current;
+    voiceEl = new Audio(s.audio);
+    voiceEl.preload = 'auto';
+    voiceEl.addEventListener('ended', function () {
+      music.duck(false);
+      if (playing && current === mine && current < slides.length - 1) show(current + 1);
+    });
+    music.duck(true);
+    var pr = voiceEl.play();
+    if (pr && pr.catch) pr.catch(function () { music.duck(false); });
+  }
+
+  function resumeVoice() {
+    var s = slides[current];
+    if (!s || !s.audio) return;
+    if (!voiceEl) { startVoice(s); return; }
+    music.duck(true);
+    var pr = voiceEl.play();
+    if (pr && pr.catch) pr.catch(function () { music.duck(false); });
   }
 
   function wireSlideButtons() {
@@ -518,6 +619,7 @@
 
   function show(i, instant) {
     if (i < 0 || i >= slides.length) return;
+    stopVoice(); // whatever was speaking belonged to the slide we're leaving
     current = i;
     var back = 1 - front;
     layers[back].innerHTML = slideHtml(slides[i]);
@@ -541,6 +643,7 @@
       if (musicOn()) fillTick(barsLeftForSlide * music.barMs());
       else armMs();
     }
+    if (playing && slides[i].audio) startVoice(slides[i]);
     if (slides[i].kind === 'end' && playing) { music.fadeOut(3); playing = false; wake(); }
     updateCtl();
   }
@@ -600,6 +703,7 @@
     } else {
       if (musicOn()) { music.isRunning() ? music.resume() : startMusicDriven(); fillTick(barsLeftForSlide * music.barMs()); }
       else armMs();
+      resumeVoice(); // a paused recording picks up where it left off
     }
     quietSoon();
     updateCtl();
@@ -608,6 +712,8 @@
   function pause() {
     playing = false;
     clearTimeout(msTimer);
+    if (voiceEl) voiceEl.pause();
+    music.duck(false);
     music.stop();
     var t = document.querySelector('.tick[data-i="' + current + '"] i');
     if (t) { var w = getComputedStyle(t).width; t.style.transition = 'none'; t.style.width = w; }
@@ -642,7 +748,7 @@
     if (!code) { player.innerHTML = '<div class="state">No keepsake code in the link.</div>'; return; }
     try {
       ev = await Nanafy.join(code,
-        'id,title,honoree,event_type,photo_url,memories(id,status,position,created_at,contributor_name,prompt_text,body,photo_url)');
+        'id,title,honoree,event_type,photo_url,memories(id,status,position,created_at,contributor_name,prompt_text,body,photo_url,audio_url,audio_seconds)');
     } catch (e) {
       player.innerHTML = '<div class="state">Could not open this keepsake.<br>Check the link and try again.</div>';
       return;
