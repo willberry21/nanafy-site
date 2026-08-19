@@ -126,6 +126,13 @@
   }
   .mem .body::first-letter { }
   .mem .spoken { font-family:var(--serif); font-style:italic; color:var(--ink-soft); margin:0; }
+  /* Mirrors the printed sheet: 37 modules plus the spec's 4-module quiet zone
+     each side, 26mm across, so ~0.58mm per module on paper. */
+  .listen { display:flex; align-items:center; gap:14px; margin-top:22px;
+    border-top:1px solid var(--line); padding-top:16px; }
+  .listen svg { width:98px; height:98px; flex:none; background:#fff; border-radius:4px; }
+  .listen-t { font-size:.92rem; font-weight:800; color:var(--turq-deep); margin:0; }
+  .listen-s { font-size:.78rem; color:var(--ink-soft); margin:4px 0 0; }
   .mem .who {
     margin: 18px 0 0; font-family: var(--serif); font-style: italic; color: var(--plum); font-size: 1rem;
   }
@@ -330,7 +337,8 @@
 <div id="root"></div>
 
 <script src="/js/session.js?v=20260810b"></script>
-<script>
+<script type="module">
+import { qrSvg } from '/js/qr.js?v=20260819a';
 (function () {
   'use strict';
 
@@ -438,6 +446,24 @@
   function isPhotoOnly(m) { return m.photo_url && !(m.body || '').trim() && !m.prompt_text && !m.audio_url; }
   function mmssBook(n) { n = Math.max(0, Math.round(n || 0)); return Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0'); }
 
+  // Paper can't play a recording, but it can carry a way to hear it. The code
+  // holds the share code as well as the memory id, so the page it opens is
+  // reached through the same door as everything else. This must stay identical
+  // to listenBlock() in nanify/tools/book-pdf/generate-book-pdf.mjs — that
+  // script, not this page, is what actually gets printed.
+  function listenBlock(m) {
+    if (!m.audio_url || !m.id) return '';
+    var url = location.origin + '/m/?c=' + encodeURIComponent(getCode()) + '&id=' + encodeURIComponent(m.id);
+    var first = (m.contributor_name || 'them').trim().split(' ')[0] || 'them';
+    return '<div class="listen">' +
+      qrSvg(url, { size: 100, quiet: 4, dark: '#1d3d3a' }) +
+      '<div class="listen-txt">' +
+        '<p class="listen-t">Hear ' + esc(first) + ' say it</p>' +
+        '<p class="listen-s">Point a phone camera at the square' +
+          (m.audio_seconds ? ' \u00b7 ' + mmssBook(m.audio_seconds) : '') + '</p>' +
+      '</div></div>';
+  }
+
   // The ordered list of memories becomes the ordered list of BLOCKS the book
   // renders and the host arranges: one block per written memory, one block
   // per group of up to four consecutive photo-only memories.
@@ -467,17 +493,13 @@
       return head + tools +
         (m.prompt_text ? '<p class="q">' + esc(m.prompt_text) + '</p>' : '') +
         ((m.body || '').trim() ? '<p class="body">' + esc(m.body) + '</p>' : '') +
-        // Paper cannot play a recording. It can say the memory was spoken,
-        // so the page is a record of it rather than a blank.
         (m.audio_url && !(m.body || '').trim()
-          ? '<p class="spoken">Spoken aloud' +
-            (m.audio_seconds ? ' \u00b7 ' + mmssBook(m.audio_seconds) : '') +
-            ' \u2014 listen in the online keepsake.</p>'
-          : '') +
+          ? '<p class="spoken">They said this out loud.</p>' : '') +
         '<p class="who">' +
           (m.contributor_name ? '— ' + esc(m.contributor_name) : '— A friend') +
           (m.created_at ? ' <span class="when">' + esc(niceDate(m.created_at)) + '</span>' : '') +
         '</p>' +
+        listenBlock(m) +
         (m.photo_url ? '<figure><img src="' + esc(m.photo_url) + '" alt=""></figure>' : '') +
       '</article>';
     }
