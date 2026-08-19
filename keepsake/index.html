@@ -223,8 +223,8 @@
   .khead-edit{ background:rgba(2,8,10,.35); backdrop-filter:blur(8px); }
 
   /* memory cards: gentle entrance + lift on the white canvas */
-  .mcard{ animation:rise .6s cubic-bezier(.2,.7,.3,1) backwards;
-    transition:transform .25s ease, border-color .25s ease; }
+  .mcard{ animation:rise .6s cubic-bezier(.22,.9,.36,1) backwards;
+    transition: transform .25s cubic-bezier(.22,.9,.36,1), border-color .25s ease; }
   .mcard:hover{ transform:translateY(-3px); border-color:var(--turq-soft); }
   @keyframes rise{ from{ opacity:0; transform:translateY(22px); } }
 
@@ -384,7 +384,7 @@
     transition:transform .15s cubic-bezier(.34,1.56,.64,1), opacity .15s ease;
   }
   .w-btn.stop { background:var(--ink); color:var(--ground); }
-  .w-btn:active:not(:disabled) { transform:scale(.98); }
+  .w-btn:active:not(:disabled) { transform:scale(.965); }
   .w-btn:disabled { opacity:.6; cursor:default; }
   .w-dot { flex:none; width:12px; height:12px; border-radius:999px; background:#2A0D06; }
   .w-btn.stop .w-dot { border-radius:2px; background:var(--verm, #FF7A63); animation:wPulse 1.1s ease-in-out infinite; }
@@ -447,7 +447,7 @@
     transition:color .15s ease, transform .15s cubic-bezier(.34,1.56,.64,1);
   }
   .tabbar .tab svg { display:block; }
-  .tabbar .tab:active { transform:scale(.92); }
+  .tabbar .tab:active { transform:scale(.965); }
   .tabbar .tab[aria-current="page"] { color:var(--turq, #5FE0D2); }
   .tabbar .tab:focus-visible { outline:2px solid var(--turq, #5FE0D2); outline-offset:-3px; }
   .tabbar[hidden] { display:none; }
@@ -457,7 +457,7 @@
     background:var(--turq, #5FE0D2); color:var(--turq-ink, #073B36);
     font-family:var(--sans, inherit); font-size:.86rem; font-weight:700;
     padding:10px 18px; border-radius:999px; opacity:0; pointer-events:none;
-    transition:opacity .2s ease, transform .2s ease;
+    transition: opacity .2s ease, transform .2s cubic-bezier(.22,.9,.36,1);
   }
   .tab-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   /* room for the bar, so nothing hides behind it */

@@ -60,14 +60,14 @@
     padding: 9px 16px; border-radius: 999px; background: var(--surface);
     border: 1px solid var(--line); color: var(--ink);
     display: inline-flex; align-items: center; gap: 7px;
-    transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+    transition: transform 0.12s cubic-bezier(.34,1.56,.64,1), background 0.15s ease, border-color 0.15s ease;
   }
   .chip:hover { border-color: var(--turq-soft); }
   .chip[aria-pressed="true"] {
     background: var(--turq); border-color: var(--turq); color: var(--turq-ink);
     box-shadow: 0 6px 16px -8px rgba(10,120,111,0.5);
   }
-  .chip:active { transform: scale(0.95); }
+  .chip:active { transform: scale(.965); }
 
   input[type="text"] {
     width: 100%; font: inherit; background: var(--surface); color: var(--ink);
@@ -92,7 +92,7 @@
   .submit {
     width: 100%; margin-top: 26px; border: 0; border-radius: 999px; cursor: pointer;
     background: var(--turq); color: var(--turq-ink); font: inherit; font-size: 1.05rem; font-weight: 700;
-    padding: 16px; transition: transform 0.12s ease, box-shadow 0.2s ease, opacity 0.15s ease;
+    padding: 16px; transition: transform 0.12s cubic-bezier(.22,.9,.36,1), box-shadow 0.2s ease, opacity 0.15s ease;
     box-shadow: 0 8px 20px -8px rgba(10,120,111,0.5);
   }
   .submit:hover:not(:disabled) { transform: translateY(-1px); }

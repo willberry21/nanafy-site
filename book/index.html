@@ -266,7 +266,7 @@
     transition:color .15s ease, transform .15s cubic-bezier(.34,1.56,.64,1);
   }
   .tabbar .tab svg { display:block; }
-  .tabbar .tab:active { transform:scale(.92); }
+  .tabbar .tab:active { transform:scale(.965); }
   .tabbar .tab[aria-current="page"] { color:var(--turq, #5FE0D2); }
   .tabbar .tab:focus-visible { outline:2px solid var(--turq, #5FE0D2); outline-offset:-3px; }
   .tabbar[hidden] { display:none; }
@@ -276,7 +276,7 @@
     background:var(--turq, #5FE0D2); color:var(--turq-ink, #073B36);
     font-family:var(--sans, inherit); font-size:.86rem; font-weight:700;
     padding:10px 18px; border-radius:999px; opacity:0; pointer-events:none;
-    transition:opacity .2s ease, transform .2s ease;
+    transition: opacity .2s ease, transform .2s cubic-bezier(.22,.9,.36,1);
   }
   .tab-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   /* room for the bar, so nothing hides behind it */
