@@ -222,6 +222,16 @@
   @keyframes foldIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
   @media (prefers-reduced-motion: reduce) { .fold { animation:none; } }
 
+
+  /* --- thumb-sized hit areas on text links -------------------------------
+     A 15px link is fine to read and hard to hit. These keep their size and
+     their place in the sentence; only the area that responds to a tap grows,
+     via a pseudo-element, so nothing reflows. */
+  .peek-link { position:relative; display:inline-block; }
+  .peek-link::after {
+    content:""; position:absolute; left:-10px; right:-10px; top:50%;
+    height:44px; transform:translateY(-50%);
+  }
   /* --- growth loop: create-your-own promo on the thank-you screen --- */
   .promo { margin-top: 36px; border: 1px solid var(--line); background: var(--surface-2); border-radius: 12px; padding: 24px 20px; text-align: center; }
   .promo-kicker { font-family: var(--display); font-size: .72rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--verm); }
@@ -573,7 +583,7 @@ function renderForm() {
 
     '<div class="gate-hint" id="gateHint"></div>' +
     '<button class="submit" id="submit">Next question</button>' +
-    '<p style="text-align:center;margin:18px 0 0;font-size:.85rem"><a style="color:var(--accent);font-weight:700;text-decoration:none" href="/keepsake/view/?c=' + encodeURIComponent(event.share_code || '') + '">Just here to look? See the keepsake &rarr;</a></p>' +
+    '<p style="text-align:center;margin:18px 0 0;font-size:.85rem"><a class="peek-link" style="color:var(--accent);font-weight:700;text-decoration:none" href="/keepsake/view/?c=' + encodeURIComponent(event.share_code || '') + '">Just here to look? See the keepsake &rarr;</a></p>' +
     '<div class="upl-progress" id="sendProgress" hidden></div>' +
     '<p class="error" id="err" hidden></p>';
 

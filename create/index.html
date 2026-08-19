@@ -174,6 +174,22 @@
   h1,h2,.brand .mark,.code-chip b,.key-sub b,#honoree{ font-weight:900; letter-spacing:-.02em; }
   .submit,.copy-btn,.action.primary,.chip[aria-pressed="true"]{ box-shadow:0 10px 24px -10px rgba(15,176,164,.55); }
 
+
+  /* --- thumb-sized hit areas on text links -------------------------------
+     A 15px link is fine to read and hard to hit. These keep their size and
+     their place in the sentence; only the area that responds to a tap grows,
+     via a pseudo-element, so nothing reflows. */
+  .foot a { position:relative; display:inline-block; }
+  .foot a::after {
+    content:""; position:absolute; left:-10px; right:-10px; top:50%;
+    height:44px; transform:translateY(-50%);
+  }
+
+  /* --- thumb-sized header controls ----------------------------------------
+     The shared header links measured 24-31px of reachable height. They now
+     clear 44px without the labels changing size: the row grows, the type
+     doesn't. */
+  .topnav .brand, .tn-links a, .tn-links .prof-link { min-height:44px; display:inline-flex; align-items:center; }
   /* == web↔app consistency: turquoise labels + turquoise-wash note (match app) == */
   .label{ color:var(--turq-deep); }
   .note{ background:#e7f7f5; }

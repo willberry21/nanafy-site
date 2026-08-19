@@ -147,6 +147,22 @@
 
   .closing { text-align:center; margin-top:44px; color:var(--ink-faint); font-size:.85rem; }
   .closing .add { color:var(--turq); text-decoration:none; font-weight:700; }
+
+
+  /* --- thumb-sized header controls ----------------------------------------
+     The shared header links measured 24-31px of reachable height. They now
+     clear 44px without the labels changing size: the row grows, the type
+     doesn't. */
+  .bar .brand, .bar a, .bar .prof-link { min-height:44px; display:inline-flex; align-items:center; }
+  /* --- thumb-sized hit areas on text links -------------------------------
+     A 15px link is fine to read and hard to hit. These keep their size and
+     their place in the sentence; only the area that responds to a tap grows,
+     via a pseudo-element, so nothing reflows. */
+  .closing .add { position:relative; display:inline-block; }
+  .closing .add::after {
+    content:""; position:absolute; left:-10px; right:-10px; top:50%;
+    height:44px; transform:translateY(-50%);
+  }
   .state { text-align:center; padding:80px 24px; color:var(--ink-soft); }
 
   /* --- the keepsake tab bar ------------------------------------------------
