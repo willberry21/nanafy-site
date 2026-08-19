@@ -352,6 +352,37 @@
   }
 
 
+  /* --- the host's welcome --------------------------------------------------
+     A rented guestbook phone plays the couple's greeting before the beep, and
+     the whole trade agrees a stiff or absent greeting gets stiff or absent
+     messages back. Lives next to the share tools, because that is where a host
+     is already thinking about getting people to contribute. */
+  .welcome-card { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:15px 16px; margin:0 0 22px; }
+  .welcome-card .w-t { font-family:var(--display); font-size:.7rem; font-weight:600; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--turq); margin:0 0 4px; }
+  .welcome-card .w-sub { font-size:.86rem; color:var(--ink-soft); margin:0 0 12px; line-height:1.45; }
+  .w-btn {
+    display:flex; align-items:center; justify-content:center; gap:9px; width:100%;
+    border:0; border-radius:12px; background:var(--verm, #FF7A63); color:#2A0D06;
+    font:inherit; font-weight:700; font-size:1rem; padding:14px; cursor:pointer;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), opacity .15s ease;
+  }
+  .w-btn.stop { background:var(--ink); color:var(--ground); }
+  .w-btn:active:not(:disabled) { transform:scale(.98); }
+  .w-btn:disabled { opacity:.6; cursor:default; }
+  .w-dot { flex:none; width:12px; height:12px; border-radius:999px; background:#2A0D06; }
+  .w-btn.stop .w-dot { border-radius:2px; background:var(--verm, #FF7A63); animation:wPulse 1.1s ease-in-out infinite; }
+  @keyframes wPulse { 0%,100%{opacity:1} 50%{opacity:.2} }
+  .w-time { font-variant-numeric:tabular-nums; }
+  .w-have { display:flex; align-items:center; gap:10px; }
+  .w-have audio { flex:1; min-width:0; height:40px; color-scheme:dark; }
+  .w-mini { flex:none; border:1px solid var(--line-strong); border-radius:999px; background:none; color:var(--ink);
+    font:inherit; font-size:.8rem; font-weight:700; padding:8px 13px; cursor:pointer; }
+  .w-mini:hover { border-color:var(--turq); color:var(--turq); }
+  .w-note { font-size:.8rem; color:var(--ink-soft); margin:10px 0 0; min-height:1.1em; }
+  .w-note.err { color:var(--danger); }
+  @media (prefers-reduced-motion: reduce) { .w-btn.stop .w-dot { animation:none; } .w-btn:active { transform:none; } }
+
   /* --- when & where ---------------------------------------------------------
      A guest who scans the code on the order of service usually wants the thing
      the paper card already told them: when it starts and where it is. Only
@@ -508,6 +539,11 @@ const SKELETON_KEEPSAKE = document.getElementById('app').innerHTML;
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
+function ownsThis(ev) {
+  const s = session();
+  return !!(s && ev && ev.owner_id && ev.owner_id === s.userId);
+}
+
 
 // --- when & where ---------------------------------------------------------
 var CAL_GLYPH = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>';
@@ -530,6 +566,130 @@ function whenCard(ev) {
     (when ? '<p class="wc-row">' + CAL_GLYPH + '<span>' + esc(when) + '</span></p>' : '') +
     (place ? '<p class="wc-row">' + PIN_GLYPH + '<span>' + esc(place) + '</span></p>' : '') +
     '</div>';
+}
+
+// --- the host's welcome ------------------------------------------------------
+// Same recording rules as the guest page: prefer MP4/AAC so a welcome recorded
+// on Android still plays on an iPhone. Uploaded the moment it stops, then
+// PATCHed onto the event — there is no form to submit, so nothing to lose.
+function pickWelcomeMime() {
+  const wanted = ['audio/mp4', 'audio/mp4;codecs=mp4a.40.2', 'audio/aac', 'audio/webm;codecs=opus', 'audio/webm'];
+  if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+  for (let i = 0; i < wanted.length; i++) if (MediaRecorder.isTypeSupported(wanted[i])) return wanted[i];
+  return '';
+}
+function welcomeExt(t) {
+  if (t.indexOf('mp4') > -1 || t.indexOf('aac') > -1) return 'm4a';
+  if (t.indexOf('webm') > -1) return 'webm';
+  if (t.indexOf('ogg') > -1) return 'ogg';
+  return 'bin';
+}
+
+function wireWelcome(ev) {
+  const card = document.getElementById('welcomeCard');
+  if (!card) return;
+  const bodyEl = document.getElementById('welcomeBody');
+  const note = document.getElementById('welcomeNote');
+  const MAX = 60; // a welcome, not a eulogy
+  const canRecord = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+
+  let url = ev.welcome_audio_url || null;
+  let secs = ev.welcome_audio_seconds || 0;
+  let rec = null, stream = null, timer = null, started = 0, recording = false, busy = false;
+
+  function say(msg, isErr) { note.className = 'w-note' + (isErr ? ' err' : ''); note.textContent = msg || ''; }
+
+  function draw() {
+    if (!canRecord && !url) {
+      bodyEl.innerHTML = '<p class="w-sub" style="margin:0">This browser can\u2019t record. Open the keepsake ' +
+        'on your phone to leave a welcome.</p>';
+      return;
+    }
+    if (recording) {
+      bodyEl.innerHTML = '<button type="button" class="w-btn stop" id="wBtn"><span class="w-dot"></span>' +
+        '<span>Stop \u00b7 <span class="w-time" id="wTime">0:00</span></span></button>';
+      return;
+    }
+    if (url) {
+      bodyEl.innerHTML = '<div class="w-have"><audio controls preload="none" src="' + esc(url) + '"></audio>' +
+        '<button type="button" class="w-mini" id="wRedo">Redo</button>' +
+        '<button type="button" class="w-mini" id="wDrop">Remove</button></div>';
+      return;
+    }
+    bodyEl.innerHTML = '<button type="button" class="w-btn" id="wBtn"><span class="w-dot"></span>' +
+      '<span>Record a welcome</span></button>';
+  }
+
+  async function save(patch, msg) {
+    busy = true;
+    const res = await fetch(SUPABASE_URL + '/rest/v1/events?share_code=eq.' + encodeURIComponent(code.toUpperCase()), {
+      method: 'PATCH',
+      headers: Object.assign({}, authHeaders(), { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+      body: JSON.stringify(patch)
+    });
+    busy = false;
+    if (!res.ok) throw new Error('save');
+    say(msg);
+  }
+
+  async function start() {
+    say('');
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch (e) { say('Your browser blocked the microphone. Allow it, then try again.', true); return; }
+    const mime = pickWelcomeMime();
+    try { rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); }
+    catch (e) { rec = new MediaRecorder(stream); }
+    const chunks = [], mimeUsed = rec.mimeType || mime;
+    rec.addEventListener('dataavailable', (e) => { if (e.data && e.data.size) chunks.push(e.data); });
+    rec.addEventListener('stop', async () => {
+      const seconds = Math.max(1, Math.round((Date.now() - started) / 1000));
+      clearInterval(timer); timer = null; recording = false; rec = null;
+      if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
+      const type = (mimeUsed || 'audio/mp4').split(';')[0];
+      const blob = new Blob(chunks, { type: type });
+      if (!blob.size) { draw(); return; }
+      draw(); say('Saving\u2026');
+      try {
+        const path = ev.id + '/welcome-' + Date.now().toString(36) + '.' + welcomeExt(type);
+        const up = await fetch(SUPABASE_URL + '/storage/v1/object/memory-audio/' + path, {
+          method: 'POST', headers: Object.assign({}, HEADERS, { 'Content-Type': type }), body: blob
+        });
+        if (!up.ok) throw new Error('upload');
+        const publicUrl = SUPABASE_URL + '/storage/v1/object/public/memory-audio/' + path;
+        await save({ welcome_audio_url: publicUrl, welcome_audio_seconds: seconds },
+                   'Saved \u2014 guests hear this before they answer.');
+        url = publicUrl; secs = seconds; ev.welcome_audio_url = url; ev.welcome_audio_seconds = secs;
+        draw();
+      } catch (e) {
+        say('That didn\u2019t save. Check your connection and record it again.', true);
+        draw();
+      }
+    });
+    started = Date.now(); recording = true; rec.start(); draw();
+    timer = setInterval(() => {
+      const n = Math.floor((Date.now() - started) / 1000);
+      const t = document.getElementById('wTime');
+      if (t) t.textContent = Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0');
+      if (n >= MAX) stop();
+    }, 250);
+  }
+  function stop() { if (rec && rec.state !== 'inactive') rec.stop(); }
+
+  card.addEventListener('click', async (e) => {
+    if (busy) return;
+    if (e.target.closest('#wBtn')) { recording ? stop() : start(); return; }
+    if (e.target.closest('#wRedo')) { url = null; draw(); say(''); start(); return; }
+    if (e.target.closest('#wDrop')) {
+      say('Removing\u2026');
+      try {
+        await save({ welcome_audio_url: null, welcome_audio_seconds: null }, 'Removed.');
+        url = null; secs = 0; ev.welcome_audio_url = null; ev.welcome_audio_seconds = null;
+        draw();
+      } catch (err) { say('Couldn\u2019t remove it \u2014 try again.', true); }
+    }
+  });
+
+  draw();
 }
 
 // --- voice memories --------------------------------------------------------
@@ -592,7 +752,7 @@ async function fetchKeepsake(c) {
   // The join RPC records membership and returns the event; the memories embed
   // then only contains approved ones (RLS), which is the keepsake view.
   const ev = await Nanafy.join(c,
-    'id,title,honoree,event_type,event_date,event_time,event_location,photo_url,owner_id,prompts(text,position),memories(id,status,contributor_name,prompt_text,body,photo_url,audio_url,audio_seconds,created_at)');
+    'id,title,honoree,event_type,event_date,event_time,event_location,welcome_audio_url,welcome_audio_seconds,photo_url,owner_id,prompts(text,position),memories(id,status,contributor_name,prompt_text,body,photo_url,audio_url,audio_seconds,created_at)');
   // Owners can read every status; the keepsake grid shows only approved.
   if (ev && Array.isArray(ev.memories)) ev.memories = ev.memories.filter((m) => m.status === 'approved');
   return ev;
@@ -681,6 +841,17 @@ function render(ev, pending) {
     '<button class="g-copy" id="gCopy">Copy</button></div></div>' +
     '</div></div>';
 
+  // Only the host records the welcome; guests only ever hear it, on /add.
+  if (ownsThis(ev)) {
+    html += '<div class="welcome-card" id="welcomeCard">' +
+      '<p class="w-t">Your welcome</p>' +
+      '<p class="w-sub">Guests hear this before they answer. Fifteen seconds in your own voice is plenty \u2014 ' +
+      'a warm one gets warm memories back.</p>' +
+      '<div id="welcomeBody"></div>' +
+      '<p class="w-note" id="welcomeNote"></p>' +
+      '</div>';
+  }
+
   // Owner-only review queue: memories waiting for approval. RLS means only
   // the signed-in owner ever receives these.
   if (staleSession) {
@@ -737,7 +908,7 @@ function render(ev, pending) {
     // The owner gets a per-memory Remove control; RLS enforces ownership
     // server-side regardless of what renders here.
     const s = session();
-    const isOwner = !!(s && ev.owner_id && ev.owner_id === s.userId);
+    const isOwner = ownsThis(ev);
     html += '<div class="mlist">' + memories.map(function (m) {
       return '<div class="mcard" data-mid="' + esc(m.id) + '">' +
         '<div class="who"><span class="name">' + esc(m.contributor_name || 'Anonymous') + '</span>' +
@@ -774,6 +945,7 @@ function render(ev, pending) {
 
   app.innerHTML = html;
   app.classList.remove('did-load'); void app.offsetWidth; app.classList.add('did-load');
+  wireWelcome(ev);
 
   const gCopy = document.getElementById('gCopy');
   gCopy.addEventListener('click', function () {

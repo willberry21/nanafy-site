@@ -184,6 +184,26 @@
     .sk-wrap, .did-load { animation:none; }
   }
 
+  /* --- the host's welcome, heard before answering ---------------------------
+     No autoplay: browsers block it, and a voice starting by itself at a
+     memorial would be awful. A clear play button that says who it's from. */
+  .host-hello {
+    display:flex; align-items:center; gap:12px; margin:0 0 22px;
+    border:1px solid var(--line); border-radius:12px; background:var(--surface-2); padding:12px 14px;
+  }
+  .hh-play {
+    flex:none; width:46px; height:46px; border-radius:999px; border:0; cursor:pointer;
+    background:var(--accent); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1);
+  }
+  .hh-play:active { transform:scale(.92); }
+  .hh-txt { min-width:0; }
+  .hh-who { font-family:var(--display); font-size:.7rem; font-weight:600; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--accent); }
+  .hh-line { font-family:var(--serif); font-style:italic; font-size:.95rem; color:var(--ink-soft); margin-top:2px; }
+  @media (prefers-reduced-motion: reduce) { .hh-play:active { transform:none; } }
+
   /* --- the quieter ways to answer ------------------------------------------
      Recording is the main path and stays one tap away. Typing and photos are
      folded behind two plain links until someone wants them, so the question
@@ -322,6 +342,39 @@ const PEN_GLYPH = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" s
 const PIC_GLYPH = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
   '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l4.8-4.4L14 17l2.6-2.2L20 17"/></svg>';
 
+
+// The host's greeting, above whichever lane the guest is in.
+function hostHello() {
+  if (!event || !event.welcome_audio_url) return '';
+  return '<div class="host-hello">' +
+    '<button type="button" class="hh-play" id="hhPlay" aria-label="Play the welcome">' +
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6L19 12z"/></svg>' +
+    '</button>' +
+    '<div class="hh-txt"><div class="hh-who">A word first</div>' +
+    '<div class="hh-line">Press play \u2014 the host left you a message.</div></div>' +
+    '</div>';
+}
+let helloAudio = null;
+function wireHostHello() {
+  const btn = document.getElementById('hhPlay');
+  if (!btn) return;
+  const PLAY = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6L19 12z"/></svg>';
+  const PAUSE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="5.5" width="3.6" height="13" rx="1"/><rect x="13.4" y="5.5" width="3.6" height="13" rx="1"/></svg>';
+  btn.addEventListener('click', () => {
+    if (!helloAudio) {
+      helloAudio = new Audio(event.welcome_audio_url);
+      helloAudio.addEventListener('ended', () => { btn.innerHTML = PLAY; btn.setAttribute('aria-label', 'Play the welcome'); });
+    }
+    if (helloAudio.paused) {
+      helloAudio.play().catch(() => {});
+      btn.innerHTML = PAUSE; btn.setAttribute('aria-label', 'Pause the welcome');
+    } else {
+      helloAudio.pause();
+      btn.innerHTML = PLAY; btn.setAttribute('aria-label', 'Play the welcome');
+    }
+  });
+}
+
 // --- voice memories --------------------------------------------------------
 // Prefer MP4/AAC. A clip recorded on someone's Android has to play back on the
 // host's iPhone, and Safari will not play WebM; Chrome records MP4 now, so the
@@ -365,6 +418,7 @@ function renderPhotoForm() {
     '<div class="center"><p class="prep">' + esc(prep) + '</p>' +
     '<h1 class="honoree">' + esc(title) + '</h1>' +
     '<p class="sub">Add your photos — pick as many as you like, straight from your camera roll.</p></div>' +
+    hostHello() +
     laneTabs('photos') +
     '<span class="label">Your photos</span>' +
     '<div class="pick-grid" id="pickGrid"></div>' +
@@ -377,6 +431,7 @@ function renderPhotoForm() {
     '<div class="upl-progress" id="uplProgress" hidden></div>' +
     '<p class="error" id="err" hidden></p>';
   wireLaneTabs('photos');
+  wireHostHello();
   enter();
 
   const input = document.getElementById('batchInput');
@@ -452,7 +507,7 @@ function renderPhotoForm() {
 async function fetchEvent(code) {
   // The share code is exchanged for membership through the join RPC — the
   // database no longer answers direct reads without it.
-  return Nanafy.join(code, 'id,title,event_type,honoree,share_code,owner_id,prompts(text,position)');
+  return Nanafy.join(code, 'id,title,event_type,honoree,share_code,owner_id,welcome_audio_url,prompts(text,position)');
 }
 
 function renderCodeEntry(message) {
@@ -481,6 +536,7 @@ function renderForm() {
     '<h1 class="honoree">' + esc(title) + '</h1>' +
     '<p class="sub">Answer all ' + n + ' questions — it takes a few minutes and means more than you know.</p></div>' +
 
+    hostHello() +
     laneTabs('words') +
 
     '<span class="label">First, your name</span>' +
@@ -522,6 +578,7 @@ function renderForm() {
     '<p class="error" id="err" hidden></p>';
 
   wireLaneTabs('words');
+  wireHostHello();
   enter();
   const bodyEl = document.getElementById('body');
   const submitEl = document.getElementById('submit');
