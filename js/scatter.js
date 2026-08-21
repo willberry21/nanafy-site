@@ -141,28 +141,44 @@
 
   if (still) { draw(1); return; }   /* held gathered: the beat that matters */   /* held mid-scatter: the idea, unmoving */
 
-  var last = -1, queued = false, inView = true;
-  function frame() {
-    queued = false;
-    var p = progress();
-    if (Math.abs(p - last) > 0.002) { last = p; draw(p); }
-  }
-  function onScroll() {
-    if (queued || !inView) return;
-    queued = true;
-    requestAnimationFrame(frame);
+  /* Scroll sets where we are going; the loop decides how fast we get there. */
+  var MAX_RATE = 1.45;   /* progress units per second — a 0→1 sweep floors at ~690ms */
+  var SMOOTH = 7;        /* how eagerly it chases the target */
+  var EPS = 0.0015;
+
+  var cur = progress(), tgt = cur, raf = 0, lastT = 0, inView = true;
+  draw(cur);
+
+  function loop(now) {
+    var dt = (now - lastT) / 1000;
+    lastT = now;
+    if (dt > 0.05) dt = 0.05;      /* a backgrounded tab must not teleport it */
+    if (dt <= 0) dt = 0.016;
+
+    var d = tgt - cur;
+    var step = d * (1 - Math.exp(-SMOOTH * dt));
+    var cap = MAX_RATE * dt;
+    if (step > cap) step = cap; else if (step < -cap) step = -cap;
+    cur += step;
+    draw(cur);
+
+    if (inView && Math.abs(tgt - cur) > EPS) raf = requestAnimationFrame(loop);
+    else raf = 0;
   }
 
-  if ('IntersectionObserver' in window) {
-    new IntersectionObserver(function (es) {
-      inView = es[0].isIntersecting;
-      if (inView) onScroll();
-    }, { rootMargin: '80px' }).observe(cv);
+  function start() {
+    if (raf || !inView) return;
+    lastT = performance.now();
+    raf = requestAnimationFrame(loop);
+  }
+
+  function onScroll() {
+    tgt = progress();
+    start();
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', function () {
-    if (measure()) { last = -1; onScroll(); }
+    if (measure()) { cur = tgt = progress(); draw(cur); }
   });
-  frame();
 })();
