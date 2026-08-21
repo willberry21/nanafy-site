@@ -129,18 +129,11 @@ select:focus-visible,textarea:focus-visible{
 }
 
 /* ── the orbs ───────────────────────────────────────────────────────────── */
-/* The canvas is drawn LARGER than the element so a soft edge has room to fade
-   into; the element keeps its laid-out size. No clipping and no shadow — a
-   drop shadow is what made these read as objects on a surface. */
-.orb{ position:relative; flex:none; display:block; overflow:visible; }
-.orb canvas{ display:block; }
-
-/* the shadow and the hard clip come back only for the old ball */
-:root[data-shape="ball"] .orb{
-  border-radius:50%; overflow:hidden;
+.orb{
+  position:relative; border-radius:50%; overflow:hidden; flex:none; display:block;
   box-shadow:0 26px 46px -28px rgba(18,24,28,.40), 0 3px 10px -6px rgba(18,24,28,.18);
 }
-:root[data-shape="ball"] .orb canvas{ width:100%; height:100%; border-radius:50%; }
+.orb canvas{ display:block; width:100%; height:100%; border-radius:50%; }
 @keyframes orb-bob{ from{ transform:translateY(0) scale(1) } to{ transform:translateY(-12px) scale(1.015) } }
 
 @media(prefers-reduced-motion:reduce){
