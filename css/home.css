@@ -23,7 +23,7 @@ h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing
 .eyebrow{ color:var(--turq-text) !important; }
 .topnav-center a,.prof-link{ color:var(--ink) !important; }
 .nav-cta,.prof-chip{ background:var(--turq) !important; color:#fff !important; }
-.step .num,.kv-row .kv-play,.topnav-links a,.signup-ok,.tick,.hl{ color:var(--turq-text) !important; }
+.step .num,.topnav-links a,.signup-ok,.tick,.hl{ color:var(--turq-text) !important; }
 
 /* ── hero: words on the left, one living sphere on the right ── */
 .hero-n{
@@ -130,18 +130,51 @@ h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing
 .step,.occ,.keep-visual,.mcard,.signup-ok{
   background:var(--surface) !important; border:1px solid var(--line) !important;
 }
-.keep-visual{ box-shadow:0 26px 54px -34px var(--shadow) !important; }
-.keep-visual .kv-name{ color:var(--ink) !important; }
-.keep-visual .kv-head .avatar{ background:linear-gradient(140deg,var(--turq),var(--pink)) !important; }
-.kv-row .kv-play{ background:var(--turq-wash) !important; }
+.keep-visual{ box-shadow:0 26px 54px -34px var(--shadow) !important; padding:8px 22px 18px !important; }
+.keep-visual .kv-head{ padding:16px 0 14px; border-bottom:1px solid var(--line) }
+.keep-visual .kv-name{ font-family:var(--display); font-weight:400; font-size:1.32rem;
+  letter-spacing:-.02em; color:var(--ink) !important; margin:0 }
+.keep-visual .kv-sub{ font-size:.86rem; color:var(--ink-soft) !important; margin:4px 0 0 }
+
+/* one memory to a row, and the first one leads: it is the one that plays */
+.kv-row{ display:block; padding:16px 0; border-bottom:1px solid var(--line) }
+.kv-row:last-of-type{ border-bottom:none }
+.kv-txt{ font-family:var(--serif) !important; font-style:italic;
+  font-size:1.02rem; line-height:1.55; color:var(--ink) !important; margin:0 }
+.kv-who{ font-family:var(--display); font-weight:600; font-size:.74rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--turq-text) !important; margin:10px 0 0 }
+.kv-who span{ font-weight:400; letter-spacing:.03em; text-transform:none; color:var(--ink-soft) }
+
+.kv-voice{ display:flex; align-items:center; gap:14px }
+.kv-voice .kv-body{ flex:1; min-width:0 }
+.kv-voice .kv-who{ margin-top:7px }
+.kv-voice .kv-play{ flex:none; width:46px; height:46px; min-height:46px; padding:0; border:0;
+  border-radius:999px; background:var(--turq); color:#fff; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition:transform .18s var(--ease), background-color .2s var(--ease) }
+.kv-voice .kv-play:hover{ background:var(--turq-deep) }
+.kv-voice .kv-play:active{ transform:scale(.94) }
+.kv-voice .kv-play[disabled]{ opacity:.45; cursor:default }
+.kv-voice .kv-bars{ display:flex; align-items:center; gap:3px; height:26px; cursor:pointer }
+.kv-voice .kv-bars i{ display:block; width:3px; border-radius:2px; background:var(--turq);
+  opacity:.26; transition:opacity .16s var(--ease), transform .16s var(--ease);
+  transform-origin:center }
+.kv-voice .kv-bars i.on{ opacity:.9 }
+.kv-voice .kv-bars i.now{ opacity:1; transform:scaleY(1.3) }
+.kv-voice .kv-time{ flex:none; font-family:var(--display); font-weight:600; font-size:.8rem;
+  color:var(--ink-soft); font-variant-numeric:tabular-nums }
+.kv-note{ font-size:.8rem; color:var(--ink-soft) !important; margin:16px 0 0 }
+.kv-note a{ color:var(--turq-text) }
 
 /* the memories arrive one at a time, the way the room fills up */
-.keep-visual.in .kv-row{ opacity:0; animation:kv-rise .7s var(--ease) forwards; }
+.keep-visual.in .kv-row{ opacity:0; animation:kv-rise .7s var(--ease) forwards }
 .keep-visual.in .kv-row:nth-of-type(1){ animation-delay:.10s }
 .keep-visual.in .kv-row:nth-of-type(2){ animation-delay:.28s }
 .keep-visual.in .kv-row:nth-of-type(3){ animation-delay:.46s }
-.keep-visual.in .kv-row:nth-of-type(4){ animation-delay:.64s }
 @keyframes kv-rise{ from{ opacity:0; transform:translateY(14px) } to{ opacity:1; transform:none } }
+@media(prefers-reduced-motion:reduce){
+  .keep-visual.in .kv-row{ opacity:1 !important; animation:none !important }
+}
 
 /* ── closing: one sphere leaning in from the edge ── */
 .closing{ background:var(--surface-2) !important; position:relative; overflow:hidden; }
@@ -170,33 +203,79 @@ h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing
 .brand .mark{ color:#6b7773 !important; }
 .brand .mark b{ color:var(--turq-bright) !important; }
 
-/* ── occasions: three spheres side by side, not dark tiles ──
-   The landscape tiles were the last thing left from the dark theme, and
-   they broke the page in half. Same three links, same words. */
-.occ-grid{ grid-template-columns:repeat(3,1fr); gap:clamp(16px,3vw,44px) !important;
-  padding:0 clamp(16px,4vw,44px) !important; align-items:start; }
+/* ── occasions: three equals, standing in the same room ──
+   They read as thrown on the page because there was no depth and no
+   relationship between them: three circles at identical heights, each with a
+   generic drop shadow floating behind it.
+
+   Depth comes from the things that actually create it, none of which rank one
+   above another:
+     · one light source. The renderer lights every orb from the upper left, so
+       every contact shadow falls to the lower right. Consistent light is most
+       of what makes a scene read as a scene.
+     · a contact shadow, not a drop shadow. An ellipse UNDER the orb, darkest
+       where it meets the ground. A shadow running all the way around an object
+       is exactly what makes it look pasted on.
+     · a slight, uneven vertical stagger. A rigid row reads as a chart; an
+       uneven one reads as objects placed somewhere.
+     · air. The old gap was doing no work.
+   Sizes stay identical on purpose. Memorials, weddings and milestones are
+   three doors into the same product, not a ranking — which is why this does
+   not copy ElevenLabs' carousel, where the centre is large and the sides are
+   cropped afterthoughts. */
+.occ-grid{ grid-template-columns:repeat(3,1fr); gap:clamp(18px,3.4vw,52px) !important;
+  padding:clamp(18px,4vw,48px) clamp(16px,4vw,44px) clamp(30px,5vw,64px) !important;
+  align-items:start; }
 .occ-cell{ text-align:center; }
-.occ-orb{ display:flex; justify-content:center; }
-.occ-orb .orb{ width:clamp(120px,17vw,230px); aspect-ratio:1;
-  transition:transform .35s var(--ease), box-shadow .35s ease; }
+.occ-orb{ position:relative; display:flex; justify-content:center; z-index:0; }
+.occ-orb .orb{ position:relative; z-index:1;
+  width:clamp(120px,17vw,218px); aspect-ratio:1;
+  box-shadow:0 18px 30px -26px rgba(18,24,28,.30) !important;
+  transition:transform .4s var(--ease), box-shadow .4s var(--ease); }
+
+/* the ground it stands on */
+.occ-orb::after{
+  content:""; position:absolute; z-index:0;
+  left:50%; bottom:-5%; width:74%; height:15%;
+  transform:translateX(-44%);          /* light upper-left, so cast lower-right */
+  background:radial-gradient(closest-side, rgba(18,24,28,.34), rgba(18,24,28,0) 74%);
+  filter:blur(8px); pointer-events:none;
+  transition:transform .4s var(--ease), opacity .4s var(--ease);
+}
+
+/* placed, not plotted */
+.occ-grid .occ-cell:nth-child(2){ padding-top:clamp(14px,2.6vw,34px) }
+.occ-grid .occ-cell:nth-child(3){ padding-top:clamp(5px,1vw,13px) }
+
 .occ-cell:nth-child(1) .occ-orb .orb{ animation:orb-bob 8.6s ease-in-out infinite alternate }
 .occ-cell:nth-child(2) .occ-orb .orb{ animation:orb-bob 10.2s ease-in-out infinite alternate-reverse }
 .occ-cell:nth-child(3) .occ-orb .orb{ animation:orb-bob 9.2s ease-in-out infinite alternate }
-.occ-cell:hover .occ-orb .orb{ transform:translateY(-8px) scale(1.03);
-  box-shadow:0 38px 60px -30px rgba(18,24,28,.5); }
+
+/* lifting an object moves it away from its shadow, and the shadow spreads */
+.occ-cell:hover .occ-orb .orb{ transform:translateY(-10px) scale(1.02);
+  box-shadow:0 30px 44px -28px rgba(18,24,28,.38) !important; }
+.occ-cell:hover .occ-orb::after{ transform:translateX(-44%) scale(1.13); opacity:.62 }
+
 .occ-cap{ font-family:var(--display); font-weight:400 !important; letter-spacing:-.02em;
-  font-size:1.3rem !important; margin-top:22px !important; }
+  font-size:1.3rem !important; margin-top:clamp(20px,2.4vw,30px) !important; }
 .occ-sub{ max-width:24ch; margin-left:auto !important; margin-right:auto !important; }
 @media(max-width:760px){
   .occ-grid{ grid-template-columns:1fr 1fr 1fr !important; gap:8px !important;
-    padding:0 14px !important; }
+    padding:14px 14px 24px !important; }
   /* the 120px floor above would overflow a 375px phone, and body hides
      overflow-x, so it would clip the captions rather than show a scrollbar */
   .occ-orb .orb{ width:min(26vw,150px) !important; }
-  .occ-cap{ font-size:1rem !important; margin-top:14px !important }
+  .occ-orb::after{ filter:blur(5px); height:13% }
+  .occ-grid .occ-cell:nth-child(2){ padding-top:12px }
+  .occ-grid .occ-cell:nth-child(3){ padding-top:5px }
+  .occ-cap{ font-size:1rem !important; margin-top:12px !important }
   .occ-sub{ font-size:.8rem; max-width:16ch }
 }
-@media(prefers-reduced-motion:reduce){ .occ-orb .orb{ animation:none !important } }
+@media(prefers-reduced-motion:reduce){
+  .occ-orb .orb{ animation:none !important }
+  .occ-cell:hover .occ-orb .orb{ transform:none }
+  .occ-cell:hover .occ-orb::after{ transform:translateX(-44%) }
+}
 
 /* == POLISH PASS: motion, targets, glass, radius hierarchy ==============
    Against the design notes. Three things we genuinely failed: the header
@@ -236,8 +315,6 @@ h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing
   transform:translateY(1px) scale(.985);
 }
 .nav-cta:hover{ box-shadow:0 10px 24px -12px var(--turq) !important; transform:translateY(-1px) }
-.kv-row .kv-play{ transition:transform .22s var(--ease), background-color .22s var(--ease) }
-.kv-row:hover .kv-play{ transform:scale(1.08); background:var(--turq-soft) !important }
 .step{ transition:border-color .3s var(--ease), box-shadow .35s var(--ease) }
 .step:hover{ border-color:var(--turq-soft) !important;
   box-shadow:0 20px 40px -30px rgba(18,24,28,.35) !important }

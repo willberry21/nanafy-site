@@ -655,18 +655,40 @@
             <li><span class="tick">✦</span><div><b>Yours to keep and to share.</b> Revisit it any time, pass it to family, or turn it into a printed keepsake down the road.</div></li>
           </ul>
         </div>
+        <!-- Real memories from the sample keepsake, and the spoken one plays.
+             This was a painted screenshot with four dead play buttons; a
+             visitor who presses one and gets nothing learns the whole page is
+             a mock-up. Same person as /example, so the site stops inventing a
+             second fictional family. -->
         <div class="keep-visual reveal">
           <div class="kv-head">
-            <div class="avatar"></div>
-            <div>
-              <div class="kv-name">Remembering Nana</div>
-              <div class="kv-sub">23 stories gathered · 1953–2020</div>
-            </div>
+            <p class="kv-name">Marion Hale</p>
+            <p class="kv-sub">1939&ndash;2026 &middot; 41 memories gathered in one afternoon</p>
           </div>
-          <div class="kv-row"><div class="kv-play">▶</div><div class="kv-txt">“The Sunday sauce recipe, in her own voice.” <span>— Marcus, 0:47</span></div></div>
-          <div class="kv-row"><div class="kv-play">▶</div><div class="kv-txt">“How she met Grandpa at the bus stop.” <span>— Elena, 1:12</span></div></div>
-          <div class="kv-row"><div class="kv-play">✎</div><div class="kv-txt">“She taught me to always send the thank-you note.” <span>— written by June</span></div></div>
-          <div class="kv-row"><div class="kv-play">▶</div><div class="kv-txt">“The song she hummed while gardening.” <span>— Theo, 0:31</span></div></div>
+
+          <div class="kv-row kv-voice" data-voice="/audio/paul.m4a" data-seconds="14">
+            <button class="kv-play" type="button" aria-label="Play Paul&rsquo;s memory"></button>
+            <div class="kv-body">
+              <div class="kv-bars"></div>
+              <p class="kv-who">Paul Hale <span>&middot; her son</span></p>
+            </div>
+            <span class="kv-time">0:14</span>
+          </div>
+
+          <div class="kv-row">
+            <p class="kv-txt">&ldquo;She taught me to drive in the church parking lot. Brought a
+              thermos and graded me out of ten.&rdquo;</p>
+            <p class="kv-who">Tessa Hale <span>&middot; her granddaughter</span></p>
+          </div>
+
+          <div class="kv-row">
+            <p class="kv-txt">&ldquo;Nothing good happens to a closed door.&rdquo; She meant it about
+              the house and she meant it about people.</p>
+            <p class="kv-who">June Alvarez <span>&middot; her friend from the choir</span></p>
+          </div>
+
+          <p class="kv-note">A sample keepsake &mdash; the spoken memory is read by a computer.
+            <a href="/example/">See the whole thing &rarr;</a></p>
         </div>
       </div>
     </div>
@@ -697,6 +719,7 @@
 
 <script src="js/orbs.js" defer></script>
 <script src="/js/scatter.js" defer></script>
+<script src="/js/voice.js" defer></script>
 <script>
   // Reveal-on-scroll
   (function () {
