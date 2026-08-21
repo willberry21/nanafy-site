@@ -38,6 +38,24 @@
   var ctx = cv.getContext('2d');
   var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* Three speeds, because "slightly faster" pulls on three different things:
+       k      how quickly each mark reaches its own target
+       chase  how closely the target follows the scroll (lower = more lag)
+       rate   the floor on how fast the whole sequence can play, in units/sec
+     ?scatter=calm | quick | quicker overrides the default, so the choice can
+     be made by feel rather than by me guessing. Temporary — delete the lookup
+     once it is settled. */
+  var SPEEDS = {
+    calm:    { k: 10, chase: 5,  rate: 1.15 },
+    quick:   { k: 15, chase: 11, rate: 1.75 },
+    quicker: { k: 22, chase: 17, rate: 2.60 }
+  };
+  var SPEED = SPEEDS.quick;
+  try {
+    var want = new URLSearchParams(location.search).get('scatter');
+    if (want && SPEEDS[want]) SPEED = SPEEDS[want];
+  } catch (e) {}
+
   /* Half & half, muted: these are people, not confetti */
   var WRITTEN = [38, 52, 56];   /* the ink they are gathered into */
   var INKS = [
@@ -77,9 +95,12 @@
            compass rose. */
         ga: (i / COUNT) * Math.PI * 2 + (rnd() - 0.5) * 0.55,
         gr: (rnd() < 0.16 ? 0.42 : 0.80 + rnd() * 0.34),
-        /* its own spring, so no two marks arrive together */
-        k: 11 + rnd() * 13,
-        damp: 5.0 + rnd() * 2.2,
+        /* its own spring, so no two marks arrive together. Damping is derived
+           from k rather than rolled separately: critical damping is 2*sqrt(k),
+           and holding a constant fraction of it keeps the same slight
+           overshoot whatever the stiffness — so changing speed changes speed,
+           and not bounciness. */
+        kBase: 1.0 + rnd() * 1.15,
         /* its own wander, at frequencies that do not line up */
         w1: rnd() * 6.283, w2: rnd() * 6.283,
         wf1: 0.21 + rnd() * 0.17, wf2: 0.09 + rnd() * 0.08,
@@ -148,8 +169,10 @@
 
       /* spring toward the target, damped. Its own k and damping mean its own
          arrival time and its own small overshoot. */
-      m.vx += ((tg.x + wx - m.x) * m.k - m.vx * m.damp) * dt;
-      m.vy += ((tg.y + wy - m.y) * m.k - m.vy * m.damp) * dt;
+      var k = m.kBase * SPEED.k;
+      var damp = 2 * Math.sqrt(k) * 0.80;      /* just under critical */
+      m.vx += ((tg.x + wx - m.x) * k - m.vx * damp) * dt;
+      m.vy += ((tg.y + wy - m.y) * k - m.vy * damp) * dt;
       m.x += m.vx * dt;
       m.y += m.vy * dt;
 
@@ -213,8 +236,8 @@
 
   /* Scroll sets where we are going; the loop decides how fast we get there,
      and the springs decide what that looks like. */
-  var MAX_RATE = 1.45;   /* progress units per second — a 0→1 sweep floors at ~690ms */
-  var SMOOTH = 7;        /* how eagerly the target chases the scroll */
+  var MAX_RATE = SPEED.rate;
+  var SMOOTH = SPEED.chase;
 
   var cur = progress(), tgt = cur, raf = 0, lastT = 0, inView = true;
   step(cur, 0.4);        /* settle onto the opening arrangement */
