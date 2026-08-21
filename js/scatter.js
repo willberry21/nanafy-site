@@ -6,12 +6,16 @@
 
      a room       clustered, overlapping, unordered
      scattered    everyone goes home and the pieces spread
-     gathered     they come back, one at a time, into an even ring
+     gathered     they come back, one at a time, into ordered rows
 
    The first two beats are the sentence beside it. The third is the product:
-   the pieces do not stay scattered, because something gathered them. Evenness
-   is what carries it — a random spread reads as loss, an ordered one reads as
-   kept. It is driven by scroll
+   the pieces do not stay scattered, because something gathered them. Order is
+   what carries it — a random spread reads as loss, ordered rows read as kept.
+
+   The gathered form was a ring first, and a ring with a hole in the middle
+   reads as a wreath or a loading spinner. Rows read as entries on a page,
+   which is what a keepsake actually is, and they keep every mark separate —
+   'every voice' matters more here than 'one blob'. It is driven by scroll
    position rather than by a clock, for two reasons: the sentence is about
    time passing, and scrolling IS the reader's time passing; and it means the
    page's one quiet moment is not permanently in motion. Stop scrolling and it
@@ -60,13 +64,17 @@
            room is sized off the SHORT side so it is always round, while the
            scatter uses both so it fills whatever shape it is given. */
         a: a, r: r, aw: aw, rw: rw,
-        /* where it ends up: an even share of the ring, with a little jitter so
-           it reads as gathered rather than as a machine part */
-        ga: (i / COUNT) * Math.PI * 2 + (rnd() - 0.5) * 0.16,
-        gr: 0.94 + rnd() * 0.12,
+        /* where it ends up: a slot in the grid, with a little jitter so it
+           reads as gathered by someone rather than as a machine part */
+        gi: i,
+        gjx: (rnd() - 0.5) * 0.30,
+        gjy: (rnd() - 0.5) * 0.30,
         size: 4.4 + rnd() * 7.6,
         ink: INKS[Math.floor(rnd() * INKS.length)],
-        lag: rnd() * 0.42            /* they do not all leave at once */
+        /* they do not all move at once — but at 0.42 most marks had not
+           started until the scroll was nearly half done, so the first third
+           of the band looked frozen */
+        lag: rnd() * 0.16
       });
     }
   }
@@ -79,10 +87,25 @@
     H = Math.round(rect.height);
     cv.width = Math.round(W * dpr);
     cv.height = Math.round(H * dpr);
+    layout();
     return true;
   }
 
-  function ease(t) { return t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2; }
+  /* Leaving starts at once — an ease-in-out spent the first fifth of the
+     journey barely moving, which is what made the top of the band look frozen.
+     Arriving is eased at both ends, because settling should look like settling. */
+  function easeOut(t) { return 1 - Math.pow(1 - t, 2.4); }
+  function easeInOut(t) { return t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2; }
+
+  /* the ordered rows they end up in */
+  var GRID = { cols: 8, rows: 5, cell: 0, x: 0, y: 0 };
+  function layout() {
+    GRID.cols = W > H * 1.6 ? 10 : 8;
+    GRID.rows = Math.ceil(COUNT / GRID.cols);
+    GRID.cell = Math.min(W * 0.70 / GRID.cols, H * 0.74 / GRID.rows);
+    GRID.x = (W - GRID.cell * GRID.cols) / 2;
+    GRID.y = (H - GRID.cell * GRID.rows) / 2;
+  }
 
   function draw(p) {
     if (!W) return;
@@ -96,26 +119,35 @@
       var base = W < H ? W : H;
       var hx = W / 2 + Math.cos(m.a) * m.r * 0.19 * base;
       var hy = H / 2 + Math.sin(m.a) * m.r * 0.19 * base;
-      var ax = W / 2 + Math.cos(m.aw) * m.rw * 0.40 * W;
-      var ay = H / 2 + Math.sin(m.aw) * m.rw * 0.34 * H;
-      var gx = W / 2 + Math.cos(m.ga) * m.gr * 0.27 * base;
-      var gy = H / 2 + Math.sin(m.ga) * m.gr * 0.27 * base;
+      var ax = W / 2 + Math.cos(m.aw) * m.rw * 0.43 * W;
+      var ay = H / 2 + Math.sin(m.aw) * m.rw * 0.36 * H;
+      var gx = GRID.x + (m.gi % GRID.cols + 0.5 + m.gjx) * GRID.cell;
+      var gy = GRID.y + (Math.floor(m.gi / GRID.cols) + 0.5 + m.gjy) * GRID.cell;
 
       /* Never fades out — it has to be present the whole time the band is on
          screen — so every beat changes the arrangement, not the presence. */
       var x, y, alpha;
       if (t < 0.5) {                      /* the room comes apart */
-        var e1 = ease(t / 0.5);
+        var e1 = easeOut(t / 0.5);
         x = hx + (ax - hx) * e1;
         y = hy + (ay - hy) * e1;
         alpha = 0.95 - 0.33 * e1;
       } else {                            /* and is gathered back */
-        var e2 = ease((t - 0.5) / 0.5);
+        var e2 = easeInOut((t - 0.5) / 0.5);
         x = ax + (gx - ax) * e2;
         y = ay + (gy - ay) * e2;
         alpha = 0.62 + 0.33 * e2;
       }
-      var rad = m.size * (1 - 0.10 * Math.sin(t * Math.PI));
+      /* smaller once gathered, or the rows blur into one smear */
+      var rad = m.size * (1 - 0.46 * (t < 0.5 ? 0 : easeInOut((t - 0.5) / 0.5)));
+      /* A mark cut off by the canvas edge reads as a bug rather than as
+         leaving, and how much room the travel above needs depends on the
+         canvas shape — which is wide and short on a phone. So clamp, and let
+         the geometry be approximate rather than the rendering be wrong. */
+      var edge = rad * 2.4;
+      if (x < edge) x = edge; else if (x > W - edge) x = W - edge;
+      if (y < edge) y = edge; else if (y > H - edge) y = H - edge;
+
       var g = ctx.createRadialGradient(x, y, 0, x, y, rad * 2.4);
       g.addColorStop(0, 'rgba(' + m.ink + ',' + alpha.toFixed(3) + ')');
       g.addColorStop(0.5, 'rgba(' + m.ink + ',' + (alpha * 0.34).toFixed(3) + ')');
