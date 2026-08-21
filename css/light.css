@@ -80,6 +80,7 @@ a{ color:inherit; }
 .btn,.hbtn,.nav-cta,button,.prof-chip,.prof-link,
 .topnav-center a,.topnav-right a,.topnav-links a{
   min-height:44px; display:inline-flex; align-items:center; justify-content:center;
+  white-space:nowrap;   /* "Sign in" was breaking across two lines */
 }
 .btn,.hbtn,button[type="submit"],input,select,textarea{ min-height:48px; }
 textarea{ min-height:96px; align-items:flex-start; }

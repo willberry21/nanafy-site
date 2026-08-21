@@ -33,10 +33,37 @@ h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing
 }
 .hero-n::before{ background:none !important; }
 /* The bloom in the corner turns. Slowly enough that you notice it only if you
-   stay — a little under two minutes for a full revolution — and lifted from .028
-   to .05 so the movement is perceptible at all. */
-.hero-n-mark svg g{ fill:rgba(18,24,28,.05) !important; }
+   stay — a little under two minutes for a full revolution.
+
+   And it carries the faintest colour. One tint across the whole flower would
+   not have read as colour at this opacity; it would have read as a smudge.
+   Each petal takes its own hue instead, stepping around turquoise → violet →
+   amber → back, with neighbours kept close so it shimmers rather than stripes.
+   Because the flower is turning, the colour travels: the same petal is a
+   different hue against the corner a minute later.
+
+   Two dials if this is wrong: the alphas below (~.07–.095) and how far the
+   hues spread. Setting every fill to rgba(18,24,28,.05) puts it back to grey. */
+.hero-n-mark svg g{ fill:rgba(18,24,28,.05); }
+.hero-n-mark svg g path:nth-child(1){ fill:rgba(15,176,164,0.085) }
+.hero-n-mark svg g path:nth-child(2){ fill:rgba(41,201,187,0.072) }
+.hero-n-mark svg g path:nth-child(3){ fill:rgba(95,169,211,0.09) }
+.hero-n-mark svg g path:nth-child(4){ fill:rgba(135,133,232,0.078) }
+.hero-n-mark svg g path:nth-child(5){ fill:rgba(163,124,233,0.095) }
+.hero-n-mark svg g path:nth-child(6){ fill:rgba(196,140,203,0.07) }
+.hero-n-mark svg g path:nth-child(7){ fill:rgba(224,137,168,0.088) }
+.hero-n-mark svg g path:nth-child(8){ fill:rgba(246,161,120,0.075) }
+.hero-n-mark svg g path:nth-child(9){ fill:rgba(247,182,130,0.092) }
+.hero-n-mark svg g path:nth-child(10){ fill:rgba(222,195,150,0.068) }
+.hero-n-mark svg g path:nth-child(11){ fill:rgba(173,200,170,0.086) }
+.hero-n-mark svg g path:nth-child(12){ fill:rgba(103,196,186,0.08) }
+.hero-n-mark svg g circle{ fill:rgba(250,190,120,.10) }   /* the seed head, warmer */
 .hero-n-mark{ top:-16% !important; right:-10% !important; }
+/* Between about 900 and 1200px the bloom reaches across the headline. At 8%
+   it does no real harm, but it muddies the letterforms — so it gets smaller
+   and further out until there is room for both. */
+@media(max-width:1200px){ .hero-n-mark{ width:52vmin !important; right:-16% !important } }
+@media(max-width:900px){ .hero-n-mark{ width:46vmin !important; right:-20% !important; top:-10% !important } }
 .hero-n-mark svg{ display:block; animation:bloom-turn 108s linear infinite; transform-origin:50% 50%; }
 @keyframes bloom-turn{ from{ transform:rotate(0deg) } to{ transform:rotate(360deg) } }
 /* Type only, since the orb came out. A single column with the measure held
@@ -292,7 +319,8 @@ h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing
   backdrop-filter:saturate(180%) blur(14px);
   border-bottom:1px solid rgba(18,24,28,.06);
 }
-.topbar-wrap .topbar{ max-width:1080px; margin:0 auto; padding:14px 0 12px; }
+.topbar-wrap .topbar{ max-width:1080px; margin:0 auto; padding:14px 0 12px;
+  gap:18px;   /* space-between alone let "My keepsakes" and "Sign in" touch */ }
 @supports not (backdrop-filter:blur(2px)){ .topbar-wrap{ background:rgba(253,252,252,.96) } }
 /* on phones the header is two rows (122px). Glued to the top that eats a
    third of the screen, so it only sticks where it is a single row. */
@@ -301,6 +329,7 @@ h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing
 /* ── every control clears a thumb, at every width, not just on phones ── */
 .nav-cta,.topnav-center a,.topnav-right a,.prof-link,.prof-chip,.topnav-links a{
   min-height:44px; display:inline-flex; align-items:center; justify-content:center;
+  white-space:nowrap;   /* "Sign in" was breaking across two lines */
 }
 .hbtn,.btn,#gateForm button,.signup-form button{ min-height:48px; display:inline-flex;
   align-items:center; justify-content:center; }
