@@ -6,28 +6,29 @@
 
      a room       clustered, overlapping, unordered
      scattered    everyone goes home and the pieces spread
-     gathered     they come back, one at a time, as lines on a page
+     gathered     they come back into a loose ring — kept, and still moving
 
-   The first two beats are the sentence beside it. The third is the product:
-   the pieces do not stay scattered, because something gathered them. Order is
-   what carries it — a random spread reads as loss, ordered rows read as kept.
+   HOW, because the how is what went wrong three times. Scroll does not move
+   the marks. Scroll moves a TARGET, and each mark is pulled toward its own
+   target by a spring, with its own stiffness and its own damping:
 
-   Two earlier attempts at the gathered form failed for the same reason. A ring
-   reads as a wreath or a loading spinner. A uniform grid reads as a loading
-   skeleton — arranged, but not kept, because nothing contains it.
+     ax = (target - x) * k  -  vx * damping  +  wander
 
-   So: lines of writing. Rows of uneven length with word-shaped gaps and a
-   ragged right edge. And the COLOUR converges as the position does — many
-   hues scattered, mostly one ink once written. Multicoloured dots in rows read
-   as a pattern no matter how they are spaced, because real writing is one ink;
-   a quarter of each mark's own colour is left behind so the page still has
-   people in it rather than type. It is driven by scroll
-   position rather than by a clock, for two reasons: the sentence is about
-   time passing, and scrolling IS the reader's time passing; and it means the
-   page's one quiet moment is not permanently in motion. Stop scrolling and it
-   stops.
+   Two consequences, both of them the point:
 
-   Markup:  <canvas data-scatter></canvas>
+   · A spring cannot snap. Marks with softer springs arrive later than stiff
+     ones and overshoot slightly before settling, so the formation assembles
+     instead of appearing. Lerping every mark along a fixed path at the same
+     rate is what made the earlier versions "snap into a grid".
+
+   · The wander never stops. Two summed sines per axis, at frequencies that do
+     not divide into each other, so the resting state keeps breathing. This is
+     the part that matters most: ANY frozen arrangement of uniform dots reads
+     as a diagram, which is why a ring read as a wreath and a lattice read as
+     a loading skeleton. Kept things are still alive.
+
+   The paced target from the previous version stays, so a violent flick still
+   cannot drag the whole sequence through in four frames.
 --------------------------------------------------------------------------- */
 (function () {
   'use strict';
@@ -45,7 +46,7 @@
   ];
   var COUNT = 38;
   var marks = [];
-  var W = 0, H = 0, dpr = 1;
+  var W = 0, H = 0, dpr = 1, clock = 0;
 
   /* A deterministic shuffle, so the arrangement is the same on every visit —
      a composition, not a new throw of dice each reload. */
@@ -71,17 +72,22 @@
            room is sized off the SHORT side so it is always round, while the
            scatter uses both so it fills whatever shape it is given. */
         a: a, r: r, aw: aw, rw: rw,
-        /* where it ends up: a slot in the grid, with a little jitter so it
-           reads as gathered by someone rather than as a machine part */
-        gi: i,
-        gjx: (rnd() - 0.5) * 0.30,
-        gjy: (rnd() - 0.5) * 0.30,
+        /* where it ends up: a place in a loose ring. Uneven radius, and a
+           few standing inside it, so it reads as a gathering and not as a
+           compass rose. */
+        ga: (i / COUNT) * Math.PI * 2 + (rnd() - 0.5) * 0.55,
+        gr: (rnd() < 0.16 ? 0.42 : 0.80 + rnd() * 0.34),
+        /* its own spring, so no two marks arrive together */
+        k: 11 + rnd() * 13,
+        damp: 5.0 + rnd() * 2.2,
+        /* its own wander, at frequencies that do not line up */
+        w1: rnd() * 6.283, w2: rnd() * 6.283,
+        wf1: 0.21 + rnd() * 0.17, wf2: 0.09 + rnd() * 0.08,
+        wamp: 0.55 + rnd() * 0.85,
+        x: 0, y: 0, vx: 0, vy: 0, placed: false,
         size: 4.4 + rnd() * 7.6,
         ink: INKS[Math.floor(rnd() * INKS.length)],
-        /* they do not all move at once — but at 0.42 most marks had not
-           started until the scroll was nearly half done, so the first third
-           of the band looked frozen */
-        lag: rnd() * 0.16
+        lag: rnd() * 0.10
       });
     }
   }
@@ -94,108 +100,95 @@
     H = Math.round(rect.height);
     cv.width = Math.round(W * dpr);
     cv.height = Math.round(H * dpr);
-    layout();
     return true;
   }
 
-  /* Leaving starts at once — an ease-in-out spent the first fifth of the
-     journey barely moving, which is what made the top of the band look frozen.
-     Arriving is eased at both ends, because settling should look like settling. */
-  function easeOut(t) { return 1 - Math.pow(1 - t, 2.4); }
-  function easeInOut(t) { return t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2; }
+  /* Where a mark WANTS to be at this point in the sequence. */
+  function targetOf(m, p) {
+    var t = (p - m.lag) / (1 - m.lag);
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    var base = W < H ? W : H;
 
-  /* Where they end up: lines of writing. Slots are worked out once per size
-     and each mark keeps its index, so the page is the same page every time. */
-  var PAGE = [];
-  function layout() {
-    PAGE = [];
-    var wide = W > H * 1.6;
-    var lines = wide ? 4 : 6;
-    var perLine = Math.ceil(COUNT / lines);
-    var lineH = Math.min(H * 0.74 / lines, W * 0.62 / perLine * 1.5);
-    var step = Math.min(W * 0.60 / (perLine + 1.6), lineH * 0.40);
-    var top = (H - lineH * (lines - 1)) / 2;
-    var left = (W - step * (perLine + 1)) / 2;
+    var hx = W / 2 + Math.cos(m.a) * m.r * 0.19 * base;
+    var hy = H / 2 + Math.sin(m.a) * m.r * 0.19 * base;
+    var ax = W / 2 + Math.cos(m.aw) * m.rw * 0.43 * W;
+    var ay = H / 2 + Math.sin(m.aw) * m.rw * 0.36 * H;
+    var gx = W / 2 + Math.cos(m.ga) * m.gr * 0.31 * base;
+    var gy = H / 2 + Math.sin(m.ga) * m.gr * 0.31 * base;
 
-    /* seeded from the same generator, so the ragged edge is composed */
-    var seed2 = 987654321;
-    function r2() { seed2 = (seed2 * 1103515245 + 12345) & 0x7fffffff; return seed2 / 0x7fffffff; }
-
-    var placed = 0;
-    for (var L = 0; L < lines && placed < COUNT; L++) {
-      /* uneven line lengths and a short last line: a paragraph, not a block */
-      var len = Math.round(perLine * (L === lines - 1 ? 0.45 + r2() * 0.3
-                                                      : 0.82 + r2() * 0.26));
-      if (len < 2) len = 2;
-      var x = left, gapNext = 2 + Math.floor(r2() * 3);
-      for (var k = 0; k < len && placed < COUNT; k++) {
-        PAGE.push({ x: x, y: top + L * lineH });
-        x += step;
-        if (--gapNext === 0) { x += step * 0.62; gapNext = 2 + Math.floor(r2() * 3); }
-        placed++;
-      }
+    /* Straight blends between the three. The spring supplies the easing, so
+       easing it here as well would only make it sluggish. */
+    if (t < 0.5) {
+      var e = t / 0.5;
+      return { x: hx + (ax - hx) * e, y: hy + (ay - hy) * e,
+               alpha: 0.95 - 0.33 * e, rad: 1, mix: 0 };
     }
-    /* anyone left over joins the end of the last line */
-    while (PAGE.length < COUNT) {
-      var lastp = PAGE[PAGE.length - 1];
-      PAGE.push({ x: lastp.x + step, y: lastp.y });
+    var g = (t - 0.5) / 0.5;
+    return { x: ax + (gx - ax) * g, y: ay + (gy - ay) * g,
+             alpha: 0.62 + 0.33 * g, rad: 1 - 0.12 * g, mix: g };
+  }
+
+  function step(p, dt) {
+    if (!W) return;
+    if (dt > 0.05) dt = 0.05;
+    clock += dt;
+
+    for (var i = 0; i < marks.length; i++) {
+      var m = marks[i];
+      var tg = targetOf(m, p);
+
+      /* the wander: two sines per axis that never come back into phase, so it
+         breathes at rest instead of freezing */
+      var wx = (Math.sin(clock * m.wf1 * 6.283 + m.w1) +
+                Math.sin(clock * m.wf2 * 6.283 + m.w2) * 0.6) * m.wamp * 3.4;
+      var wy = (Math.cos(clock * m.wf2 * 6.283 + m.w1 * 1.7) +
+                Math.cos(clock * m.wf1 * 6.283 + m.w2 * 0.8) * 0.6) * m.wamp * 3.4;
+
+      if (!m.placed) { m.x = tg.x; m.y = tg.y; m.placed = true; }
+
+      /* spring toward the target, damped. Its own k and damping mean its own
+         arrival time and its own small overshoot. */
+      m.vx += ((tg.x + wx - m.x) * m.k - m.vx * m.damp) * dt;
+      m.vy += ((tg.y + wy - m.y) * m.k - m.vy * m.damp) * dt;
+      m.x += m.vx * dt;
+      m.y += m.vy * dt;
+
+      m.alpha = tg.alpha;
+      m.radMul = tg.rad;
+      m.mix = tg.mix;
     }
   }
 
-  function draw(p) {
+  function draw() {
     if (!W) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
+
     for (var i = 0; i < marks.length; i++) {
       var m = marks[i];
-      /* each mark's own share of the journey, so the room empties unevenly */
-      var t = (p - m.lag) / (1 - m.lag);
-      t = t < 0 ? 0 : t > 1 ? 1 : t;
-      var base = W < H ? W : H;
-      var hx = W / 2 + Math.cos(m.a) * m.r * 0.19 * base;
-      var hy = H / 2 + Math.sin(m.a) * m.r * 0.19 * base;
-      var ax = W / 2 + Math.cos(m.aw) * m.rw * 0.43 * W;
-      var ay = H / 2 + Math.sin(m.aw) * m.rw * 0.36 * H;
-      var slot = PAGE[m.gi] || PAGE[0];
-      var gx = slot.x + m.gjx * 3;
-      var gy = slot.y + m.gjy * 3;
+      var rad = m.size * (m.radMul === undefined ? 1 : m.radMul);
 
-      /* Never fades out — it has to be present the whole time the band is on
-         screen — so every beat changes the arrangement, not the presence. */
-      var x, y, alpha;
-      if (t < 0.5) {                      /* the room comes apart */
-        var e1 = easeOut(t / 0.5);
-        x = hx + (ax - hx) * e1;
-        y = hy + (ay - hy) * e1;
-        alpha = 0.95 - 0.33 * e1;
-      } else {                            /* and is gathered back */
-        var e2 = easeInOut((t - 0.5) / 0.5);
-        x = ax + (gx - ax) * e2;
-        y = ay + (gy - ay) * e2;
-        alpha = 0.62 + 0.33 * e2;
-      }
-      /* smaller once gathered, or the rows blur into one smear */
-      var rad = m.size * (1 - 0.62 * (t < 0.5 ? 0 : easeInOut((t - 0.5) / 0.5)));
-      /* A mark cut off by the canvas edge reads as a bug rather than as
-         leaving, and how much room the travel above needs depends on the
-         canvas shape — which is wide and short on a phone. So clamp, and let
-         the geometry be approximate rather than the rendering be wrong. */
-      var edge = rad * 2.4;
-      if (x < edge) x = edge; else if (x > W - edge) x = W - edge;
-      if (y < edge) y = edge; else if (y > H - edge) y = H - edge;
-
-      /* many voices while scattered, mostly one hand once written down */
+      /* many voices while scattered, a little more of one hand once gathered */
       var ink = m.ink;
-      if (t > 0.5) {
-        var w = easeInOut((t - 0.5) / 0.5) * 0.75;
+      if (m.mix) {
+        var w = m.mix * 0.34;
         ink = [Math.round(m.ink[0] + (WRITTEN[0] - m.ink[0]) * w),
                Math.round(m.ink[1] + (WRITTEN[1] - m.ink[1]) * w),
                Math.round(m.ink[2] + (WRITTEN[2] - m.ink[2]) * w)];
       }
 
+      /* a mark cut off by the canvas edge reads as a bug rather than as
+         leaving, and how much room the travel needs depends on the shape of
+         the canvas — so clamp, and let the geometry be approximate */
+      var edge = rad * 2.4;
+      var x = m.x, y = m.y;
+      if (x < edge) x = edge; else if (x > W - edge) x = W - edge;
+      if (y < edge) y = edge; else if (y > H - edge) y = H - edge;
+
+      var a = m.alpha === undefined ? 0.95 : m.alpha;
       var g = ctx.createRadialGradient(x, y, 0, x, y, rad * 2.4);
-      g.addColorStop(0, 'rgba(' + ink + ',' + alpha.toFixed(3) + ')');
-      g.addColorStop(0.5, 'rgba(' + ink + ',' + (alpha * 0.34).toFixed(3) + ')');
+      g.addColorStop(0, 'rgba(' + ink + ',' + a.toFixed(3) + ')');
+      g.addColorStop(0.5, 'rgba(' + ink + ',' + (a * 0.34).toFixed(3) + ')');
       g.addColorStop(1, 'rgba(' + ink + ',0)');
       ctx.fillStyle = g;
       ctx.beginPath();
@@ -216,30 +209,36 @@
   build();
   if (!measure()) return;
 
-  if (still) { draw(1); return; }   /* held gathered: the beat that matters */   /* held mid-scatter: the idea, unmoving */
+  if (still) { step(1, 0.4); draw(); return; }   /* held gathered, unmoving */
 
-  /* Scroll sets where we are going; the loop decides how fast we get there. */
+  /* Scroll sets where we are going; the loop decides how fast we get there,
+     and the springs decide what that looks like. */
   var MAX_RATE = 1.45;   /* progress units per second — a 0→1 sweep floors at ~690ms */
-  var SMOOTH = 7;        /* how eagerly it chases the target */
-  var EPS = 0.0015;
+  var SMOOTH = 7;        /* how eagerly the target chases the scroll */
 
   var cur = progress(), tgt = cur, raf = 0, lastT = 0, inView = true;
-  draw(cur);
+  step(cur, 0.4);        /* settle onto the opening arrangement */
+  draw();
 
   function loop(now) {
     var dt = (now - lastT) / 1000;
     lastT = now;
-    if (dt > 0.05) dt = 0.05;      /* a backgrounded tab must not teleport it */
+    if (dt > 0.05) dt = 0.05;     /* a backgrounded tab must not teleport it */
     if (dt <= 0) dt = 0.016;
 
     var d = tgt - cur;
-    var step = d * (1 - Math.exp(-SMOOTH * dt));
+    var move = d * (1 - Math.exp(-SMOOTH * dt));
     var cap = MAX_RATE * dt;
-    if (step > cap) step = cap; else if (step < -cap) step = -cap;
-    cur += step;
-    draw(cur);
+    if (move > cap) move = cap; else if (move < -cap) move = -cap;
+    cur += move;
 
-    if (inView && Math.abs(tgt - cur) > EPS) raf = requestAnimationFrame(loop);
+    step(cur, dt);
+    draw();
+
+    /* Unlike the old version this does NOT stop when the target is reached:
+       the wander is the whole reason the resting state does not read as a
+       diagram, so it runs for as long as the band is on screen. */
+    if (inView) raf = requestAnimationFrame(loop);
     else raf = 0;
   }
 
@@ -249,13 +248,23 @@
     raf = requestAnimationFrame(loop);
   }
 
-  function onScroll() {
-    tgt = progress();
-    start();
+  function onScroll() { tgt = progress(); start(); }
+
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) {
+      inView = es[0].isIntersecting;
+      if (inView) start();
+    }, { rootMargin: '80px' }).observe(cv);
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', function () {
-    if (measure()) { cur = tgt = progress(); draw(cur); }
+    if (measure()) {
+      for (var i = 0; i < marks.length; i++) marks[i].placed = false;
+      cur = tgt = progress();
+      step(cur, 0.4);
+      draw();
+    }
   });
+  start();
 })();
