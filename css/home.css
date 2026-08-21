@@ -55,9 +55,8 @@ h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing
 }
 
 /* ── the spheres themselves ── */
-.orb{ position:relative; border-radius:50%; overflow:hidden; flex:none; display:block;
-  box-shadow:0 26px 46px -28px rgba(18,24,28,.40), 0 3px 10px -6px rgba(18,24,28,.18); }
-.orb canvas{ display:block; width:100%; height:100%; border-radius:50%; }
+/* base .orb now lives in css/light.css — clipping and shadow belong to the
+   old ball only, and this layer must not put them back. */
 .orb-hero{ width:clamp(230px,33vw,400px); aspect-ratio:1; }
 @keyframes orb-bob{ from{ transform:translateY(0) scale(1) } to{ transform:translateY(-12px) scale(1.015) } }
 .orb-hero{ animation:orb-bob 9.4s ease-in-out infinite alternate; }
@@ -66,8 +65,8 @@ h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing
 /* the step numbers sit ON a small sphere instead of a tinted square */
 .step .num{ position:relative; background:none !important; width:60px; height:60px;
   border-radius:50%; display:grid; place-items:center; overflow:visible; }
-.step .num .orb-step{ position:absolute; inset:0; width:100%; height:100%;
-  box-shadow:0 12px 22px -14px rgba(18,24,28,.5); }
+.step .num .orb-step{ position:absolute; inset:0; width:100%; height:100%; }
+:root[data-shape="ball"] .step .num .orb-step{ box-shadow:0 12px 22px -14px rgba(18,24,28,.5); }
 .step .num .num-n{ position:relative; z-index:1; color:#fff; font-family:var(--display);
   font-weight:600; font-size:1.3rem; letter-spacing:0;
   text-shadow:0 1px 2px rgba(18,24,28,.6), 0 0 12px rgba(18,24,28,.45); }
@@ -135,8 +134,8 @@ h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing
 .occ-cell:nth-child(1) .occ-orb .orb{ animation:orb-bob 8.6s ease-in-out infinite alternate }
 .occ-cell:nth-child(2) .occ-orb .orb{ animation:orb-bob 10.2s ease-in-out infinite alternate-reverse }
 .occ-cell:nth-child(3) .occ-orb .orb{ animation:orb-bob 9.2s ease-in-out infinite alternate }
-.occ-cell:hover .occ-orb .orb{ transform:translateY(-8px) scale(1.03);
-  box-shadow:0 38px 60px -30px rgba(18,24,28,.5); }
+.occ-cell:hover .occ-orb .orb{ transform:translateY(-8px) scale(1.03); }
+:root[data-shape="ball"] .occ-cell:hover .occ-orb .orb{ box-shadow:0 38px 60px -30px rgba(18,24,28,.5); }
 .occ-cap{ font-family:var(--display); font-weight:400 !important; letter-spacing:-.02em;
   font-size:1.3rem !important; margin-top:22px !important; }
 .occ-sub{ max-width:24ch; margin-left:auto !important; margin-right:auto !important; }
@@ -194,8 +193,8 @@ h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing
 .step{ transition:border-color .3s var(--ease), box-shadow .35s var(--ease) }
 .step:hover{ border-color:var(--turq-soft) !important;
   box-shadow:0 20px 40px -30px rgba(18,24,28,.35) !important }
-.orb-hero{ transition:box-shadow .4s var(--ease) }
-.orb-hero:hover{ box-shadow:0 34px 60px -26px rgba(18,24,28,.5) }
+:root[data-shape="ball"] .orb-hero{ transition:box-shadow .4s var(--ease) }
+:root[data-shape="ball"] .orb-hero:hover{ box-shadow:0 34px 60px -26px rgba(18,24,28,.5) }
 
 /* keyboard users get the same affordance the mouse does */
 a:focus-visible,button:focus-visible,input:focus-visible{
