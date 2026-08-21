@@ -6,16 +6,22 @@
 
      a room       clustered, overlapping, unordered
      scattered    everyone goes home and the pieces spread
-     gathered     they come back, one at a time, into ordered rows
+     gathered     they come back, one at a time, as lines on a page
 
    The first two beats are the sentence beside it. The third is the product:
    the pieces do not stay scattered, because something gathered them. Order is
    what carries it — a random spread reads as loss, ordered rows read as kept.
 
-   The gathered form was a ring first, and a ring with a hole in the middle
-   reads as a wreath or a loading spinner. Rows read as entries on a page,
-   which is what a keepsake actually is, and they keep every mark separate —
-   'every voice' matters more here than 'one blob'. It is driven by scroll
+   Two earlier attempts at the gathered form failed for the same reason. A ring
+   reads as a wreath or a loading spinner. A uniform grid reads as a loading
+   skeleton — arranged, but not kept, because nothing contains it.
+
+   So: lines of writing. Rows of uneven length with word-shaped gaps and a
+   ragged right edge. And the COLOUR converges as the position does — many
+   hues scattered, mostly one ink once written. Multicoloured dots in rows read
+   as a pattern no matter how they are spaced, because real writing is one ink;
+   a quarter of each mark's own colour is left behind so the page still has
+   people in it rather than type. It is driven by scroll
    position rather than by a clock, for two reasons: the sentence is about
    time passing, and scrolling IS the reader's time passing; and it means the
    page's one quiet moment is not permanently in motion. Stop scrolling and it
@@ -32,6 +38,7 @@
   var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* Half & half, muted: these are people, not confetti */
+  var WRITTEN = [38, 52, 56];   /* the ink they are gathered into */
   var INKS = [
     [15,176,164], [10,122,114], [150,116,244], [224,137,168],
     [250,166,110], [46,206,192], [102,68,176]
@@ -97,14 +104,42 @@
   function easeOut(t) { return 1 - Math.pow(1 - t, 2.4); }
   function easeInOut(t) { return t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2; }
 
-  /* the ordered rows they end up in */
-  var GRID = { cols: 8, rows: 5, cell: 0, x: 0, y: 0 };
+  /* Where they end up: lines of writing. Slots are worked out once per size
+     and each mark keeps its index, so the page is the same page every time. */
+  var PAGE = [];
   function layout() {
-    GRID.cols = W > H * 1.6 ? 10 : 8;
-    GRID.rows = Math.ceil(COUNT / GRID.cols);
-    GRID.cell = Math.min(W * 0.70 / GRID.cols, H * 0.74 / GRID.rows);
-    GRID.x = (W - GRID.cell * GRID.cols) / 2;
-    GRID.y = (H - GRID.cell * GRID.rows) / 2;
+    PAGE = [];
+    var wide = W > H * 1.6;
+    var lines = wide ? 4 : 6;
+    var perLine = Math.ceil(COUNT / lines);
+    var lineH = Math.min(H * 0.74 / lines, W * 0.62 / perLine * 1.5);
+    var step = Math.min(W * 0.60 / (perLine + 1.6), lineH * 0.40);
+    var top = (H - lineH * (lines - 1)) / 2;
+    var left = (W - step * (perLine + 1)) / 2;
+
+    /* seeded from the same generator, so the ragged edge is composed */
+    var seed2 = 987654321;
+    function r2() { seed2 = (seed2 * 1103515245 + 12345) & 0x7fffffff; return seed2 / 0x7fffffff; }
+
+    var placed = 0;
+    for (var L = 0; L < lines && placed < COUNT; L++) {
+      /* uneven line lengths and a short last line: a paragraph, not a block */
+      var len = Math.round(perLine * (L === lines - 1 ? 0.45 + r2() * 0.3
+                                                      : 0.82 + r2() * 0.26));
+      if (len < 2) len = 2;
+      var x = left, gapNext = 2 + Math.floor(r2() * 3);
+      for (var k = 0; k < len && placed < COUNT; k++) {
+        PAGE.push({ x: x, y: top + L * lineH });
+        x += step;
+        if (--gapNext === 0) { x += step * 0.62; gapNext = 2 + Math.floor(r2() * 3); }
+        placed++;
+      }
+    }
+    /* anyone left over joins the end of the last line */
+    while (PAGE.length < COUNT) {
+      var lastp = PAGE[PAGE.length - 1];
+      PAGE.push({ x: lastp.x + step, y: lastp.y });
+    }
   }
 
   function draw(p) {
@@ -121,8 +156,9 @@
       var hy = H / 2 + Math.sin(m.a) * m.r * 0.19 * base;
       var ax = W / 2 + Math.cos(m.aw) * m.rw * 0.43 * W;
       var ay = H / 2 + Math.sin(m.aw) * m.rw * 0.36 * H;
-      var gx = GRID.x + (m.gi % GRID.cols + 0.5 + m.gjx) * GRID.cell;
-      var gy = GRID.y + (Math.floor(m.gi / GRID.cols) + 0.5 + m.gjy) * GRID.cell;
+      var slot = PAGE[m.gi] || PAGE[0];
+      var gx = slot.x + m.gjx * 3;
+      var gy = slot.y + m.gjy * 3;
 
       /* Never fades out — it has to be present the whole time the band is on
          screen — so every beat changes the arrangement, not the presence. */
@@ -139,7 +175,7 @@
         alpha = 0.62 + 0.33 * e2;
       }
       /* smaller once gathered, or the rows blur into one smear */
-      var rad = m.size * (1 - 0.46 * (t < 0.5 ? 0 : easeInOut((t - 0.5) / 0.5)));
+      var rad = m.size * (1 - 0.62 * (t < 0.5 ? 0 : easeInOut((t - 0.5) / 0.5)));
       /* A mark cut off by the canvas edge reads as a bug rather than as
          leaving, and how much room the travel above needs depends on the
          canvas shape — which is wide and short on a phone. So clamp, and let
@@ -148,10 +184,19 @@
       if (x < edge) x = edge; else if (x > W - edge) x = W - edge;
       if (y < edge) y = edge; else if (y > H - edge) y = H - edge;
 
+      /* many voices while scattered, mostly one hand once written down */
+      var ink = m.ink;
+      if (t > 0.5) {
+        var w = easeInOut((t - 0.5) / 0.5) * 0.75;
+        ink = [Math.round(m.ink[0] + (WRITTEN[0] - m.ink[0]) * w),
+               Math.round(m.ink[1] + (WRITTEN[1] - m.ink[1]) * w),
+               Math.round(m.ink[2] + (WRITTEN[2] - m.ink[2]) * w)];
+      }
+
       var g = ctx.createRadialGradient(x, y, 0, x, y, rad * 2.4);
-      g.addColorStop(0, 'rgba(' + m.ink + ',' + alpha.toFixed(3) + ')');
-      g.addColorStop(0.5, 'rgba(' + m.ink + ',' + (alpha * 0.34).toFixed(3) + ')');
-      g.addColorStop(1, 'rgba(' + m.ink + ',0)');
+      g.addColorStop(0, 'rgba(' + ink + ',' + alpha.toFixed(3) + ')');
+      g.addColorStop(0.5, 'rgba(' + ink + ',' + (alpha * 0.34).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(' + ink + ',0)');
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.arc(x, y, rad * 2.4, 0, Math.PI * 2);
