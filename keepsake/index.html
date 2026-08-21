@@ -536,6 +536,7 @@
 </div>
 
 <script src="/js/session.js?v=20260810b"></script>
+<script src="/js/media.js?v=20260821a"></script>
 <script>
 const SUPABASE_URL = Nanafy.SUPABASE_URL;
 const ANON_KEY = Nanafy.ANON_KEY;
@@ -652,7 +653,7 @@ function wireWelcome(ev) {
       return;
     }
     if (url) {
-      bodyEl.innerHTML = '<div class="w-have"><audio controls preload="none" src="' + esc(url) + '"></audio>' +
+      bodyEl.innerHTML = '<div class="w-have"><audio controls preload="none" data-media="' + esc(url) + '"></audio>' +
         '<button type="button" class="w-mini" id="wRedo">Redo</button>' +
         '<button type="button" class="w-mini" id="wDrop">Remove</button></div>';
       return;
@@ -745,7 +746,7 @@ function voiceBlock(m) {
   const len = m.audio_seconds ? ' \u00b7 ' + mmss(m.audio_seconds) : '';
   return '<div class="voice"><div class="voice-tag">' + VOICE_GLYPH +
     '<span>' + esc(who) + '\u2019s voice' + len + '</span></div>' +
-    '<audio controls preload="none" src="' + esc(m.audio_url) + '"></audio></div>';
+    '<audio controls preload="none" data-media="' + esc(m.audio_url) + '"></audio></div>';
 }
 function bodyBlock(m) {
   return (m.body || '').trim() ? '<div class="body">' + esc(m.body) + '</div>' : '';
@@ -839,7 +840,9 @@ function render(ev, pending) {
   const addLink = location.origin + '/add/?c=' + encodeURIComponent(code.toUpperCase());
 
   const kheadStyle = ev.photo_url
-    ? ' style="background-image:linear-gradient(rgba(15,28,26,.30),rgba(15,28,26,.78)),url(' + esc(ev.photo_url) + ');background-size:cover;background-position:center"'
+    ? ' data-media="' + esc(ev.photo_url) + '" data-media-as="background"' +
+      ' data-media-gradient="linear-gradient(rgba(15,28,26,.30),rgba(15,28,26,.78))"' +
+      ' style="background-size:cover;background-position:center"'
     : '';
   let html =
     '<div class="khead ' + (ev.photo_url ? 'has-photo' : 'no-photo') + '"' + kheadStyle + '>' +
@@ -919,7 +922,7 @@ function render(ev, pending) {
           '<span class="when">' + batch.length + ' photo' + (batch.length > 1 ? 's' : '') + '</span></div>' +
           '<div class="pgrid">' + batch.map(function (m) {
             return '<button type="button" class="pg-cell" data-mid="' + esc(m.id) + '" aria-pressed="true">' +
-              '<img src="' + esc(m.photo_url) + '" alt="Photo from ' + esc(who) + '" loading="lazy"><span class="pg-check">✓</span></button>';
+              '<img data-media="' + esc(m.photo_url) + '" alt="Photo from ' + esc(who) + '" loading="lazy"><span class="pg-check">✓</span></button>';
           }).join('') + '</div>' +
           '<div class="rvw">' +
           '<button type="button" class="rvw-no" data-batch-decline>Decline selected</button>' +
@@ -935,7 +938,7 @@ function render(ev, pending) {
           (m.prompt_text ? '<div class="q">' + esc(m.prompt_text) + '</div>' : '') +
           bodyBlock(m) +
           voiceBlock(m) +
-          (m.photo_url ? '<div class="photo"><img src="' + esc(m.photo_url) + '" alt="Shared photo" loading="lazy"></div>' : '') +
+          (m.photo_url ? '<div class="photo"><img data-media="' + esc(m.photo_url) + '" alt="Shared photo" loading="lazy"></div>' : '') +
           '<div class="rvw"><button type="button" class="rvw-no" data-decide="rejected">Decline</button>' +
           '<button type="button" class="rvw-yes" data-decide="approved">Approve</button></div>' +
           '</div>';
@@ -957,7 +960,7 @@ function render(ev, pending) {
         (m.prompt_text ? '<div class="q">' + esc(m.prompt_text) + '</div>' : '') +
         bodyBlock(m) +
         voiceBlock(m) +
-        (m.photo_url ? '<div class="photo"><img src="' + esc(m.photo_url) + '" alt="Shared photo" loading="lazy"></div>' : '') +
+        (m.photo_url ? '<div class="photo"><img data-media="' + esc(m.photo_url) + '" alt="Shared photo" loading="lazy"></div>' : '') +
         (isOwner
           ? '<div class="m-tools">' +
             (m.photo_url ? '<button type="button" class="m-remove" data-remove-photo>Remove the photo</button>' : '') +
@@ -1190,7 +1193,8 @@ function render(ev, pending) {
       var file = document.getElementById('editPhoto').files[0];
       if (file) {
         var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
-        var path = 'honoree/' + code.toUpperCase() + '-' + Date.now() + '.' + ext;
+        // Never the share code: that is the credential, and a path travels.
+        var path = ev.id + '/cover-' + Date.now().toString(36) + '.' + ext;
         var up = await fetch(SUPABASE_URL + '/storage/v1/object/memory-photos/' + path, {
           method: 'POST',
           headers: Object.assign({}, HEADERS, { 'Content-Type': file.type || 'image/jpeg' }),

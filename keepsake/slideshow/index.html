@@ -201,6 +201,7 @@
   button:focus-visible { outline:2px solid var(--turq); outline-offset:2px; }
 </style>
 <script src="/js/session.js?v=20260810b"></script>
+<script src="/js/media.js?v=20260821a"></script>
 </head>
 <body>
 <div id="player">
@@ -497,8 +498,8 @@
   function slideHtml(s) {
     if (s.kind === 'photo') {
       var kb = reduced ? '' : 'kb-' + (kbCycle++ % 4);
-      return '<div class="photo-bg" style="background-image:url(&quot;' + s.url.replace(/"/g, '') + '&quot;)"></div>' +
-        '<img class="photo-fg ' + kb + '" src="' + s.url.replace(/"/g, '&quot;') + '" alt="">' +
+      return '<div class="photo-bg" data-media="' + s.url.replace(/"/g, '&quot;') + '" data-media-as="background"></div>' +
+        '<img class="photo-fg ' + kb + '" data-media="' + s.url.replace(/"/g, '&quot;') + '" alt="">' +
         '<div class="photo-shade"></div>' +
         (s.note || s.who || s.audio
           ? '<div class="caption">' +
@@ -529,7 +530,7 @@
     if (s.kind === 'title') {
       var prep = PREPOSITIONS[ev.event_type] || 'For';
       return '<div class="title-slide">' +
-        (s.hero ? '<div class="heroimg blurred" style="background-image:url(&quot;' + s.hero.replace(/"/g, '') + '&quot;)"></div><div class="hero-dim"></div>' : '') +
+        (s.hero ? '<div class="heroimg blurred" data-media="' + s.hero.replace(/"/g, '&quot;') + '" data-media-as="background"></div><div class="hero-dim"></div>' : '') +
         '<div class="t-content">' +
         '<p class="t-prep">' + esc(prep) + '</p>' +
         '<h1 class="t-title">' + esc(s.title) + '</h1>' +
@@ -563,11 +564,14 @@
     music.duck(false);
   }
 
-  function startVoice(s) {
+  async function startVoice(s) {
     stopVoice();
     if (!s || !s.audio) return;
     var mine = current;
-    voiceEl = new Audio(s.audio);
+    var src = await Nanafy.mediaUrl(s.audio);
+    /* the slide may have moved on while we were signing */
+    if (current !== mine) return;
+    voiceEl = new Audio(src);
     voiceEl.preload = 'auto';
     voiceEl.addEventListener('ended', function () {
       music.duck(false);

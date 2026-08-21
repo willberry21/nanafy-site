@@ -164,6 +164,7 @@
   }
 </style>
 <script src="/js/session.js?v=20260810b"></script>
+<script src="/js/media.js?v=20260821a"></script>
 </head>
 <body>
 
@@ -597,7 +598,7 @@
       var b = document.createElement('button');
       b.className = 'pick';
       b.type = 'button';
-      b.innerHTML = '<img src="' + cand.url.replace(/"/g, '&quot;') + '" alt="" loading="lazy">' +
+      b.innerHTML = '<img data-media="' + cand.url.replace(/"/g, '&quot;') + '" alt="" loading="lazy">' +
         (cand.tag ? '<span class="tag">' + cand.tag + '</span>' : '');
       b.addEventListener('click', function () {
         picks.querySelectorAll('.pick').forEach(function (p) { p.classList.remove('sel'); });

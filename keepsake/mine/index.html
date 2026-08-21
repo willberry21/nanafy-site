@@ -98,6 +98,7 @@
   }
 </style>
 <script src="/js/session.js?v=20260810b"></script>
+<script src="/js/media.js?v=20260821a"></script>
 <script src="/js/keep.js?v=20260814a"></script>
 </head>
 <body>
@@ -208,7 +209,7 @@
         var fresh = since ? approved.filter(function (m) { return new Date(m.created_at) > new Date(since); }).length : 0;
         return '<a class="kcard" href="/keepsake/view/?c=' + encodeURIComponent(ev.share_code) + '">' +
           (ev.photo_url
-            ? '<img class="thumb" src="' + esc(ev.photo_url) + '" alt="">'
+            ? '<img class="thumb" data-media="' + esc(ev.photo_url) + '" alt="">'
             : '<div class="thumb ph">&#10047;</div>') +
           '<div><div class="k-prep">' + esc(prep) + '</div>' +
           '<div class="k-title">' + esc(title) + '</div>' +

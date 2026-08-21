@@ -387,6 +387,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/session.js?v=20260810b"></script>
+<script src="/js/media.js?v=20260821a"></script>
 <script>
   var SUPABASE_URL = 'https://vigenqlwwoknxjzahvtv.supabase.co';
   var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpZ2VucWx3d29rbnhqemFodnR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDI0MjksImV4cCI6MjA5OTIxODQyOX0.qjggNEyEwVfrHP8neWPlTPcKOp92wiFwUgv4aEiswaE';
@@ -508,8 +509,12 @@
             badge.style.display = 'inline-flex';
           }
           if (row.photo_url) {
-            el.style.background =
-              'linear-gradient(180deg, rgba(4,9,11,.1) 25%, rgba(4,9,11,.82) 85%), url(' + row.photo_url + ') center/cover';
+            el.style.backgroundSize = 'cover';
+            el.style.backgroundPosition = 'center';
+            el.setAttribute('data-media-gradient',
+              'linear-gradient(180deg, rgba(4,9,11,.1) 25%, rgba(4,9,11,.82) 85%)');
+            el.setAttribute('data-media-as', 'background');
+            el.setAttribute('data-media', row.photo_url);
             var wm = el.querySelector('.bloom-wm');
             if (wm) wm.style.display = 'none';
           }

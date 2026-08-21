@@ -237,6 +237,7 @@
   }
 </style>
 <script src="/js/session.js?v=20260810b"></script>
+<script src="/js/media.js?v=20260821a"></script>
 <script src="/js/keep.js?v=20260814a"></script>
 </head>
 <body>
@@ -300,7 +301,7 @@
     var len = m.audio_seconds ? ' \u00b7 ' + mmss(m.audio_seconds) : '';
     return '<div class="voice"><div class="voice-tag">' + VOICE_GLYPH +
       '<span>' + esc(who) + '\u2019s voice' + len + '</span></div>' +
-      '<audio controls preload="none" src="' + esc(m.audio_url) + '"></audio></div>';
+      '<audio controls preload="none" data-media="' + esc(m.audio_url) + '"></audio></div>';
   }
 
   function render(ev) {
@@ -321,7 +322,7 @@
 
     var html =
       '<div class="hero">' +
-      (ev.photo_url ? '<img class="portrait" src="' + esc(ev.photo_url) + '" alt="">' : '') +
+      (ev.photo_url ? '<img class="portrait" data-media="' + esc(ev.photo_url) + '" alt="">' : '') +
       '<p class="prep">' + esc(prep) + '</p>' +
       '<h1>' + esc(title) + '</h1>' +
       '<p class="sub">' + n + ' ' + (n === 1 ? 'memory' : 'memories') + ', from the people who were there.</p>' +
@@ -421,13 +422,13 @@
       ((m.body || '').trim() ? '<p class="body">' + esc(m.body.trim()) + '</p>' : '') +
       voiceBlock(m) +
       (m.contributor_name ? '<p class="who">— ' + esc(m.contributor_name) + '</p>' : '') +
-      (m.photo_url ? '<img src="' + esc(m.photo_url) + '" alt="" loading="lazy">' : '') +
+      (m.photo_url ? '<img data-media="' + esc(m.photo_url) + '" alt="" loading="lazy">' : '') +
       '</div>';
   }
 
   function photoCard(m) {
     return '<div class="mem photo-only">' +
-      '<img src="' + esc(m.photo_url) + '" alt="" loading="lazy">' +
+      '<img data-media="' + esc(m.photo_url) + '" alt="" loading="lazy">' +
       (m.contributor_name
         ? '<div class="meta"><p class="who" style="margin:0">— ' + esc(m.contributor_name) + '</p></div>'
         : '') +

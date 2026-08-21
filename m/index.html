@@ -107,6 +107,7 @@
 </div>
 
 <script src="/js/session.js?v=20260810b"></script>
+<script src="/js/media.js?v=20260821a"></script>
 <script>
 (function () {
   'use strict';
@@ -122,7 +123,7 @@
   var PLAY = '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6L19 12z"/></svg>';
   var PAUSE = '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="5.5" width="3.6" height="13" rx="1"/><rect x="13.4" y="5.5" width="3.6" height="13" rx="1"/></svg>';
 
-  function render(ev, m) {
+  async function render(ev, m) {
     var q = '?c=' + encodeURIComponent(code);
     app.innerHTML =
       (m.prompt_text ? '<p class="q">' + esc(m.prompt_text) + '</p>' : '') +
@@ -136,12 +137,12 @@
             '<div class="bar"><i id="bar"></i></div></div>' +
           '</div>'
         : '') +
-      (m.photo_url ? '<img class="photo" src="' + esc(m.photo_url) + '" alt="">' : '') +
+      (m.photo_url ? '<img class="photo" data-media="' + esc(m.photo_url) + '" alt="">' : '') +
       '<div class="onward"><a href="/keepsake/view/' + q + '">See the whole keepsake \u2192</a></div>';
 
     var btn = document.getElementById('play');
     if (!btn) return;
-    var audio = new Audio(m.audio_url);
+    var audio = new Audio(await Nanafy.mediaUrl(m.audio_url));
     var bar = document.getElementById('bar'), time = document.getElementById('time');
     audio.addEventListener('timeupdate', function () {
       if (audio.duration) bar.style.width = (audio.currentTime / audio.duration * 100) + '%';
@@ -174,7 +175,7 @@
       return;
     }
     document.title = (m.contributor_name || 'A memory') + ' \u00b7 ' + (ev.honoree || ev.title || 'Nanafy');
-    render(ev, m);
+    await render(ev, m);
   })();
 })();
 </script>

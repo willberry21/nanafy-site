@@ -372,6 +372,7 @@
 <div id="root"></div>
 
 <script src="/js/session.js?v=20260810b"></script>
+<script src="/js/media.js?v=20260821a"></script>
 <script type="module">
 import { qrSvg } from '/js/qr.js?v=20260819a';
 (function () {
@@ -453,7 +454,7 @@ import { qrSvg } from '/js/qr.js?v=20260819a';
         (ev.title && ev.honoree && ev.title !== ev.honoree
           ? '<p class="sub">' + esc(ev.title) + '</p>' : '') +
         (ev.photo_url
-          ? '<img class="portrait" src="' + esc(ev.photo_url) + '" alt="">' : '') +
+          ? '<img class="portrait" data-media="' + esc(ev.photo_url) + '" alt="">' : '') +
         '<div class="foot">' +
           esc(count) + ' ' + (count === 1 ? 'memory' : 'memories') + ' gathered' +
           (ev.event_date ? '<br>' + esc(niceDate(ev.event_date)) : '') +
@@ -535,7 +536,7 @@ import { qrSvg } from '/js/qr.js?v=20260819a';
           (m.created_at ? ' <span class="when">' + esc(niceDate(m.created_at)) + '</span>' : '') +
         '</p>' +
         listenBlock(m) +
-        (m.photo_url ? '<figure><img src="' + esc(m.photo_url) + '" alt=""></figure>' : '') +
+        (m.photo_url ? '<figure><img data-media="' + esc(m.photo_url) + '" alt=""></figure>' : '') +
       '</article>';
     }
     var names = [];
@@ -545,7 +546,7 @@ import { qrSvg } from '/js/qr.js?v=20260819a';
     });
     return head + tools +
       '<div class="collage n' + b.mems.length + '">' +
-        b.mems.map(function (m2) { return '<img src="' + esc(m2.photo_url) + '" alt="">'; }).join('') +
+        b.mems.map(function (m2) { return '<img data-media="' + esc(m2.photo_url) + '" alt="">'; }).join('') +
       '</div>' +
       '<p class="who">' + (names.length ? '— Photos from ' + esc(names.join(' & ')) : '— Photos from the gathering') + '</p>' +
     '</article>';

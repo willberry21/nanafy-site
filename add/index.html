@@ -279,6 +279,7 @@
 </div>
 
 <script src="/js/session.js?v=20260810b"></script>
+<script src="/js/media.js?v=20260821a"></script>
 <script src="/js/keep.js?v=20260814a"></script>
 <script>
 const SUPABASE_URL = Nanafy.SUPABASE_URL;
@@ -384,9 +385,9 @@ function wireHostHello() {
   if (!btn) return;
   const PLAY = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6L19 12z"/></svg>';
   const PAUSE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="5.5" width="3.6" height="13" rx="1"/><rect x="13.4" y="5.5" width="3.6" height="13" rx="1"/></svg>';
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
     if (!helloAudio) {
-      helloAudio = new Audio(event.welcome_audio_url);
+      helloAudio = new Audio(await Nanafy.mediaUrl(event.welcome_audio_url));
       helloAudio.addEventListener('ended', () => { btn.innerHTML = PLAY; btn.setAttribute('aria-label', 'Play the welcome'); });
     }
     if (helloAudio.paused) {
