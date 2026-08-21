@@ -83,7 +83,11 @@ a{ color:inherit; }
 }
 .btn,.hbtn,button[type="submit"],input,select,textarea{ min-height:48px; }
 textarea{ min-height:96px; align-items:flex-start; }
-.btn,.hbtn,.nav-cta,button,input,select,textarea{ border-radius:var(--r-md); }
+/* Buttons are pills. 12px read blocky at 48px tall — the corner has to keep
+   up with the height, and half of 48 is 24, not 12. Inputs stay rectangular:
+   a pill-shaped text field looks like a search box, which these are not. */
+.btn,.hbtn,.nav-cta,button{ border-radius:999px; }
+input,select,textarea{ border-radius:var(--r-md); }
 
 .btn-primary,.hbtn.solid,.nav-cta,button.primary,button.submit,button[type="submit"]{
   background:var(--turq); color:#fff; border-color:var(--turq);

@@ -567,9 +567,16 @@
   <!-- WHY -->
   <section class="band why plain">
     <div class="wrap">
-      <div class="inner reveal">
-        <p>At every memorial, wedding, and milestone, a room fills with people who each hold a <span class="hl">piece of someone</span>. Then everyone goes home, and the pieces scatter.</p>
-        <p class="small">A photo shows you the face. It doesn’t tell you the story behind the smile. Nanafy is a simple way to gather those stories while everyone is still in the room — before they leave with the crowd.</p>
+      <div class="why-grid">
+        <div class="inner reveal">
+          <p>At every memorial, wedding, and milestone, a room fills with people who each hold a <span class="hl">piece of someone</span>. Then everyone goes home, and the pieces scatter.</p>
+          <p class="small">A photo shows you the face. It doesn’t tell you the story behind the smile. Nanafy is a simple way to gather those stories while everyone is still in the room — before they leave with the crowd.</p>
+        </div>
+        <!-- One mark per person. They come apart as you scroll — the sentence,
+             enacted. Scroll-driven on purpose: stop, and it stops. -->
+        <figure class="scatter reveal" aria-hidden="true">
+          <canvas data-scatter></canvas>
+        </figure>
       </div>
     </div>
   </section>
@@ -689,6 +696,7 @@
   </footer>
 
 <script src="js/orbs.js" defer></script>
+<script src="/js/scatter.js" defer></script>
 <script>
   // Reveal-on-scroll
   (function () {
