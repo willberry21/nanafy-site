@@ -1,0 +1,143 @@
+/* Nanafy — the light canvas ==================================================
+   One stylesheet for the whole site. Every page used to carry its own copy of
+   the dark "peacock" palette in an inline <style>; this is linked after that,
+   so it redefines the same token names and the pages follow without being
+   rewritten.
+
+   Two ideas:
+     1. The page is near-white with near-black type, and headings are light
+        weight at a large size — that is what reads modern, not more colour.
+     2. The only thing with colour is alive. Colour lives inside the orbs
+        (js/orbs.js); the page itself stays quiet.
+
+   Load it LAST in <head>. Rules here are unprefixed by design — where a page
+   hard-codes a dark hex with !important, fix it in that page, not here.
+   ========================================================================= */
+
+:root{
+  color-scheme:light;
+
+  /* ground */
+  --paper:#fdfcfc; --ground:#fdfcfc; --surface:#ffffff; --surface-2:#f5f2ed;
+  --warm:#f7f5f1; --field:#ffffff;
+
+  /* ink */
+  --ink:#12181c; --ink-soft:#636f6b;   /* clears 4.5:1 on the cream panels too, not just on white */
+  --line:#e8e3da; --line-strong:#d8d2c6;
+
+  /* turquoise, rationed: buttons, labels, small marks */
+  /* Turquoise carries two jobs, and on a white ground they need two values.
+     --turq is a FILL: deep enough that white sits on it at 5.2:1.
+     --turq-ink is what goes ON that fill, so on a light theme it is white.
+     --turq-text is turquoise used AS text on the page — needs the deep one.
+     --turq-bright is the brand's own #0FB0A4, kept for the wordmark and for
+     graphics, where contrast rules do not apply. */
+  --turq:#0a7a72; --turq-bright:#0fb0a4; --turq-2:#23c9bd;
+  --turq-deep:#075f59; --turq-ink:#ffffff; --turq-text:#0a7a72;
+  --turq-soft:rgba(15,176,164,.30); --turq-wash:rgba(15,176,164,.10);
+  --accent:#0a7a72; --accent-ink:#ffffff; --accent-wash:rgba(15,176,164,.10);
+  --plum:#0a7a72;
+
+  --pink:#e089a8; --pink-ink:#c14e7c; --pink-wash:rgba(224,137,168,.12);
+  --verm:#e8654a; --danger:#c0392b;
+  --ink-faint:rgba(18,24,28,.62);
+
+  --glow:rgba(35,201,189,.22); --glow-2:rgba(224,137,168,.16);
+  --shadow:rgba(18,24,28,.16);
+
+  /* type: Josefin announces, Lato works, Lora holds the memories */
+  --display:"Josefin Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --serif:"Lora",Georgia,serif;
+  --sans:"Lato",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+
+  /* motion: one curve, and it settles rather than arrives */
+  --ease:cubic-bezier(.16,1,.3,1);
+  --ease-out:cubic-bezier(.22,.9,.36,1);
+
+  /* radius: the outer box is always the rounder one */
+  --r-lg:16px; --r-md:12px; --r-sm:10px;
+}
+
+body{ background:var(--ground); color:var(--ink); font-family:var(--sans); }
+
+/* ── type ───────────────────────────────────────────────────────────────── */
+h1,h2,h3{ font-family:var(--display); font-weight:300; letter-spacing:-.03em; color:var(--ink); }
+h4,h5{ font-family:var(--display); font-weight:400; color:var(--ink); }
+.eyebrow{ font-family:var(--display); font-weight:600; letter-spacing:.22em; color:var(--turq-text); }
+.lede,.section-lede,.note,.small,.sub{ color:var(--ink-soft); }
+a{ color:inherit; }
+
+/* the wordmark: Nana in turquoise, fy in grey */
+.brand .mark{ color:#6b7773; }
+.brand .mark b{ color:var(--turq-bright); }   /* the wordmark keeps the brand's own turquoise */
+
+/* ── surfaces ───────────────────────────────────────────────────────────── */
+.card,.panel,.step,.occ,.mcard,.keep-visual,.signup-ok,.tile,.box{
+  background:var(--surface); border-color:var(--line); border-radius:var(--r-lg);
+}
+
+/* ── controls: every one clears a thumb, at every width ─────────────────── */
+.btn,.hbtn,.nav-cta,button,.prof-chip,.prof-link,
+.topnav-center a,.topnav-right a,.topnav-links a{
+  min-height:44px; display:inline-flex; align-items:center; justify-content:center;
+}
+.btn,.hbtn,button[type="submit"],input,select,textarea{ min-height:48px; }
+textarea{ min-height:96px; align-items:flex-start; }
+.btn,.hbtn,.nav-cta,button,input,select,textarea{ border-radius:var(--r-md); }
+
+.btn-primary,.hbtn.solid,.nav-cta,button.primary,button.submit,button[type="submit"]{
+  background:var(--turq); color:#fff; border-color:var(--turq);
+}
+.btn-primary:hover,.hbtn.solid:hover,.nav-cta:hover,button.primary:hover{
+  background:var(--turq-deep); border-color:var(--turq-deep); color:#fff;
+}
+.btn-ghost,.hbtn.line{ background:none; color:var(--ink); border-color:var(--line-strong); }
+.btn-ghost:hover,.hbtn.line:hover{ border-color:var(--turq); color:var(--turq-text); }
+
+input,select,textarea{
+  background:#fff; color:var(--ink); border:1px solid var(--line); color-scheme:light;
+}
+input::placeholder,textarea::placeholder{ color:var(--ink-soft); }
+input:focus,select:focus,textarea:focus{ border-color:var(--turq); box-shadow:0 0 0 3px var(--turq-soft); outline:none; }
+
+/* ── micro-feedback: press, and the surface answers ─────────────────────── */
+.btn,.hbtn,.nav-cta,button,.prof-chip{
+  transition:transform .16s var(--ease), background-color .2s var(--ease),
+             color .2s var(--ease), box-shadow .28s var(--ease), border-color .2s var(--ease);
+}
+.btn:active,.hbtn:active,.nav-cta:active,button:active{ transform:translateY(1px) scale(.985); }
+.nav-cta:hover{ transform:translateY(-1px); box-shadow:0 10px 24px -12px var(--turq); }
+a:focus-visible,button:focus-visible,input:focus-visible,
+select:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--turq); outline-offset:3px; border-radius:4px;
+}
+
+/* ── glass header: it stays, and the page frosts under it ───────────────── */
+.topbar-wrap,.bar-wrap{
+  position:sticky; top:0; z-index:60; max-width:none;
+  background:rgba(253,252,252,.72);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid rgba(18,24,28,.06);
+}
+@supports not (backdrop-filter:blur(2px)){
+  .topbar-wrap,.bar-wrap{ background:rgba(253,252,252,.96); }
+}
+/* a multi-row header glued to a phone screen eats a third of it */
+@media(max-width:760px){
+  .topbar-wrap,.bar-wrap{ position:static; border-bottom:1px solid var(--line); }
+}
+
+/* ── the orbs ───────────────────────────────────────────────────────────── */
+.orb{
+  position:relative; border-radius:50%; overflow:hidden; flex:none; display:block;
+  box-shadow:0 26px 46px -28px rgba(18,24,28,.40), 0 3px 10px -6px rgba(18,24,28,.18);
+}
+.orb canvas{ display:block; width:100%; height:100%; border-radius:50%; }
+@keyframes orb-bob{ from{ transform:translateY(0) scale(1) } to{ transform:translateY(-12px) scale(1.015) } }
+
+@media(prefers-reduced-motion:reduce){
+  .orb{ animation:none !important; }
+  .btn:active,.hbtn:active,.nav-cta:active,button:active{ transform:none; }
+  .nav-cta:hover{ transform:none; }
+}

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The keepsake book · Nanafy</title>
 <meta name="description" content="Every memory, gathered into a book.">
-<meta name="theme-color" content="#115E67">
+<meta name="theme-color" content="#fdfcfc">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -314,6 +314,40 @@
   @media (prefers-reduced-motion: reduce) {
     ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
   }
+</style>
+<link rel="stylesheet" href="/css/light.css">
+<style>
+  /* light-canvas fixes for this page: things the dark theme
+     hard-coded, which cannot be fixed by swapping tokens alone. */
+  /* The book's chrome hard-coded its colours instead of using tokens, so the
+     ground, toolbar and code-entry stayed dark teal with white type. The book
+     SHEETS keep their warm-white paper — they are previewing print. */
+  body{ background:var(--ground) !important; }
+  .bar{ background:rgba(253,252,252,.72) !important; border-bottom:1px solid rgba(18,24,28,.06) !important; }
+  .bar .mark{ color:#6b7773 !important; }
+  .bar .mark b{ color:var(--turq-bright) !important; }
+  .bar .meta{ color:var(--ink-soft) !important; }
+  .bar a.back{ color:var(--ink) !important; border-color:var(--line-strong) !important; }
+  .bar a.back:hover{ background:var(--turq-wash) !important; color:var(--turq-text) !important;
+    border-color:var(--turq) !important; }
+  .bar button, #orderWrap a, #orderWrap a:visited{
+    background:var(--turq) !important; color:#fff !important; }
+  #orderWrap a:hover{ background:var(--turq-deep) !important; }
+  .hint,.arr-msg{ color:var(--ink-soft) !important; }
+  .arr-bar button{ color:var(--ink) !important; border-color:var(--line-strong) !important; }
+  .arr-bar #arrSave{ background:var(--turq) !important; border-color:var(--turq) !important; color:#fff !important; }
+  .state{ color:var(--ink) !important; }
+  .state h1{ color:var(--ink) !important; }
+  .state p{ color:var(--ink-soft) !important; }
+  .state input{ background:#fff !important; color:var(--ink) !important;
+    border:1px solid var(--line) !important; }
+  .state input::placeholder{ color:var(--ink-soft) !important; }
+  .state input:focus{ border-color:var(--turq) !important; box-shadow:0 0 0 3px var(--turq-soft) !important; }
+  .state button{ background:var(--turq) !important; color:#fff !important; }
+  .sheet{ box-shadow:0 26px 60px -32px rgba(18,24,28,.30) !important; }
+  .brand .bloom [fill="#0FB0A4"]{ fill:#0FB0A4 }
+  .brand .bloom [fill="#FFFFFF"]{ fill:#FFFFFF }
+  .brand .mark b{ color:var(--turq) }
 </style>
 </head>
 <body>

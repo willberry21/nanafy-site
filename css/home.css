@@ -1,0 +1,218 @@
+/* Nanafy homepage ============================================================
+   Only what is specific to this page: the hero, the step orbs, the occasions
+   row and the closing band. Palette, type, motion, targets and the glass
+   header are shared — see css/light.css, which loads before this.
+
+   The !important here is deliberate: it defeats the older dark "peacock"
+   layer still inline in index.html, which uses !important itself.
+   ========================================================================= */
+
+/* == LIVING ORBS: the white canvas, the black text, and the spheres =======
+   Final override layer, same pattern as PEACOCK above. Two moves:
+   (1) the ground goes back to near-white with near-black type — the
+       headline drops to weight 300 at a big size, which is the whole
+       reason this reads modern instead of shouty;
+   (2) the only colour that moves is inside the orbs (js/orbs.js).
+   Everything colourful is now a sphere, so the page itself can stay quiet. */
+/* palette, type and motion tokens now live in css/light.css */
+body{ background:var(--ground) !important; color:var(--ink) !important; }
+
+/* type: light and large. Tight tracking is what stops 300-weight going limp. */
+h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing:-.03em !important;
+  color:var(--ink); }
+.eyebrow{ color:var(--turq-text) !important; }
+.topnav-center a,.prof-link{ color:var(--ink) !important; }
+.nav-cta,.prof-chip{ background:var(--turq) !important; color:#fff !important; }
+.step .num,.kv-row .kv-play,.topnav-links a,.signup-ok,.tick,.hl{ color:var(--turq-text) !important; }
+
+/* ── hero: words on the left, one living sphere on the right ── */
+.hero-n{
+  background:var(--ground) !important; min-height:0; align-items:center;
+  padding:clamp(48px,7vw,96px) 0 clamp(56px,8vw,104px);
+  border-bottom:1px solid var(--line);
+}
+.hero-n::before{ background:none !important; }
+.hero-n-mark svg g{ fill:rgba(18,24,28,.028) !important; }
+.hero-n-grid{ display:grid; grid-template-columns:1.08fr .92fr; gap:clamp(28px,5vw,64px);
+  align-items:center; }
+.hero-n h1{
+  background:none !important; -webkit-background-clip:border-box !important;
+  background-clip:border-box !important; color:var(--ink) !important;
+  font-weight:300 !important; text-transform:none !important;
+  font-size:clamp(2.5rem,6vw,4.4rem) !important; line-height:1.02 !important;
+  letter-spacing:-.035em !important;
+}
+.hero-n p{ color:#3f4a48 !important; font-size:1.14rem; }
+.hero-n .hero-n-fine{ font-size:.9rem; color:var(--ink-soft) !important; margin:22px 0 0; }
+.hbtn.solid{ background:var(--turq) !important; color:#fff !important; }
+.hbtn.solid:hover{ background:var(--turq-deep) !important; color:#fff !important; }
+.hbtn.line{ color:var(--ink) !important; border-color:var(--line-strong) !important; }
+.hbtn.line:hover{ border-color:var(--turq) !important; color:var(--turq-text) !important; }
+.hero-n-orb{ display:flex; justify-content:center; }
+@media(max-width:860px){
+  .hero-n-grid{ grid-template-columns:1fr; gap:34px; }
+  .hero-n-orb{ order:-1; justify-content:flex-start; }
+}
+
+/* ── the spheres themselves ── */
+.orb{ position:relative; border-radius:50%; overflow:hidden; flex:none; display:block;
+  box-shadow:0 26px 46px -28px rgba(18,24,28,.40), 0 3px 10px -6px rgba(18,24,28,.18); }
+.orb canvas{ display:block; width:100%; height:100%; border-radius:50%; }
+.orb-hero{ width:clamp(230px,33vw,400px); aspect-ratio:1; }
+@keyframes orb-bob{ from{ transform:translateY(0) scale(1) } to{ transform:translateY(-12px) scale(1.015) } }
+.orb-hero{ animation:orb-bob 9.4s ease-in-out infinite alternate; }
+.closing-orb .orb{ animation:orb-bob 11s ease-in-out infinite alternate-reverse; }
+
+/* the step numbers sit ON a small sphere instead of a tinted square */
+.step .num{ position:relative; background:none !important; width:60px; height:60px;
+  border-radius:50%; display:grid; place-items:center; overflow:visible; }
+.step .num .orb-step{ position:absolute; inset:0; width:100%; height:100%;
+  box-shadow:0 12px 22px -14px rgba(18,24,28,.5); }
+.step .num .num-n{ position:relative; z-index:1; color:#fff; font-family:var(--display);
+  font-weight:600; font-size:1.3rem; letter-spacing:0;
+  text-shadow:0 1px 2px rgba(18,24,28,.6), 0 0 12px rgba(18,24,28,.45); }
+.step:nth-child(1) .num .orb-step{ animation:orb-bob 7.8s ease-in-out infinite alternate }
+.step:nth-child(2) .num .orb-step{ animation:orb-bob 9.1s ease-in-out infinite alternate-reverse }
+.step:nth-child(3) .num .orb-step{ animation:orb-bob 8.4s ease-in-out infinite alternate }
+
+/* ── bands: white, cream, white — the page needs somewhere quiet ── */
+.band{ background:var(--ground) !important; }
+.band.why{ background:var(--surface-2) !important; }
+.band.why .inner p{ color:var(--ink) !important; }
+.step,.occ,.keep-visual,.mcard,.signup-ok{
+  background:var(--surface) !important; border:1px solid var(--line) !important;
+}
+.keep-visual{ box-shadow:0 26px 54px -34px var(--shadow) !important; }
+.keep-visual .kv-name{ color:var(--ink) !important; }
+.keep-visual .kv-head .avatar{ background:linear-gradient(140deg,var(--turq),var(--pink)) !important; }
+.kv-row .kv-play{ background:var(--turq-wash) !important; }
+
+/* the memories arrive one at a time, the way the room fills up */
+.keep-visual.in .kv-row{ opacity:0; animation:kv-rise .7s var(--ease) forwards; }
+.keep-visual.in .kv-row:nth-of-type(1){ animation-delay:.10s }
+.keep-visual.in .kv-row:nth-of-type(2){ animation-delay:.28s }
+.keep-visual.in .kv-row:nth-of-type(3){ animation-delay:.46s }
+.keep-visual.in .kv-row:nth-of-type(4){ animation-delay:.64s }
+@keyframes kv-rise{ from{ opacity:0; transform:translateY(14px) } to{ opacity:1; transform:none } }
+
+/* ── closing: one sphere leaning in from the edge ── */
+.closing{ background:var(--surface-2) !important; position:relative; overflow:hidden; }
+.closing .wrap{ position:relative; z-index:1; }
+.closing-orb{ position:absolute; right:-7vw; top:50%; transform:translateY(-50%);
+  width:clamp(170px,26vw,320px); pointer-events:none; opacity:.9; }
+.closing-orb .orb{ width:100%; aspect-ratio:1; }
+.closing h2{ max-width:18em }
+.btn-primary{ background:var(--turq) !important; color:#fff !important; }
+.btn-ghost{ color:var(--ink) !important; }
+@media(max-width:900px){ .closing-orb{ right:-22vw; opacity:.5 } }
+
+/* the pre-launch curtain follows the ground back to white */
+#gate{ background:var(--ground) !important; }
+.gate-mark b{ color:var(--turq) !important; }
+.gate-mark{ color:var(--pink-ink) !important; }
+.gate-h,.gate-card{ color:var(--ink) !important; }
+.gate-sub{ color:var(--ink-soft) !important; }
+#gatePw{ background:#fff !important; border:1.5px solid var(--line) !important; color:var(--ink) !important; }
+#gatePw::placeholder{ color:var(--ink-soft) !important; }
+#gateForm button{ background:var(--turq) !important; color:#fff !important; }
+.gate-err{ color:#c0392b !important; }
+
+
+/* the wordmark: Nana in turquoise, fy in grey — the dark layer had it white */
+.brand .mark{ color:#6b7773 !important; }
+.brand .mark b{ color:var(--turq-bright) !important; }
+.hero-n-mark svg g{ fill:rgba(18,24,28,.018) !important; }
+
+/* ── occasions: three spheres side by side, not dark tiles ──
+   The landscape tiles were the last thing left from the dark theme, and
+   they broke the page in half. Same three links, same words. */
+.occ-grid{ grid-template-columns:repeat(3,1fr); gap:clamp(16px,3vw,44px) !important;
+  padding:0 clamp(16px,4vw,44px) !important; align-items:start; }
+.occ-cell{ text-align:center; }
+.occ-orb{ display:flex; justify-content:center; }
+.occ-orb .orb{ width:clamp(120px,17vw,230px); aspect-ratio:1;
+  transition:transform .35s var(--ease), box-shadow .35s ease; }
+.occ-cell:nth-child(1) .occ-orb .orb{ animation:orb-bob 8.6s ease-in-out infinite alternate }
+.occ-cell:nth-child(2) .occ-orb .orb{ animation:orb-bob 10.2s ease-in-out infinite alternate-reverse }
+.occ-cell:nth-child(3) .occ-orb .orb{ animation:orb-bob 9.2s ease-in-out infinite alternate }
+.occ-cell:hover .occ-orb .orb{ transform:translateY(-8px) scale(1.03);
+  box-shadow:0 38px 60px -30px rgba(18,24,28,.5); }
+.occ-cap{ font-family:var(--display); font-weight:400 !important; letter-spacing:-.02em;
+  font-size:1.3rem !important; margin-top:22px !important; }
+.occ-sub{ max-width:24ch; margin-left:auto !important; margin-right:auto !important; }
+@media(max-width:760px){
+  .occ-grid{ grid-template-columns:1fr 1fr 1fr !important; gap:8px !important;
+    padding:0 14px !important; }
+  /* the 120px floor above would overflow a 375px phone, and body hides
+     overflow-x, so it would clip the captions rather than show a scrollbar */
+  .occ-orb .orb{ width:min(26vw,150px) !important; }
+  .occ-cap{ font-size:1rem !important; margin-top:14px !important }
+  .occ-sub{ font-size:.8rem; max-width:16ch }
+}
+@media(prefers-reduced-motion:reduce){ .occ-orb .orb{ animation:none !important } }
+
+/* == POLISH PASS: motion, targets, glass, radius hierarchy ==============
+   Against the design notes. Three things we genuinely failed: the header
+   didn't stick or blur, controls were under 44px on desktop (only the
+   phone breakpoint fixed them), and the radius scale was inverted —
+   10px cards holding 12px buttons. Easing was already one consistent
+   curve, so that only needed a name. == */
+
+/* ── glass header: it stays, and the page blurs under it ── */
+.topbar-wrap{
+  position:sticky; top:0; z-index:60; max-width:none !important;
+  background:rgba(253,252,252,.72);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid rgba(18,24,28,.06);
+}
+.topbar-wrap .topbar{ max-width:1080px; margin:0 auto; padding:14px 0 12px; }
+@supports not (backdrop-filter:blur(2px)){ .topbar-wrap{ background:rgba(253,252,252,.96) } }
+/* on phones the header is two rows (122px). Glued to the top that eats a
+   third of the screen, so it only sticks where it is a single row. */
+@media(max-width:760px){ .topbar-wrap{ position:static; border-bottom:1px solid var(--line) } }
+
+/* ── every control clears a thumb, at every width, not just on phones ── */
+.nav-cta,.topnav-center a,.topnav-right a,.prof-link,.prof-chip,.topnav-links a{
+  min-height:44px; display:inline-flex; align-items:center; justify-content:center;
+}
+.hbtn,.btn,#gateForm button,.signup-form button{ min-height:48px; display:inline-flex;
+  align-items:center; justify-content:center; }
+#gatePw,.signup-form input[type="email"]{ min-height:48px; }
+
+/* ── micro-rewards: press, and the surfaces answer ── */
+.hbtn,.btn,.nav-cta,.prof-chip,#gateForm button{
+  transition:transform .16s var(--ease), background-color .2s var(--ease),
+             color .2s var(--ease), box-shadow .28s var(--ease);
+}
+.hbtn:active,.btn:active,.nav-cta:active,#gateForm button:active{
+  transform:translateY(1px) scale(.985);
+}
+.nav-cta:hover{ box-shadow:0 10px 24px -12px var(--turq) !important; transform:translateY(-1px) }
+.kv-row .kv-play{ transition:transform .22s var(--ease), background-color .22s var(--ease) }
+.kv-row:hover .kv-play{ transform:scale(1.08); background:var(--turq-soft) !important }
+.step{ transition:border-color .3s var(--ease), box-shadow .35s var(--ease) }
+.step:hover{ border-color:var(--turq-soft) !important;
+  box-shadow:0 20px 40px -30px rgba(18,24,28,.35) !important }
+.orb-hero{ transition:box-shadow .4s var(--ease) }
+.orb-hero:hover{ box-shadow:0 34px 60px -26px rgba(18,24,28,.5) }
+
+/* keyboard users get the same affordance the mouse does */
+a:focus-visible,button:focus-visible,input:focus-visible{
+  outline:2px solid var(--turq); outline-offset:3px; border-radius:4px;
+}
+
+/* ── radius hierarchy: outer box always rounder than what sits inside ── */
+.keep-visual,.step,.occ,.mcard,.signup-ok{ border-radius:var(--r-lg) !important }
+.hbtn,.btn,.nav-cta,#gateForm button,#gatePw,
+.signup-form input[type="email"],.signup-form button{ border-radius:var(--r-md) !important }
+.gate-card .gate-h{ letter-spacing:-.03em }
+
+@media(prefers-reduced-motion:reduce){
+  .hbtn:active,.btn:active,.nav-cta:active{ transform:none }
+  .step:hover,.kv-row:hover .kv-play,.orb-hero:hover{ transform:none }
+}
+@media(prefers-reduced-motion:reduce){
+  .orb,.orb-hero,.closing-orb .orb,.step .num .orb-step{ animation:none !important }
+  .keep-visual.in .kv-row{ opacity:1 !important; animation:none !important }
+}
