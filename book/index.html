@@ -648,11 +648,45 @@ import { qrSvg } from '/js/qr.js?v=20260819a';
     bar.hidden = false;
     hint.hidden = false;
     barMeta.textContent = mems.length + (mems.length === 1 ? ' memory' : ' memories');
+    var _pages = bookPageCount(prompts.length, blocks.length);
+    var _tier = bookPrice(_pages);
     hint.innerHTML = 'You’re previewing the real book — the printed copy contains every page below, ' +
-      'as a ' + bookPageCount(prompts.length, blocks.length) + '-page softcover (A4).';
+      'as a ' + _pages + '-page softcover (A4)' +
+      (SHOW_PRICE && _tier.offering ? ', $' + _tier.price + ' printed and shipped' : '') + '.';
 
     mountOrderButton(ev, prompts, blocks);
     mountArrange(ev, prompts, mems);
+  }
+
+  // ---- Price ----------------------------------------------------------------
+  // Temporary ladder, set 21 Aug 2026. Four bands rather than one flat price
+  // because print cost scales per page and page count is (memories + 4): a
+  // 24-page book costs $13.04 to print, a 254-page one costs $72.14. A single
+  // flat price either loses money on the big memorials — which are the best
+  // keepsakes, the ones where 150 people came — or overcharges the small ones.
+  //
+  // Each band clears roughly 2x print. Clean numbers on purpose: a computed
+  // price like $47.38 reads like a print shop, not like something a family keeps.
+  //
+  // NOT YET CHARGED. Checked against Peecho's button script: there is no
+  // data-price, data-margin or data-markup attribute — retail lives entirely on
+  // Peecho's side. Making these real needs either an offering per band in the
+  // Peecho dashboard priced to match (id goes in `offering`, passed through as
+  // data-offering), or Nanafy's own checkout charging them directly. Until then
+  // SHOW_PRICE stays false, because showing a price nobody is charged is a lie.
+  var SHOW_PRICE = false;
+  var PRICE_TIERS = [
+    { maxPages: 40,  price: 59,  offering: null },
+    { maxPages: 80,  price: 79,  offering: null },
+    { maxPages: 140, price: 109, offering: null },
+    { maxPages: 300, price: 159, offering: null }
+  ];
+
+  function bookPrice(pages) {
+    for (var i = 0; i < PRICE_TIERS.length; i++) {
+      if (pages <= PRICE_TIERS[i].maxPages) return PRICE_TIERS[i];
+    }
+    return PRICE_TIERS[PRICE_TIERS.length - 1];
   }
 
   // MUST mirror the sheet math in nanify/tools/book-pdf/generate-book-pdf.mjs:
@@ -803,7 +837,11 @@ import { qrSvg } from '/js/qr.js?v=20260819a';
     a.setAttribute('data-width', '210');
     a.setAttribute('data-height', '297');
     a.setAttribute('data-pages', String(bookPageCount(prompts.length, blocks.length)));
-    a.setAttribute('data-noprice', 'true');
+    var tier = bookPrice(bookPageCount(prompts.length, blocks.length));
+    if (tier.offering) a.setAttribute('data-offering', tier.offering);
+    // hide Peecho's own figure unless an offering priced to our ladder exists,
+    // or the button shows bare production cost as if it were the price
+    if (!(SHOW_PRICE && tier.offering)) a.setAttribute('data-noprice', 'true');
     a.setAttribute('data-currency', 'USD');
     a.setAttribute('data-reference', ref);
     // Fills the preview box in Peecho's checkout: the honoree's photo, or
