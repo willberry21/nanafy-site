@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy · Nanafy</title>
+<meta name="description" content="What Nanafy collects, where it is stored, who else can see it, and how to have it deleted. Written to be read.">
+<meta name="theme-color" content="#fdfcfc">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Lato:wght@400;700&family=Lora:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="/css/light.css">
+<link rel="stylesheet" href="/css/legal.css">
+<style>
+  *{box-sizing:border-box} html{-webkit-text-size-adjust:100%}
+  body{margin:0;font-size:17px;line-height:1.6}
+  .topbar-wrap{padding:0 22px}
+  .topbar{max-width:720px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0}
+  .brand{display:flex;align-items:center;gap:9px;text-decoration:none}
+  .brand .mark{font-family:var(--display);font-weight:600;font-size:1.05rem;letter-spacing:.18em;text-transform:uppercase}
+  .topbar .back{font-family:var(--display);font-weight:600;font-size:.86rem;text-decoration:none;color:var(--ink);border:1.5px solid var(--line-strong);padding:0 16px;border-radius:var(--r-md)}
+  .topbar .back:hover{border-color:var(--turq);color:var(--turq-text)}
+</style>
+</head>
+<body>
+
+<div class="topbar-wrap">
+  <div class="topbar">
+    <a class="brand" href="/"><span class="mark"><b>Nana</b>fy</span></a>
+    <a class="back" href="/terms/">Terms →</a>
+  </div>
+</div>
+
+<main class="legal">
+  <span class="eyebrow">Privacy</span>
+  <h1>What we hold, and what we do with it.</h1>
+  <p class="updated">Last updated <mark class="todo">DATE — set this when you publish</mark></p>
+
+  <div class="plain">
+    <p class="h">The short version</p>
+    <p>People leave memories on Nanafy at the worst and best moments of their lives.
+      We treat that accordingly. We do not sell anything to anyone, we do not run
+      advertising trackers, and there is no analytics script on this site watching you.</p>
+    <p>A guest gives us three things: the name they type, the words they write or
+      speak, and any photos they add. Nothing else. No account, no email, no phone
+      number. A host gives us an email address so they can get back into their keepsake.</p>
+    <p>You can ask us to delete any of it, and we will.</p>
+  </div>
+
+  <h2>Who this is</h2>
+  <p>Nanafy is operated by <mark class="todo">LEGAL ENTITY NAME</mark> of
+    <mark class="todo">BUSINESS ADDRESS</mark>. If you want to reach a person about
+    anything on this page, write to <mark class="todo">PRIVACY CONTACT EMAIL</mark>.</p>
+  <p>This policy covers nanafy.ai and the pages under it — creating a keepsake, adding
+    a memory, viewing a keepsake, and ordering a printed book.</p>
+
+  <h2>What a guest gives us</h2>
+  <p>If someone scanned a code at a gathering and left a memory, this is the whole of it:</p>
+  <ul>
+    <li><strong>The name you type.</strong> You choose what to put. It can be a first
+      name, a full name, or how you were known to them.</li>
+    <li><strong>Your memory.</strong> Either words you typed, or a recording of your
+      voice made in your phone's browser.</li>
+    <li><strong>Photos,</strong> if you add any.</li>
+    <li><strong>A timestamp,</strong> so the keepsake can be ordered.</li>
+  </ul>
+  <p>We do not ask a guest for an email address, a phone number, or an account. We do
+    not read your contacts, your camera roll beyond the photo you pick, or your location.</p>
+
+  <h2>What a host gives us</h2>
+  <ul>
+    <li><strong>An email address,</strong> and either a password or a one-time sign-in
+      link, so only you can get back into your keepsake.</li>
+    <li><strong>The keepsake's details</strong> — the occasion, the person's name,
+      dates, a photo, and the questions you want guests asked.</li>
+    <li><strong>A welcome recording,</strong> if you record one.</li>
+    <li><strong>Order details</strong> if you buy a printed book. Payment is handled by
+      our print partner, not by us — see below.</li>
+  </ul>
+
+  <h2>Where it is stored, and who else touches it</h2>
+  <p>Nanafy runs on a small number of outside services. This is all of them.</p>
+  <div class="tscroll">
+  <table>
+    <tr><th>Service</th><th>What it does</th><th>What it sees</th></tr>
+    <tr><td>Supabase</td><td>Database, sign-in, and file storage — the keepsakes live here</td>
+        <td>Everything: names, memories, recordings, photos, host emails</td></tr>
+    <tr><td>Peecho</td><td>Prints and ships the book</td>
+        <td>Only if you order one: the book's contents, plus your name, shipping address and payment, which they take directly</td></tr>
+    <tr><td>Google Fonts</td><td>Serves the two typefaces the site uses</td>
+        <td>Your IP address and browser, when a page loads</td></tr>
+    <tr><td>api.qrserver.com</td><td>Draws the QR image a host prints or shows</td>
+        <td>The keepsake's guest link, whenever that QR is displayed</td></tr>
+    <tr><td>jsDelivr</td><td>Serves one script on the "my keepsakes" page</td>
+        <td>Your IP address and browser, on that page</td></tr>
+    <tr><td>Cloudflare</td><td>Sits in front of the site</td>
+        <td>Your IP address and the pages you request</td></tr>
+    <tr><td><mark class="todo">AI PROVIDER — NAME IT</mark></td>
+        <td>Suggests questions, and arranges the book if a host asks Nana to</td>
+        <td>See the section below</td></tr>
+  </table>
+  </div>
+
+  <h2>Nana AI, and what it is shown</h2>
+  <div class="flag">
+    <p>Two features send text to an AI model. We would rather say so here than have you
+      find out later.</p>
+  </div>
+  <p><strong>Suggesting questions.</strong> When a host asks Nana to suggest questions,
+    we send the occasion, the person's name, and whatever the host typed about them. No
+    guest memories are involved — at that point there aren't any.</p>
+  <p><strong>Arranging the book.</strong> If a host asks Nana to arrange the printed
+    book, we send, for each memory: the contributor's name, the question it answered,
+    and <strong>the first 240 characters of what they wrote</strong>. Recordings and
+    photos are never sent — only text. This only happens when a host presses the button,
+    and the host reviews the result before anything is saved.</p>
+  <p><mark class="todo">CONFIRM AND STATE: which provider, whether they retain the text, and that it is not used to train their models. Do not publish this page until this line is true.</mark></p>
+
+  <h2>Recordings and photos are stored at unlisted web addresses</h2>
+  <div class="flag">
+    <p>This is the one thing on this page we would most want you to read.</p>
+  </div>
+  <p>A keepsake page itself is private — it is reachable only by its code or link, and
+    it is not listed or indexed anywhere. But the recordings and photos inside it are
+    each stored at their own long, unguessable web address, and <strong>anyone who has
+    one of those addresses can open that file without signing in</strong>. Addresses are
+    random and are never published, so this is not a door standing open — but it is not
+    a lock either.</p>
+  <p>In practice: do not forward the direct link to a recording to anyone you would not
+    have handed the recording to.</p>
+  <p><mark class="todo">DECISION: switch these to short-lived signed URLs and this section becomes two friendlier sentences. Until then this paragraph has to stay, because it is true.</mark></p>
+
+  <h2>What we deliberately don't do</h2>
+  <ul>
+    <li><strong>No advertising, and no ad trackers.</strong> There is no Facebook pixel,
+      no Google Ads tag, no third-party cookie on this site.</li>
+    <li><strong>No analytics.</strong> We are not currently measuring your visit at all.
+      If that ever changes we will name the tool here first.</li>
+    <li><strong>We do not sell or rent anything about you,</strong> and we do not share
+      memories with anyone beyond the services listed above.</li>
+    <li><strong>We do not read your keepsake for our own purposes.</strong> We may look
+      at a specific keepsake if you ask us for help with it, or if we are legally
+      required to.</li>
+  </ul>
+
+  <h2>What we keep on your device</h2>
+  <p>No advertising cookies. A handful of entries in your browser's local storage, which
+    stay on your device:</p>
+  <div class="tscroll">
+  <table>
+    <tr><th>Name</th><th>Why</th></tr>
+    <tr><td><code>sb-…-auth-token</code></td><td>Keeps a host signed in</td></tr>
+    <tr><td><code>nanafy_anon_session</code></td><td>Lets a guest edit or delete the memory they just left, without an account</td></tr>
+    <tr><td><code>nanafy_keepsakes</code></td><td>Remembers which keepsakes you have opened on this device</td></tr>
+    <tr><td><code>nanafy_signin_email</code></td><td>Saves you retyping your email at sign-in</td></tr>
+    <tr><td><code>nanafy_gate_ok</code></td><td>Remembers you passed the pre-launch password</td></tr>
+  </table>
+  </div>
+  <p>Clearing your browser data removes all of these. It does not delete anything from
+    the keepsake itself.</p>
+
+  <h2>How long we keep it</h2>
+  <p>A keepsake is meant to outlast the occasion, so we keep it until someone asks us
+    not to. We do not run a countdown, and we do not delete memories because a host
+    stopped paying for something.</p>
+  <p><mark class="todo">WRITE THE PERMANENCE COMMITMENT: how much notice families get if Nanafy ever shuts down, and that a full export will be available before that happens. A QR printed in a book is a promise — this paragraph is where you keep it.</mark></p>
+
+  <h2>Deleting things</h2>
+  <ul>
+    <li><strong>A guest</strong> can delete the memory they left, from the same device
+      and browser they left it on. If that device is gone, email us and we will remove it.</li>
+    <li><strong>A host</strong> can delete any memory in their keepsake, or the whole
+      keepsake, from the keepsake page.</li>
+    <li><strong>Anyone</strong> can ask us to remove a memory that is about them, or
+      that they left, by writing to <mark class="todo">PRIVACY CONTACT EMAIL</mark>.</li>
+  </ul>
+  <p>Deleting a memory removes it from the keepsake and from our storage. A printed book
+    already in someone's hands is, of course, already printed.</p>
+
+  <h2>Children</h2>
+  <p>Children leave memories at memorials, and we would not want it otherwise. A child
+    can leave a memory the same way anyone else does, and we collect nothing from them
+    beyond the name they type and what they say.</p>
+  <p>Hosting a keepsake is different: you must be 18 or older to create one and be
+    responsible for it. If you believe we hold something a child provided that you want
+    removed, write to us and we will remove it without asking you to prove anything.</p>
+
+  <h2>Your rights</h2>
+  <p>Wherever you live, you can ask us for a copy of what we hold about you, ask us to
+    correct it, or ask us to delete it. If you are in the UK, the EU, or a US state with
+    its own privacy law, you may have further rights — including the right to complain
+    to your data protection regulator.</p>
+  <p>We will not charge you for asking, and we will not make you create an account to
+    ask. Write to <mark class="todo">PRIVACY CONTACT EMAIL</mark>.</p>
+  <p><mark class="todo">LAWYER: confirm whether GDPR applies (are EU guests expected?), whether a DPA with Supabase is needed, and whether voice recordings trigger any state biometric law. We are not identifying anyone by voice, which is the usual test, but get it checked.</mark></p>
+
+  <h2>If this page changes</h2>
+  <p>We will change the date at the top. If a change actually matters — a new service
+    that sees your memories, say — we will tell hosts by email rather than quietly
+    editing this page.</p>
+
+  <a class="backhome" href="/">← Back to Nanafy</a>
+</main>
+
+</body>
+</html>

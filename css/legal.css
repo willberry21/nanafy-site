@@ -1,0 +1,49 @@
+/* Legal pages — built to actually be read ==================================
+   A privacy policy a grieving family can follow is worth more than one that
+   is technically complete and impenetrable. Long measure, real line height,
+   plain-language summary at the top of every section that needs one.
+   ======================================================================== */
+
+.legal{ width:100%; max-width:720px; margin:0 auto; padding:0 22px 80px }
+.legal .eyebrow{ display:block; margin:44px 0 10px }
+.legal h1{ font-size:clamp(2.2rem,6vw,3.1rem); line-height:1.04; margin:0 0 14px }
+.legal .updated{ color:var(--ink-soft); font-size:.92rem; margin:0 0 10px }
+
+.legal h2{ font-size:clamp(1.3rem,3.4vw,1.65rem); margin:44px 0 12px;
+  padding-top:22px; border-top:1px solid var(--line) }
+.legal h3{ font-size:1.08rem; margin:26px 0 8px; font-weight:400 }
+.legal p,.legal li{ font-size:1.02rem; line-height:1.7 }
+.legal p{ margin:0 0 14px }
+.legal ul{ margin:0 0 16px; padding-left:22px }
+.legal li{ margin:0 0 8px }
+.legal a{ color:var(--turq-text); text-decoration:underline; text-underline-offset:2px }
+.legal strong{ font-weight:700 }
+
+/* the plain-language box that opens each page */
+.plain{ background:var(--surface-2); border:1px solid var(--line);
+  border-radius:var(--r-lg); padding:20px 22px; margin:0 0 12px }
+.plain p:last-child{ margin-bottom:0 }
+.plain .h{ font-family:var(--display); font-weight:600; font-size:.7rem;
+  letter-spacing:.2em; text-transform:uppercase; color:var(--turq-text); margin:0 0 10px }
+
+/* a fact worth not burying */
+.flag{ border-left:3px solid var(--turq); background:var(--turq-wash);
+  border-radius:0 var(--r-sm) var(--r-sm) 0; padding:14px 18px; margin:0 0 16px }
+.flag p:last-child{ margin-bottom:0 }
+
+/* things William still has to fill in. Loud on purpose. */
+mark.todo{ background:#ffe9a8; color:#5d4600; padding:1px 6px; border-radius:4px;
+  font-weight:700; box-shadow:inset 0 0 0 1px #e8c65c }
+
+.legal table{ width:100%; border-collapse:collapse; margin:0 0 18px; font-size:.95rem }
+.legal th,.legal td{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--line);
+  vertical-align:top }
+.legal th{ font-family:var(--display); font-weight:600; font-size:.72rem;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft) }
+.legal td code{ font-size:.86rem; background:var(--surface-2); padding:2px 6px; border-radius:4px }
+.legal .tscroll{ overflow-x:auto; margin:0 0 18px }
+
+.legal .backhome{ display:inline-flex; margin-top:34px; text-decoration:none;
+  font-family:var(--display); font-weight:600; border:1.5px solid var(--line-strong);
+  padding:0 20px; border-radius:var(--r-md); color:var(--ink) }
+.legal .backhome:hover{ border-color:var(--turq); color:var(--turq-text) }
