@@ -441,6 +441,135 @@
   #gatePw::placeholder{ color:rgba(255,255,255,.5); }
   #gateForm button{ background:#5FE0D2 !important; color:#073B36 !important; }
   .gate-err{ color:#FFB4A6 !important; }
+
+  /* == LIVING ORBS: the white canvas, the black text, and the spheres =======
+     Final override layer, same pattern as PEACOCK above. Two moves:
+     (1) the ground goes back to near-white with near-black type — the
+         headline drops to weight 300 at a big size, which is the whole
+         reason this reads modern instead of shouty;
+     (2) the only colour that moves is inside the orbs (js/orbs.js).
+     Everything colourful is now a sphere, so the page itself can stay quiet. */
+  :root{
+    color-scheme:light;
+    --paper:#fdfcfc; --ground:#fdfcfc; --surface:#ffffff; --surface-2:#f5f2ed; --warm:#f7f5f1;
+    --ink:#12181c; --ink-soft:#6b7773; --line:#e8e3da; --line-strong:#d8d2c6;
+    --turq:#0fb0a4; --turq-2:#23c9bd; --turq-ink:#0a7a72;
+    --turq-soft:rgba(15,176,164,.30); --turq-wash:rgba(15,176,164,.10);
+    --pink:#e089a8; --pink-ink:#c14e7c; --pink-wash:rgba(224,137,168,.12);
+    --glow:rgba(35,201,189,.22); --glow-2:rgba(224,137,168,.16);
+    --shadow:rgba(18,24,28,.16);
+  }
+  body{ background:var(--ground) !important; color:var(--ink) !important; }
+
+  /* type: light and large. Tight tracking is what stops 300-weight going limp. */
+  h1,h2,h3{ font-family:var(--display); font-weight:300 !important; letter-spacing:-.03em !important;
+    color:var(--ink); }
+  .eyebrow{ color:var(--turq-ink) !important; }
+  .topnav-center a,.prof-link{ color:var(--ink) !important; }
+  .nav-cta,.prof-chip{ background:var(--turq) !important; color:#fff !important; }
+  .step .num,.kv-row .kv-play,.topnav-links a,.signup-ok,.tick,.hl{ color:var(--turq-ink) !important; }
+
+  /* ── hero: words on the left, one living sphere on the right ── */
+  .hero-n{
+    background:var(--ground) !important; min-height:0; align-items:center;
+    padding:clamp(48px,7vw,96px) 0 clamp(56px,8vw,104px);
+    border-bottom:1px solid var(--line);
+  }
+  .hero-n::before{ background:none !important; }
+  .hero-n-mark svg g{ fill:rgba(18,24,28,.028) !important; }
+  .hero-n-grid{ display:grid; grid-template-columns:1.08fr .92fr; gap:clamp(28px,5vw,64px);
+    align-items:center; }
+  .hero-n h1{
+    background:none !important; -webkit-background-clip:border-box !important;
+    background-clip:border-box !important; color:var(--ink) !important;
+    font-weight:300 !important; text-transform:none !important;
+    font-size:clamp(2.5rem,6vw,4.4rem) !important; line-height:1.02 !important;
+    letter-spacing:-.035em !important;
+  }
+  .hero-n p{ color:#3f4a48 !important; font-size:1.14rem; }
+  .hero-n .hero-n-fine{ font-size:.9rem; color:var(--ink-soft) !important; margin:22px 0 0; }
+  .hbtn.solid{ background:var(--turq) !important; color:#fff !important; }
+  .hbtn.solid:hover{ background:var(--turq-ink) !important; color:#fff !important; }
+  .hbtn.line{ color:var(--ink) !important; border-color:var(--line-strong) !important; }
+  .hbtn.line:hover{ border-color:var(--turq) !important; color:var(--turq-ink) !important; }
+  .hero-n-orb{ display:flex; justify-content:center; }
+  @media(max-width:860px){
+    .hero-n-grid{ grid-template-columns:1fr; gap:34px; }
+    .hero-n-orb{ order:-1; justify-content:flex-start; }
+  }
+
+  /* ── the spheres themselves ── */
+  .orb{ position:relative; border-radius:50%; overflow:hidden; flex:none; display:block;
+    box-shadow:0 26px 46px -28px rgba(18,24,28,.40), 0 3px 10px -6px rgba(18,24,28,.18); }
+  .orb canvas{ display:block; width:100%; height:100%; border-radius:50%; }
+  .orb-hero{ width:clamp(230px,33vw,400px); aspect-ratio:1; }
+  @keyframes orb-bob{ from{ transform:translateY(0) scale(1) } to{ transform:translateY(-12px) scale(1.015) } }
+  .orb-hero{ animation:orb-bob 9.4s ease-in-out infinite alternate; }
+  .closing-orb .orb{ animation:orb-bob 11s ease-in-out infinite alternate-reverse; }
+
+  /* the step numbers sit ON a small sphere instead of a tinted square */
+  .step .num{ position:relative; background:none !important; width:60px; height:60px;
+    border-radius:50%; display:grid; place-items:center; overflow:visible; }
+  .step .num .orb-step{ position:absolute; inset:0; width:100%; height:100%;
+    box-shadow:0 12px 22px -14px rgba(18,24,28,.5); }
+  .step .num .num-n{ position:relative; z-index:1; color:#fff; font-family:var(--display);
+    font-weight:600; font-size:1.3rem; letter-spacing:0;
+    text-shadow:0 1px 6px rgba(18,24,28,.45); }
+  .step:nth-child(1) .num .orb-step{ animation:orb-bob 7.8s ease-in-out infinite alternate }
+  .step:nth-child(2) .num .orb-step{ animation:orb-bob 9.1s ease-in-out infinite alternate-reverse }
+  .step:nth-child(3) .num .orb-step{ animation:orb-bob 8.4s ease-in-out infinite alternate }
+
+  /* ── bands: white, cream, white — the page needs somewhere quiet ── */
+  .band{ background:var(--ground) !important; }
+  .band.why{ background:var(--surface-2) !important; }
+  .band.why .inner p{ color:var(--ink) !important; }
+  .step,.occ,.keep-visual,.mcard,.signup-ok{
+    background:var(--surface) !important; border:1px solid var(--line) !important;
+  }
+  .keep-visual{ box-shadow:0 26px 54px -34px var(--shadow) !important; }
+  .keep-visual .kv-name{ color:var(--ink) !important; }
+  .keep-visual .kv-head .avatar{ background:linear-gradient(140deg,var(--turq),var(--pink)) !important; }
+  .kv-row .kv-play{ background:var(--turq-wash) !important; }
+
+  /* the memories arrive one at a time, the way the room fills up */
+  .keep-visual.in .kv-row{ opacity:0; animation:kv-rise .7s cubic-bezier(.22,.9,.36,1) forwards; }
+  .keep-visual.in .kv-row:nth-of-type(1){ animation-delay:.10s }
+  .keep-visual.in .kv-row:nth-of-type(2){ animation-delay:.28s }
+  .keep-visual.in .kv-row:nth-of-type(3){ animation-delay:.46s }
+  .keep-visual.in .kv-row:nth-of-type(4){ animation-delay:.64s }
+  @keyframes kv-rise{ from{ opacity:0; transform:translateY(14px) } to{ opacity:1; transform:none } }
+
+  /* ── closing: one sphere leaning in from the edge ── */
+  .closing{ background:var(--surface-2) !important; position:relative; overflow:hidden; }
+  .closing .wrap{ position:relative; z-index:1; }
+  .closing-orb{ position:absolute; right:-7vw; top:50%; transform:translateY(-50%);
+    width:clamp(170px,26vw,320px); pointer-events:none; opacity:.9; }
+  .closing-orb .orb{ width:100%; aspect-ratio:1; }
+  .closing h2{ max-width:18em }
+  .btn-primary{ background:var(--turq) !important; color:#fff !important; }
+  .btn-ghost{ color:var(--ink) !important; }
+  @media(max-width:900px){ .closing-orb{ right:-22vw; opacity:.5 } }
+
+  /* the pre-launch curtain follows the ground back to white */
+  #gate{ background:var(--ground) !important; }
+  .gate-mark b{ color:var(--turq) !important; }
+  .gate-mark{ color:var(--pink-ink) !important; }
+  .gate-h,.gate-card{ color:var(--ink) !important; }
+  .gate-sub{ color:var(--ink-soft) !important; }
+  #gatePw{ background:#fff !important; border:1.5px solid var(--line) !important; color:var(--ink) !important; }
+  #gatePw::placeholder{ color:var(--ink-soft) !important; }
+  #gateForm button{ background:var(--turq) !important; color:#fff !important; }
+  .gate-err{ color:#c0392b !important; }
+
+
+  /* the wordmark: Nana in turquoise, fy in grey — the dark layer had it white */
+  .brand .mark{ color:#8b9997 !important; }
+  .brand .mark b{ color:var(--turq) !important; }
+  .hero-n-mark svg g{ fill:rgba(18,24,28,.018) !important; }
+  @media(prefers-reduced-motion:reduce){
+    .orb,.orb-hero,.closing-orb .orb,.step .num .orb-step{ animation:none !important }
+    .keep-visual.in .kv-row{ opacity:1 !important; animation:none !important }
+  }
 </style>
 </head>
 <noscript>
@@ -542,11 +671,19 @@
   <section class="hero-n">
     <div class="hero-n-mark"><svg viewBox="0 0 100 100" aria-hidden="true"><g fill="rgba(255,255,255,.05)"><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(0 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(30 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(60 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(90 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(120 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(150 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(180 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(210 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(240 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(270 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(300 50 50)"/><path d="M50 5 C59 15 59 27 50 37 C41 27 41 15 50 5 Z" transform="rotate(330 50 50)"/><circle cx="50" cy="50" r="18.5"/></g></svg></div>
     <div class="hero-n-inner reveal in">
-      <h1>Every voice.<br>Kept forever.</h1>
-      <p>One code at the gathering. Every story, in their own words. Memorials, weddings, and the milestones in between.</p>
-      <div class="hero-n-cta">
-        <a class="hbtn solid" href="/create/">Create a keepsake</a>
-        <a class="hbtn line" href="#how">How it works</a>
+      <div class="hero-n-grid">
+        <div class="hero-n-words">
+          <h1>Every voice.<br>Kept forever.</h1>
+          <p>One code at the gathering. Every story, in their own words. Memorials, weddings, and the milestones in between.</p>
+          <div class="hero-n-cta">
+            <a class="hbtn solid" href="/create/">Create a keepsake</a>
+            <a class="hbtn line" href="#how">How it works</a>
+          </div>
+          <p class="hero-n-fine">Free to create · No app for your guests · Works on any phone</p>
+        </div>
+        <div class="hero-n-orb">
+          <div class="orb orb-hero" data-orb data-pal="2"><canvas></canvas></div>
+        </div>
       </div>
     </div>
   </section>
@@ -571,21 +708,21 @@
       </div>
       <div class="steps">
         <div class="step reveal">
-          <div class="num">1</div>
+          <div class="num"><span class="num-n">1</span><span class="orb orb-step" data-orb data-pal="1"><canvas></canvas></span></div>
           <div>
             <h3>Create a keepsake for your person or occasion</h3>
             <p>Add a name, a photo, and a few words. It takes a couple of minutes, and it’s yours — private, and only shared with the people you choose.</p>
           </div>
         </div>
         <div class="step reveal">
-          <div class="num">2</div>
+          <div class="num"><span class="num-n">2</span><span class="orb orb-step" data-orb data-pal="2"><canvas></canvas></span></div>
           <div>
             <h3>Share the QR code where people gather</h3>
             <p>Print it on the memorial card, set it on the wedding table, drop it into the invitation. One scan takes each guest straight to that page — not a generic homepage, but <em>their</em> page.</p>
           </div>
         </div>
         <div class="step reveal">
-          <div class="num">3</div>
+          <div class="num"><span class="num-n">3</span><span class="orb orb-step" data-orb data-pal="4"><canvas></canvas></span></div>
           <div>
             <h3>Everyone leaves a story — you keep them forever</h3>
             <p>Guests write a memory or record their voice, right there on their phone. Every story lands in one place, gathered into a keepsake you’ll still have long after the day is over.</p>
@@ -654,6 +791,7 @@
 
   <!-- CLOSING -->
   <section class="closing" id="start">
+    <div class="closing-orb"><div class="orb" data-orb data-pal="0"><canvas></canvas></div></div>
     <div class="wrap">
       <div class="reveal">
         <h2>Don’t let the stories leave with everyone.</h2>
@@ -674,6 +812,7 @@
     </div>
   </footer>
 
+<script src="js/orbs.js" defer></script>
 <script>
   // Reveal-on-scroll
   (function () {
