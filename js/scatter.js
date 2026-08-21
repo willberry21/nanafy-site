@@ -2,8 +2,16 @@
    Next to "a room fills with people who each hold a piece of someone. Then
    everyone goes home, and the pieces scatter."
 
-   One mark per person. They start as a room — clustered, overlapping — and
-   come apart as you scroll past, fading as they go. It is driven by scroll
+   One mark per person, in three beats as you scroll:
+
+     a room       clustered, overlapping, unordered
+     scattered    everyone goes home and the pieces spread
+     gathered     they come back, one at a time, into an even ring
+
+   The first two beats are the sentence beside it. The third is the product:
+   the pieces do not stay scattered, because something gathered them. Evenness
+   is what carries it — a random spread reads as loss, an ordered one reads as
+   kept. It is driven by scroll
    position rather than by a clock, for two reasons: the sentence is about
    time passing, and scrolling IS the reader's time passing; and it means the
    page's one quiet moment is not permanently in motion. Stop scrolling and it
@@ -52,6 +60,10 @@
            room is sized off the SHORT side so it is always round, while the
            scatter uses both so it fills whatever shape it is given. */
         a: a, r: r, aw: aw, rw: rw,
+        /* where it ends up: an even share of the ring, with a little jitter so
+           it reads as gathered rather than as a machine part */
+        ga: (i / COUNT) * Math.PI * 2 + (rnd() - 0.5) * 0.16,
+        gr: 0.94 + rnd() * 0.12,
         size: 4.4 + rnd() * 7.6,
         ink: INKS[Math.floor(rnd() * INKS.length)],
         lag: rnd() * 0.42            /* they do not all leave at once */
@@ -81,18 +93,29 @@
       /* each mark's own share of the journey, so the room empties unevenly */
       var t = (p - m.lag) / (1 - m.lag);
       t = t < 0 ? 0 : t > 1 ? 1 : t;
-      var e = ease(t);
       var base = W < H ? W : H;
       var hx = W / 2 + Math.cos(m.a) * m.r * 0.19 * base;
       var hy = H / 2 + Math.sin(m.a) * m.r * 0.19 * base;
       var ax = W / 2 + Math.cos(m.aw) * m.rw * 0.40 * W;
       var ay = H / 2 + Math.sin(m.aw) * m.rw * 0.34 * H;
-      var x = hx + (ax - hx) * e;
-      var y = hy + (ay - hy) * e;
-      /* never fades out: it has to be present the whole time the band is
-         on screen, so scattering changes the arrangement, not the presence */
-      var alpha = 0.95 - 0.34 * e;
-      var rad = m.size * (1 - 0.10 * e);
+      var gx = W / 2 + Math.cos(m.ga) * m.gr * 0.27 * base;
+      var gy = H / 2 + Math.sin(m.ga) * m.gr * 0.27 * base;
+
+      /* Never fades out — it has to be present the whole time the band is on
+         screen — so every beat changes the arrangement, not the presence. */
+      var x, y, alpha;
+      if (t < 0.5) {                      /* the room comes apart */
+        var e1 = ease(t / 0.5);
+        x = hx + (ax - hx) * e1;
+        y = hy + (ay - hy) * e1;
+        alpha = 0.95 - 0.33 * e1;
+      } else {                            /* and is gathered back */
+        var e2 = ease((t - 0.5) / 0.5);
+        x = ax + (gx - ax) * e2;
+        y = ay + (gy - ay) * e2;
+        alpha = 0.62 + 0.33 * e2;
+      }
+      var rad = m.size * (1 - 0.10 * Math.sin(t * Math.PI));
       var g = ctx.createRadialGradient(x, y, 0, x, y, rad * 2.4);
       g.addColorStop(0, 'rgba(' + m.ink + ',' + alpha.toFixed(3) + ')');
       g.addColorStop(0.5, 'rgba(' + m.ink + ',' + (alpha * 0.34).toFixed(3) + ')');
@@ -107,8 +130,8 @@
   /* 0 while the band is low on the screen, 1 once it has risen past */
   function progress() {
     var r = cv.getBoundingClientRect();
-    var start = window.innerHeight * 0.94;
-    var end = window.innerHeight * 0.02;
+    var start = window.innerHeight * 0.95;
+    var end = window.innerHeight * 0.08;
     var p = (start - r.top) / (start - end);
     return p < 0 ? 0 : p > 1 ? 1 : p;
   }
@@ -116,7 +139,7 @@
   build();
   if (!measure()) return;
 
-  if (still) { draw(0.5); return; }   /* held mid-scatter: the idea, unmoving */
+  if (still) { draw(1); return; }   /* held gathered: the beat that matters */   /* held mid-scatter: the idea, unmoving */
 
   var last = -1, queued = false, inView = true;
   function frame() {
