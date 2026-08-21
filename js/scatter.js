@@ -92,8 +92,9 @@
         a: a, r: r, aw: aw, rw: rw,
         /* where it ends up: a place in a loose ring. Uneven radius, and a
            few standing inside it, so it reads as a gathering and not as a
-           compass rose. */
-        ga: (i / COUNT) * Math.PI * 2 + (rnd() - 0.5) * 0.55,
+           compass rose. The angle is assigned after the fact — see below. */
+        ga: 0,
+        gjitter: (rnd() - 0.5) * 0.55,
         gr: (rnd() < 0.16 ? 0.42 : 0.80 + rnd() * 0.34),
         /* its own spring, so no two marks arrive together. Damping is derived
            from k rather than rolled separately: critical damping is 2*sqrt(k),
@@ -108,8 +109,21 @@
         x: 0, y: 0, vx: 0, vy: 0, placed: false,
         size: 4.4 + rnd() * 7.6,
         ink: INKS[Math.floor(rnd() * INKS.length)],
-        lag: rnd() * 0.10
+        lag: rnd() * 0.07
       });
+    }
+  }
+
+  /* Each mark gathers to the ring slot nearest where it scattered to, rather
+     than to one picked by its index. Otherwise a mark on the left flies to a
+     slot on the right, half of them cross through the middle at once, and the
+     gather reads as a swirl — mean spread actually dipped BELOW the final ring
+     while everything was in transit. Sorting by the scatter angle makes the
+     mapping monotonic, so gathering is a contraction and nothing crosses. */
+  function assignRing() {
+    var order = marks.slice().sort(function (p, q) { return p.aw - q.aw; });
+    for (var i = 0; i < order.length; i++) {
+      order[i].ga = (i / order.length) * Math.PI * 2 + order[i].gjitter;
     }
   }
 
@@ -124,7 +138,28 @@
     return true;
   }
 
-  /* Where a mark WANTS to be at this point in the sequence. */
+  /* Where a mark WANTS to be at this point in the sequence.
+
+     The timeline has HOLDS in it, and that is the whole point. Blending the
+     two halves straight into each other meant the target reversed direction at
+     the exact instant it arrived — so the marks, which lag their target by
+     design, were still travelling outward when they got pulled back. The
+     scattered beat never actually landed. A three-beat story needs each beat
+     to be reached and then held for a moment before the next one starts.
+
+       0.00 – 0.10   held as a room          you register that it is a room
+       0.10 – 0.42   coming apart
+       0.42 – 0.62   held scattered          the beat lands, and is seen
+       0.62 – 0.94   being gathered
+       0.94 – 1.00   held gathered           it rests, still breathing            */
+  var BEATS = [0.10, 0.42, 0.62, 0.94];
+
+  function span(t, a, b) {            /* 0 before a, 1 after b, linear between */
+    if (t <= a) return 0;
+    if (t >= b) return 1;
+    return (t - a) / (b - a);
+  }
+
   function targetOf(m, p) {
     var t = (p - m.lag) / (1 - m.lag);
     t = t < 0 ? 0 : t > 1 ? 1 : t;
@@ -137,16 +172,20 @@
     var gx = W / 2 + Math.cos(m.ga) * m.gr * 0.31 * base;
     var gy = H / 2 + Math.sin(m.ga) * m.gr * 0.31 * base;
 
-    /* Straight blends between the three. The spring supplies the easing, so
-       easing it here as well would only make it sluggish. */
-    if (t < 0.5) {
-      var e = t / 0.5;
-      return { x: hx + (ax - hx) * e, y: hy + (ay - hy) * e,
-               alpha: 0.95 - 0.33 * e, rad: 1, mix: 0 };
-    }
-    var g = (t - 0.5) / 0.5;
-    return { x: ax + (gx - ax) * g, y: ay + (gy - ay) * g,
-             alpha: 0.62 + 0.33 * g, rad: 1 - 0.12 * g, mix: g };
+    /* out, then in — each on its own window, with the hold between them */
+    var out = span(t, BEATS[0], BEATS[1]);
+    var back = span(t, BEATS[2], BEATS[3]);
+
+    var sx = hx + (ax - hx) * out;     /* where it is on the way out */
+    var sy = hy + (ay - hy) * out;
+
+    return {
+      x: sx + (gx - sx) * back,
+      y: sy + (gy - sy) * back,
+      alpha: 0.95 - 0.33 * out + 0.33 * back,
+      rad: 1 - 0.12 * back,
+      mix: back
+    };
   }
 
   function step(p, dt) {
@@ -230,6 +269,7 @@
   }
 
   build();
+  assignRing();
   if (!measure()) return;
 
   if (still) { step(1, 0.4); draw(); return; }   /* held gathered, unmoving */
